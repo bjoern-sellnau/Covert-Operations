@@ -16,6 +16,7 @@ export interface BulletData {
   position: THREE.Vector2
   velocity: THREE.Vector2
   lifetime: number
+  damage: number
 }
 
 export interface PlayerData {
@@ -46,6 +47,9 @@ function makeEntityStore() {
     bulletIdCounter: 0,
     focus: FOCUS_MAX,
     isBulletTime: false,
+    ammo: 48,
+    maxAmmo: 48,
+    creditsEarned: 0,
   }
 }
 
@@ -67,4 +71,7 @@ export function resetEntityStore() {
   s.inWaveBreak = false
   s.focus = FOCUS_MAX
   s.isBulletTime = false
+  s.ammo = 48
+  s.maxAmmo = 48
+  s.creditsEarned = 0
 }
