@@ -3,9 +3,11 @@ import { useLoadoutStore } from '../game/loadoutStore'
 
 export function GameOver() {
   const setPhase = useGameStore((s) => s.setPhase)
+  const setPlaytesting = useGameStore((s) => s.setPlaytesting)
   const score = useGameStore((s) => s.score)
   const wave = useGameStore((s) => s.wave)
   const creditsEarned = useGameStore((s) => s.creditsEarned)
+  const isPlaytesting = useGameStore((s) => s.isPlaytesting)
   const { credits } = useLoadoutStore()
 
   return (
@@ -60,45 +62,63 @@ export function GameOver() {
 
       {/* Buttons */}
       <div style={{ display: 'flex', gap: 16 }}>
-        <button
-          onClick={() => setPhase('shop')}
-          style={{
-            background: '#00aaff22', border: '2px solid #00aaff', color: '#00aaff',
-            fontSize: 14, letterSpacing: 4, padding: '14px 32px', cursor: 'pointer',
-            fontFamily: 'inherit', textTransform: 'uppercase', transition: 'all 0.15s',
-            boxShadow: '0 0 14px #00aaff44',
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = '#00aaff44'; e.currentTarget.style.color = '#ffffff' }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = '#00aaff22'; e.currentTarget.style.color = '#00aaff' }}
-        >
-          Ausrüstung
-        </button>
+        {isPlaytesting ? (
+          <button
+            onClick={() => { setPlaytesting(false); setPhase('editor') }}
+            style={{
+              background: '#00ff8822', border: '2px solid #00ff88', color: '#00ff88',
+              fontSize: 14, letterSpacing: 4, padding: '14px 32px', cursor: 'pointer',
+              fontFamily: 'inherit', textTransform: 'uppercase', transition: 'all 0.15s',
+              boxShadow: '0 0 14px #00ff8844',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = '#00ff8844'; e.currentTarget.style.color = '#ffffff' }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = '#00ff8822'; e.currentTarget.style.color = '#00ff88' }}
+          >
+            Zurück zum Editor
+          </button>
+        ) : (
+          <>
+            <button
+              onClick={() => setPhase('shop')}
+              style={{
+                background: '#00aaff22', border: '2px solid #00aaff', color: '#00aaff',
+                fontSize: 14, letterSpacing: 4, padding: '14px 32px', cursor: 'pointer',
+                fontFamily: 'inherit', textTransform: 'uppercase', transition: 'all 0.15s',
+                boxShadow: '0 0 14px #00aaff44',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = '#00aaff44'; e.currentTarget.style.color = '#ffffff' }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = '#00aaff22'; e.currentTarget.style.color = '#00aaff' }}
+            >
+              Ausrüstung
+            </button>
 
-        <button
-          onClick={() => setPhase('playing')}
-          style={{
-            background: 'transparent', border: '2px solid #445566', color: '#667788',
-            fontSize: 14, letterSpacing: 4, padding: '14px 32px', cursor: 'pointer',
-            fontFamily: 'inherit', textTransform: 'uppercase', transition: 'all 0.15s',
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = '#22334422'; e.currentTarget.style.color = '#aabbcc' }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#667788' }}
-        >
-          Wiederholen
-        </button>
+            <button
+              onClick={() => setPhase('playing')}
+              style={{
+                background: 'transparent', border: '2px solid #445566', color: '#667788',
+                fontSize: 14, letterSpacing: 4, padding: '14px 32px', cursor: 'pointer',
+                fontFamily: 'inherit', textTransform: 'uppercase', transition: 'all 0.15s',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = '#22334422'; e.currentTarget.style.color = '#aabbcc' }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#667788' }}
+            >
+              Wiederholen
+            </button>
 
-        <button
-          onClick={() => setPhase('menu')}
-          style={{
-            background: 'transparent', border: '1px solid #332222', color: '#443333',
-            fontSize: 14, letterSpacing: 4, padding: '14px 32px', cursor: 'pointer',
-            fontFamily: 'inherit', textTransform: 'uppercase', transition: 'all 0.15s',
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = '#776666'; e.currentTarget.style.borderColor = '#554444' }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = '#443333'; e.currentTarget.style.borderColor = '#332222' }}
-        >
-          Menü
-        </button>
+            <button
+              onClick={() => setPhase('menu')}
+              style={{
+                background: 'transparent', border: '1px solid #332222', color: '#443333',
+                fontSize: 14, letterSpacing: 4, padding: '14px 32px', cursor: 'pointer',
+                fontFamily: 'inherit', textTransform: 'uppercase', transition: 'all 0.15s',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = '#776666'; e.currentTarget.style.borderColor = '#554444' }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = '#443333'; e.currentTarget.style.borderColor = '#332222' }}
+            >
+              Menü
+            </button>
+          </>
+        )}
       </div>
     </div>
   )

@@ -4,21 +4,31 @@ import { HUD } from './components/HUD'
 import { MainMenu } from './components/MainMenu'
 import { GameOver } from './components/GameOver'
 import { Shop } from './components/Shop'
+import { Editor } from './editor/Editor'
 
 export function App() {
   const phase = useGameStore((s) => s.phase)
   const isBulletTime = useGameStore((s) => s.isBulletTime)
+  const fpsMode = useGameStore((s) => s.fpsMode)
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}>
-      {/* Canvas — filter for bullet-time desaturation */}
+      {/* Game canvas (always mounted, gated by phase in GameScene) */}
       <div style={{
         position: 'absolute', inset: 0,
         filter: isBulletTime ? 'saturate(0.25) brightness(0.85)' : 'none',
         transition: 'filter 0.15s ease-out',
+        display: (phase === 'playing' || phase === 'gameover') ? 'block' : 'none',
       }}>
         <Game />
       </div>
+
+      {/* Editor canvas */}
+      {phase === 'editor' && (
+        <div style={{ position: 'absolute', inset: 0 }}>
+          <Editor />
+        </div>
+      )}
 
       {/* Bullet-time vignette */}
       {phase === 'playing' && (
@@ -38,6 +48,19 @@ export function App() {
           backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,100,220,0.04) 3px, rgba(0,100,220,0.04) 4px)',
           animation: 'btScanlines 8s linear infinite',
         }} />
+      )}
+
+      {/* FPS crosshair */}
+      {phase === 'playing' && fpsMode && (
+        <div style={{
+          position: 'absolute', top: '50%', left: '50%',
+          transform: 'translate(-50%, -50%)',
+          pointerEvents: 'none', color: '#ffffff88',
+          fontSize: 20, lineHeight: 1,
+          textShadow: '0 0 4px #00ffff',
+        }}>
+          +
+        </div>
       )}
 
       {phase === 'playing' && <HUD />}

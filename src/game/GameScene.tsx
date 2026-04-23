@@ -4,25 +4,17 @@ import * as THREE from 'three'
 import { entityStore, resetEntityStore } from './entityStore'
 import { useGameStore } from '../store/gameStore'
 import { useLoadoutStore } from './loadoutStore'
+import { useEditorStore } from '../editor/editorStore'
 import { useInput } from './useInput'
 import { spawnWave } from './spawnWave'
+import { GameLevelObjects, resolveCircleVsLevel, pointIntersectsLevel } from './GameLevelObjects'
+import type { Level } from '../editor/editorStore'
 import {
-  PLAYER_SPEED,
-  PLAYER_RADIUS,
-  BULLET_LIFETIME,
-  BULLET_RADIUS,
-  ARENA_HALF,
-  ENEMY_CONFIGS,
-  WEAPON_CONFIGS,
-  AMMO_CONFIGS,
-  INVINCIBLE_DURATION,
-  WAVE_BREAK_DURATION,
-  BULLET_TIME_SCALE,
-  BULLET_TIME_PLAYER_REAL,
-  FOCUS_MAX,
-  FOCUS_DRAIN_RATE,
-  FOCUS_REGEN_RATE,
-  FOCUS_MIN_ACTIVATE,
+  PLAYER_SPEED, PLAYER_RADIUS, BULLET_LIFETIME, BULLET_RADIUS,
+  ARENA_HALF, ENEMY_CONFIGS, WEAPON_CONFIGS, AMMO_CONFIGS,
+  INVINCIBLE_DURATION, WAVE_BREAK_DURATION,
+  BULLET_TIME_SCALE, BULLET_TIME_PLAYER_REAL,
+  FOCUS_MAX, FOCUS_DRAIN_RATE, FOCUS_REGEN_RATE, FOCUS_MIN_ACTIVATE,
 } from './types'
 import { Arena } from './Arena'
 import { PlayerMesh } from './PlayerMesh'
@@ -41,8 +33,11 @@ const _normalAmbientColor = new THREE.Color(0x4488ff)
 const _btDirColor = new THREE.Color(0x6688cc)
 const _normalDirColor = new THREE.Color(0xffffff)
 
+// FPS sensitivity
+const FPS_SENS = 0.0025
+
 export function GameScene() {
-  const { camera } = useThree()
+  const { camera, gl } = useThree()
   const input = useInput()
   const setPhase = useGameStore((s) => s.setPhase)
   const updateHUD = useGameStore((s) => s.updateHUD)
@@ -50,6 +45,9 @@ export function GameScene() {
   const setEnemyIds = useGameStore((s) => s.setEnemyIds)
   const setBulletIds = useGameStore((s) => s.setBulletIds)
   const setWaveMessage = useGameStore((s) => s.setWaveMessage)
+  const setFpsMode = useGameStore((s) => s.setFpsMode)
+  const isPlaytesting = useGameStore((s) => s.isPlaytesting)
+  const setPlaytesting = useGameStore((s) => s.setPlaytesting)
   const phase = useGameStore((s) => s.phase)
   const enemyIds = useGameStore((s) => s.enemyIds)
   const bulletIds = useGameStore((s) => s.bulletIds)
@@ -60,32 +58,70 @@ export function GameScene() {
   const hudTimer = useRef(0)
   const btTimer = useRef(0)
   const phaseRef = useRef(phase)
+  const fpsModeRef = useRef(false)
+  const activeLevelRef = useRef<Level | null>(null)
 
   useEffect(() => { phaseRef.current = phase }, [phase])
 
+  // ── Initialize game ──────────────────────────────────────────────────────
   useEffect(() => {
     if (phase !== 'playing') return
     resetEntityStore()
     useGameStore.getState().reset()
 
-    // Apply loadout to entity store
+    // Apply loadout
     const loadout = useLoadoutStore.getState()
-    const maxAmmo = loadout.getMaxAmmo()
-    entityStore.ammo = maxAmmo
-    entityStore.maxAmmo = maxAmmo
+    entityStore.ammo = loadout.getMaxAmmo()
+    entityStore.maxAmmo = entityStore.ammo
     entityStore.creditsEarned = 0
 
+    // Load level from editor (if playtesting)
+    activeLevelRef.current = useEditorStore.getState().activePlayLevel
+
+    // Use editor spawn points if available, otherwise random
     const ids = spawnWave(1)
     setEnemyIds(ids)
     setWaveMessage('Wave 1')
     setTimeout(() => setWaveMessage(''), 2000)
   }, [phase, setEnemyIds, setWaveMessage])
 
+  // ── Camera default position ───────────────────────────────────────────────
   useEffect(() => {
     camera.position.set(0, 22, 9)
     camera.lookAt(0, 0, -1)
   }, [camera])
 
+  // ── FPS toggle (F key) ────────────────────────────────────────────────────
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.code === 'KeyF' && phaseRef.current === 'playing') {
+        fpsModeRef.current = !fpsModeRef.current
+        setFpsMode(fpsModeRef.current)
+        if (fpsModeRef.current) {
+          gl.domElement.requestPointerLock()
+        } else {
+          document.exitPointerLock()
+          // Restore top-down camera
+          camera.position.set(0, 22, 9)
+          camera.lookAt(0, 0, -1)
+        }
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [camera, gl.domElement, setFpsMode])
+
+  // ── Pointer lock mouse look (FPS) ─────────────────────────────────────────
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (!fpsModeRef.current || !document.pointerLockElement) return
+      entityStore.player.angle += e.movementX * FPS_SENS
+    }
+    window.addEventListener('mousemove', handler)
+    return () => window.removeEventListener('mousemove', handler)
+  }, [])
+
+  // ── Main game loop ────────────────────────────────────────────────────────
   useFrame((state, delta) => {
     if (phaseRef.current !== 'playing') return
 
@@ -93,8 +129,9 @@ export function GameScene() {
     const es = entityStore
     const now = state.clock.elapsedTime
     const keys = input.current.keys
+    const level = activeLevelRef.current
 
-    // ── Bullet Time ──────────────────────────────────────────────────────────
+    // ── Bullet time ──────────────────────────────────────────────────────────
     const wantBT = keys.has('ShiftLeft') || keys.has('ShiftRight')
     if (wantBT && es.focus >= FOCUS_MIN_ACTIVATE) {
       es.isBulletTime = true
@@ -119,48 +156,90 @@ export function GameScene() {
       dirLightRef.current.intensity = THREE.MathUtils.lerp(dirLightRef.current.intensity, es.isBulletTime ? 0.5 : 1.2, 0.07)
     }
 
-    // ── Mouse world position ─────────────────────────────────────────────────
-    _raycaster.setFromCamera(state.pointer, camera)
-    _raycaster.ray.intersectPlane(_groundPlane, _mouseTarget)
-    es.mouseWorld.copy(_mouseTarget)
-
     // ── Player movement ──────────────────────────────────────────────────────
     let dx = 0, dz = 0
     if (keys.has('KeyW') || keys.has('ArrowUp')) dz -= 1
     if (keys.has('KeyS') || keys.has('ArrowDown')) dz += 1
     if (keys.has('KeyA') || keys.has('ArrowLeft')) dx -= 1
     if (keys.has('KeyD') || keys.has('ArrowRight')) dx += 1
-    if (dx !== 0 || dz !== 0) { const len = Math.sqrt(dx * dx + dz * dz); dx /= len; dz /= len }
+
+    if (fpsModeRef.current && (dx !== 0 || dz !== 0)) {
+      // In FPS: move relative to facing direction
+      const fwdX = Math.sin(es.player.angle)
+      const fwdZ = -Math.cos(es.player.angle)
+      const rightX = Math.cos(es.player.angle)
+      const rightZ = Math.sin(es.player.angle)
+      const mx = fwdX * (-dz) + rightX * dx
+      const mz = fwdZ * (-dz) + rightZ * dx
+      const len = Math.sqrt(mx * mx + mz * mz)
+      dx = len > 0 ? mx / len : 0
+      dz = len > 0 ? mz / len : 0
+    } else if (dx !== 0 || dz !== 0) {
+      const len = Math.sqrt(dx * dx + dz * dz)
+      dx /= len; dz /= len
+    }
 
     const bound = ARENA_HALF - PLAYER_RADIUS - 0.5
-    es.player.position.x = Math.max(-bound, Math.min(bound, es.player.position.x + dx * PLAYER_SPEED * playerDt))
-    es.player.position.y = Math.max(-bound, Math.min(bound, es.player.position.y + dz * PLAYER_SPEED * playerDt))
+    let nx = Math.max(-bound, Math.min(bound, es.player.position.x + dx * PLAYER_SPEED * playerDt))
+    let nz = Math.max(-bound, Math.min(bound, es.player.position.y + dz * PLAYER_SPEED * playerDt))
 
-    _toMouse.set(es.mouseWorld.x - es.player.position.x, es.mouseWorld.z - es.player.position.y)
-    if (_toMouse.lengthSq() > 0.01) es.player.angle = Math.atan2(_toMouse.x, -_toMouse.y)
+    // Resolve against level objects
+    if (level) {
+      const resolved = resolveCircleVsLevel(nx, nz, PLAYER_RADIUS, level)
+      nx = resolved.x; nz = resolved.z
+    }
+    es.player.position.x = nx
+    es.player.position.y = nz
 
+    // ── Aim angle ────────────────────────────────────────────────────────────
+    if (!fpsModeRef.current) {
+      _raycaster.setFromCamera(state.pointer, camera)
+      _raycaster.ray.intersectPlane(_groundPlane, _mouseTarget)
+      es.mouseWorld.copy(_mouseTarget)
+      _toMouse.set(es.mouseWorld.x - es.player.position.x, es.mouseWorld.z - es.player.position.y)
+      if (_toMouse.lengthSq() > 0.01) es.player.angle = Math.atan2(_toMouse.x, -_toMouse.y)
+    }
+    // In FPS mode, angle is driven by mouse movement events (see pointer lock handler)
+    _toMouse.set(Math.sin(es.player.angle), -Math.cos(es.player.angle))
+
+    // ── Camera: top-down or FPS ───────────────────────────────────────────────
+    if (fpsModeRef.current) {
+      camera.position.set(es.player.position.x, 0.7, es.player.position.y)
+      camera.lookAt(
+        es.player.position.x + Math.sin(es.player.angle) * 10,
+        0.7,
+        es.player.position.y - Math.cos(es.player.angle) * 10,
+      )
+    } else {
+      // Restore top-down if just switched back
+      if (Math.abs(camera.position.y - 22) > 0.5) {
+        camera.position.set(0, 22, 9)
+        camera.lookAt(0, 0, -1)
+      }
+    }
+
+    // ── Player mesh ───────────────────────────────────────────────────────────
     if (playerGroupRef.current) {
       playerGroupRef.current.position.set(es.player.position.x, 0, es.player.position.y)
       playerGroupRef.current.rotation.y = es.player.angle
+      playerGroupRef.current.visible = !fpsModeRef.current
     }
 
-    // ── Shooting (fire rate uses real delta) ─────────────────────────────────
+    // ── Shooting ──────────────────────────────────────────────────────────────
     es.player.shootCooldown -= delta
     const isShooting = input.current.mouseButtons.has(0) || keys.has('Space')
     const loadout = useLoadoutStore.getState()
     const weaponCfg = WEAPON_CONFIGS[loadout.selectedWeapon]
-    const dmgBonus = AMMO_CONFIGS[loadout.selectedAmmo].damageBonus
-    const finalDamage = weaponCfg.baseDamage + dmgBonus
+    const finalDamage = weaponCfg.baseDamage + AMMO_CONFIGS[loadout.selectedAmmo].damageBonus
 
-    if (isShooting && es.player.shootCooldown <= 0 && _toMouse.lengthSq() > 0.01 && es.ammo > 0) {
+    if (isShooting && es.player.shootCooldown <= 0 && es.ammo > 0) {
       es.player.shootCooldown = weaponCfg.shootCooldown
       es.ammo = Math.max(0, es.ammo - 1)
-
-      const baseAngle = Math.atan2(_toMouse.x, -_toMouse.y)
+      const baseAngle = Math.atan2(_toMouse.x, _toMouse.y)
 
       for (let p = 0; p < weaponCfg.pellets; p++) {
         const pelletAngle = baseAngle + (Math.random() - 0.5) * 2 * weaponCfg.spread
-        const bDir = new THREE.Vector2(Math.sin(pelletAngle), -Math.cos(pelletAngle))
+        const bDir = new THREE.Vector2(Math.sin(pelletAngle), Math.cos(pelletAngle))
         const bid = `bullet-${++es.bulletIdCounter}`
         es.bullets.set(bid, {
           id: bid,
@@ -176,32 +255,37 @@ export function GameScene() {
       setBulletIds(Array.from(es.bullets.keys()))
     }
 
-    // ── Update bullets ───────────────────────────────────────────────────────
+    // ── Update bullets ────────────────────────────────────────────────────────
     const bulletsToRemove: string[] = []
     for (const [id, bullet] of es.bullets) {
       bullet.position.x += bullet.velocity.x * dt
       bullet.position.y += bullet.velocity.y * dt
       bullet.lifetime -= dt
-      if (bullet.lifetime <= 0 || Math.abs(bullet.position.x) > ARENA_HALF || Math.abs(bullet.position.y) > ARENA_HALF) {
-        bulletsToRemove.push(id)
-      }
+      const oob = bullet.lifetime <= 0 || Math.abs(bullet.position.x) > ARENA_HALF || Math.abs(bullet.position.y) > ARENA_HALF
+      const hitWall = level ? pointIntersectsLevel(bullet.position.x, bullet.position.y, BULLET_RADIUS, level) : false
+      if (oob || hitWall) bulletsToRemove.push(id)
     }
 
-    // ── Update enemies ───────────────────────────────────────────────────────
+    // ── Update enemies ────────────────────────────────────────────────────────
     const enemiesToRemove: string[] = []
-    let scoreGained = 0
-    let creditsGained = 0
+    let scoreGained = 0, creditsGained = 0
     const hitBullets = new Set<string>()
 
     for (const [eid, enemy] of es.enemies) {
       const cfg = ENEMY_CONFIGS[enemy.type]
-
       _toPlayer.set(es.player.position.x - enemy.position.x, es.player.position.y - enemy.position.y)
       const dist = _toPlayer.length()
+
       if (dist > 0.05) {
         _toPlayer.multiplyScalar(cfg.speed * dt / dist)
-        enemy.position.x += _toPlayer.x
-        enemy.position.y += _toPlayer.y
+        let ex = enemy.position.x + _toPlayer.x
+        let ez = enemy.position.y + _toPlayer.y
+        if (level) {
+          const r = resolveCircleVsLevel(ex, ez, cfg.size, level)
+          ex = r.x; ez = r.z
+        }
+        enemy.position.x = ex
+        enemy.position.y = ez
       }
 
       for (const [bid, bullet] of es.bullets) {
@@ -228,11 +312,10 @@ export function GameScene() {
       }
     }
 
-    // ── Apply removals ───────────────────────────────────────────────────────
+    // ── Apply removals ────────────────────────────────────────────────────────
     let changed = false
     for (const id of bulletsToRemove) { if (es.bullets.delete(id)) changed = true }
     if (changed) setBulletIds(Array.from(es.bullets.keys()))
-
     changed = false
     for (const id of enemiesToRemove) { if (es.enemies.delete(id)) changed = true }
     if (changed) setEnemyIds(Array.from(es.enemies.keys()))
@@ -245,8 +328,7 @@ export function GameScene() {
     if (es.inWaveBreak) {
       es.waveBreakTimer -= dt
       if (es.waveBreakTimer <= 0) {
-        es.inWaveBreak = false
-        es.wave++
+        es.inWaveBreak = false; es.wave++
         const ids = spawnWave(es.wave)
         setEnemyIds(ids)
         setWaveMessage(`Wave ${es.wave}`)
@@ -254,15 +336,20 @@ export function GameScene() {
       }
     }
 
-    // ── Game over ────────────────────────────────────────────────────────────
+    // ── Game over ─────────────────────────────────────────────────────────────
     if (es.player.health <= 0) {
+      if (fpsModeRef.current) { document.exitPointerLock(); fpsModeRef.current = false; setFpsMode(false) }
       useLoadoutStore.getState().addCredits(es.creditsEarned)
       setPhase('gameover')
       useGameStore.getState().updateHUD(0, es.score, es.wave, es.ammo, es.maxAmmo, es.creditsEarned)
+      // Return to editor if playtesting
+      if (isPlaytesting) {
+        setTimeout(() => { setPlaytesting(false); setPhase('editor') }, 3000)
+      }
       return
     }
 
-    // ── Throttled HUD updates ────────────────────────────────────────────────
+    // ── Throttled HUD ────────────────────────────────────────────────────────
     hudTimer.current += delta
     if (hudTimer.current >= 0.08) {
       hudTimer.current = 0
@@ -275,9 +362,12 @@ export function GameScene() {
     }
   })
 
+  const activeLevel = activeLevelRef.current
+
   return (
     <>
       <Arena />
+      {activeLevel && <GameLevelObjects level={activeLevel} />}
       <group ref={playerGroupRef}>
         <PlayerMesh />
       </group>

@@ -1,4 +1,4 @@
-export type GamePhase = 'menu' | 'shop' | 'playing' | 'gameover'
+export type GamePhase = 'menu' | 'shop' | 'playing' | 'gameover' | 'editor'
 
 export type EnemyType = 'basic' | 'fast' | 'tank'
 export type WeaponId = 'pistol' | 'smg' | 'shotgun' | 'rifle'
@@ -20,21 +20,9 @@ export interface EnemyConfig {
 }
 
 export const ENEMY_CONFIGS: Record<EnemyType, EnemyConfig> = {
-  basic: {
-    speed: 2.5, health: 1, size: 0.45, damage: 8,
-    color: '#cc2222', emissive: '#ff0000',
-    scoreValue: 10, creditValue: 5, segments: 6,
-  },
-  fast: {
-    speed: 5.0, health: 1, size: 0.3, damage: 12,
-    color: '#cc6600', emissive: '#ff8800',
-    scoreValue: 25, creditValue: 10, segments: 4,
-  },
-  tank: {
-    speed: 1.4, health: 4, size: 0.75, damage: 20,
-    color: '#6600cc', emissive: '#8800ff',
-    scoreValue: 60, creditValue: 25, segments: 8,
-  },
+  basic: { speed: 2.5, health: 1, size: 0.45, damage: 8, color: '#cc2222', emissive: '#ff0000', scoreValue: 10, creditValue: 5, segments: 6 },
+  fast:  { speed: 5.0, health: 1, size: 0.3,  damage: 12, color: '#cc6600', emissive: '#ff8800', scoreValue: 25, creditValue: 10, segments: 4 },
+  tank:  { speed: 1.4, health: 4, size: 0.75, damage: 20, color: '#6600cc', emissive: '#8800ff', scoreValue: 60, creditValue: 25, segments: 8 },
 }
 
 // ── Weapons ────────────────────────────────────────────────────────────────
@@ -45,69 +33,21 @@ export interface WeaponConfig {
   price: number
   baseDamage: number
   pellets: number
-  spread: number      // radians of cone half-angle
+  spread: number
   shootCooldown: number
   bulletSpeed: number
   baseAmmo: number
-  statDamage: number  // 1-5 for UI stars
+  statDamage: number
   statRate: number
   statRange: number
   description: string
 }
 
 export const WEAPON_CONFIGS: Record<WeaponId, WeaponConfig> = {
-  pistol: {
-    name: 'Pistole M9',
-    shortName: 'M9',
-    price: 0,
-    baseDamage: 1,
-    pellets: 1,
-    spread: 0,
-    shootCooldown: 0.18,
-    bulletSpeed: 18,
-    baseAmmo: 48,
-    statDamage: 2, statRate: 3, statRange: 4,
-    description: 'Zuverlässige Seitenwaffe. Unbegrenzt verfügbar.',
-  },
-  smg: {
-    name: 'MP5 Maschinenpistole',
-    shortName: 'MP5',
-    price: 150,
-    baseDamage: 1,
-    pellets: 1,
-    spread: 0.04,
-    shootCooldown: 0.083,
-    bulletSpeed: 16,
-    baseAmmo: 90,
-    statDamage: 1, statRate: 5, statRange: 3,
-    description: 'Hohe Feuerrate. Ideal gegen Gruppen leichter Ziele.',
-  },
-  shotgun: {
-    name: 'Schrotflinte SPAS',
-    shortName: 'SPAS',
-    price: 200,
-    baseDamage: 2,
-    pellets: 5,
-    spread: 0.28,
-    shootCooldown: 0.65,
-    bulletSpeed: 13,
-    baseAmmo: 20,
-    statDamage: 5, statRate: 1, statRange: 1,
-    description: '5 Pellets pro Schuss. Vernichtend auf kurze Distanz.',
-  },
-  rifle: {
-    name: 'Sturmgewehr G36',
-    shortName: 'G36',
-    price: 250,
-    baseDamage: 2,
-    pellets: 1,
-    spread: 0,
-    shootCooldown: 0.25,
-    bulletSpeed: 22,
-    baseAmmo: 36,
-    statDamage: 4, statRate: 2, statRange: 5,
-    description: 'Präzise und stark. Eliminiert Tanks in 2 Schuss.',
-  },
+  pistol:  { name: 'Pistole M9',          shortName: 'M9',   price: 0,   baseDamage: 1, pellets: 1, spread: 0,    shootCooldown: 0.18,  bulletSpeed: 18, baseAmmo: 48, statDamage: 2, statRate: 3, statRange: 4, description: 'Zuverlässige Seitenwaffe. Unbegrenzt verfügbar.' },
+  smg:     { name: 'MP5 Maschinenpistole', shortName: 'MP5',  price: 150, baseDamage: 1, pellets: 1, spread: 0.04, shootCooldown: 0.083, bulletSpeed: 16, baseAmmo: 90, statDamage: 1, statRate: 5, statRange: 3, description: 'Hohe Feuerrate. Ideal gegen Gruppen leichter Ziele.' },
+  shotgun: { name: 'Schrotflinte SPAS',   shortName: 'SPAS', price: 200, baseDamage: 2, pellets: 5, spread: 0.28, shootCooldown: 0.65,  bulletSpeed: 13, baseAmmo: 20, statDamage: 5, statRate: 1, statRange: 1, description: '5 Pellets pro Schuss. Vernichtend auf kurze Distanz.' },
+  rifle:   { name: 'Sturmgewehr G36',     shortName: 'G36',  price: 250, baseDamage: 2, pellets: 1, spread: 0,    shootCooldown: 0.25,  bulletSpeed: 22, baseAmmo: 36, statDamage: 4, statRate: 2, statRange: 5, description: 'Präzise und stark. Eliminiert Tanks in 2 Schuss.' },
 }
 
 // ── Equipment ──────────────────────────────────────────────────────────────
@@ -121,27 +61,9 @@ export interface EquipmentConfig {
 }
 
 export const EQUIPMENT_CONFIGS: Record<EquipmentId, EquipmentConfig> = {
-  backpack: {
-    name: 'Taktikrucksack',
-    slot: 'back',
-    price: 100,
-    ammoMultBonus: 0.6,
-    description: '+60% Munitionskapazität. Trägt schwere Last.',
-  },
-  chest_pouch: {
-    name: 'Brusttasche',
-    slot: 'chest',
-    price: 80,
-    ammoMultBonus: 0.3,
-    description: '+30% Munitionskapazität. Schneller Zugriff.',
-  },
-  leg_pouch: {
-    name: 'Beintasche',
-    slot: 'legs',
-    price: 70,
-    ammoMultBonus: 0.3,
-    description: '+30% Munitionskapazität. Am Oberschenkel befestigt.',
-  },
+  backpack:    { name: 'Taktikrucksack', slot: 'back',  price: 100, ammoMultBonus: 0.6, description: '+60% Munitionskapazität. Trägt schwere Last.' },
+  chest_pouch: { name: 'Brusttasche',   slot: 'chest', price: 80,  ammoMultBonus: 0.3, description: '+30% Munitionskapazität. Schneller Zugriff.' },
+  leg_pouch:   { name: 'Beintasche',    slot: 'legs',  price: 70,  ammoMultBonus: 0.3, description: '+30% Munitionskapazität. Am Oberschenkel befestigt.' },
 }
 
 // ── Ammunition ─────────────────────────────────────────────────────────────
@@ -156,30 +78,9 @@ export interface AmmoConfig {
 }
 
 export const AMMO_CONFIGS: Record<AmmoId, AmmoConfig> = {
-  standard: {
-    name: 'FMJ Standard',
-    shortName: 'FMJ',
-    price: 0,
-    damageBonus: 0,
-    color: '#aaaaaa',
-    description: 'Vollmantelgeschoss. Zuverlässig und günstig.',
-  },
-  hollow_point: {
-    name: 'Hohlspitz HP',
-    shortName: 'HP',
-    price: 80,
-    damageBonus: 1,
-    color: '#ffaa00',
-    description: '+1 Schaden. Maximale Wundwirkung gegen leicht gepanzerte Ziele.',
-  },
-  ap: {
-    name: 'Panzerbrechend AP',
-    shortName: 'AP',
-    price: 160,
-    damageBonus: 2,
-    color: '#00ccff',
-    description: '+2 Schaden. Durchschlägt auch schwere Panzerung.',
-  },
+  standard:     { name: 'FMJ Standard',      shortName: 'FMJ', price: 0,   damageBonus: 0, color: '#aaaaaa', description: 'Vollmantelgeschoss. Zuverlässig und günstig.' },
+  hollow_point: { name: 'Hohlspitz HP',      shortName: 'HP',  price: 80,  damageBonus: 1, color: '#ffaa00', description: '+1 Schaden. Maximale Wundwirkung gegen leicht gepanzerte Ziele.' },
+  ap:           { name: 'Panzerbrechend AP', shortName: 'AP',  price: 160, damageBonus: 2, color: '#00ccff', description: '+2 Schaden. Durchschlägt auch schwere Panzerung.' },
 }
 
 // ── Physics constants ──────────────────────────────────────────────────────

@@ -14,6 +14,8 @@ interface GameStore {
   ammo: number
   maxAmmo: number
   creditsEarned: number
+  fpsMode: boolean
+  isPlaytesting: boolean
 
   setPhase: (phase: GamePhase) => void
   updateHUD: (health: number, score: number, wave: number, ammo: number, maxAmmo: number, credits: number) => void
@@ -21,6 +23,8 @@ interface GameStore {
   setEnemyIds: (ids: string[]) => void
   setBulletIds: (ids: string[]) => void
   setWaveMessage: (msg: string) => void
+  setFpsMode: (v: boolean) => void
+  setPlaytesting: (v: boolean) => void
   reset: () => void
 }
 
@@ -37,6 +41,8 @@ export const useGameStore = create<GameStore>((set) => ({
   ammo: 48,
   maxAmmo: 48,
   creditsEarned: 0,
+  fpsMode: false,
+  isPlaytesting: false,
 
   setPhase: (phase) => set({ phase }),
   updateHUD: (health, score, wave, ammo, maxAmmo, creditsEarned) =>
@@ -45,18 +51,13 @@ export const useGameStore = create<GameStore>((set) => ({
   setEnemyIds: (ids) => set({ enemyIds: ids }),
   setBulletIds: (ids) => set({ bulletIds: ids }),
   setWaveMessage: (msg) => set({ waveMessage: msg }),
+  setFpsMode: (fpsMode) => set({ fpsMode }),
+  setPlaytesting: (isPlaytesting) => set({ isPlaytesting }),
   reset: () =>
     set({
-      health: 100,
-      score: 0,
-      wave: 1,
-      enemyIds: [],
-      bulletIds: [],
-      waveMessage: '',
-      focus: 100,
-      isBulletTime: false,
-      ammo: 48,
-      maxAmmo: 48,
-      creditsEarned: 0,
+      health: 100, score: 0, wave: 1,
+      enemyIds: [], bulletIds: [], waveMessage: '',
+      focus: 100, isBulletTime: false,
+      ammo: 48, maxAmmo: 48, creditsEarned: 0, fpsMode: false,
     }),
 }))
