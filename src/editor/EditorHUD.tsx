@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { useEditorStore, OBJECT_TYPE_CFGS, type ObjectType, type ViewMode, type ToolMode } from './editorStore'
+import { useEditorStore, OBJECT_TYPE_CFGS, type ObjectType, type ViewMode, type ToolMode, type Level } from './editorStore'
 import { useGameStore } from '../store/gameStore'
 
 const C = {
@@ -154,13 +154,42 @@ export function EditorHUD() {
     viewMode, toolMode, placeType,
     currentLevelId, getCurrentLevel,
     setViewMode, setToolMode, setPlaceType,
-    createLevel, setActivePlayLevel,
+    createLevel, importLevel, setActivePlayLevel,
   } = useEditorStore()
 
   const setPhase = useGameStore((s) => s.setPhase)
   const setPlaytesting = useGameStore((s) => s.setPlaytesting)
   const [fpsCursor, setFpsCursor] = useState(false)
   const lockedRef = useRef(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleExport = () => {
+    const level = getCurrentLevel()
+    if (!level) return
+    const blob = new Blob([JSON.stringify(level, null, 2)], { type: 'application/json' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `${level.name.replace(/\s+/g, '_')}.json`
+    a.click()
+    URL.revokeObjectURL(a.href)
+  }
+
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target?.result as string) as Level
+        if (!data.name || !Array.isArray(data.objects)) throw new Error('invalid')
+        importLevel(data)
+      } catch {
+        alert('Ungültige Level-Datei.')
+      }
+    }
+    reader.readAsText(file)
+    e.target.value = ''
+  }
 
   const viewModes: [ViewMode, string][] = [['topdown', 'Top'], ['perspective', 'Perspektive'], ['fps', 'Ego']]
   const toolModes: [ToolMode, string][] = [['select', 'Auswahl'], ['place', 'Platzieren'], ['delete', 'Löschen']]
@@ -226,12 +255,17 @@ export function EditorHUD() {
         {/* New level */}
         <button style={btn()} onClick={() => createLevel()}>+ Level</button>
 
+        {/* Import */}
+        <button style={btn()} onClick={() => fileInputRef.current?.click()}>↑ Import</button>
+        <input ref={fileInputRef} type="file" accept=".json" style={{ display: 'none' }} onChange={handleImport} />
+
         <div style={{ flex: 1 }} />
 
-        {/* Current level name */}
+        {/* Current level name + export */}
         {currentLevelId && (
-          <div style={{ color: C.textDim, fontSize: 11 }}>
-            {getCurrentLevel()?.name ?? '—'}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ color: C.textDim, fontSize: 11 }}>{getCurrentLevel()?.name ?? '—'}</div>
+            <button style={btn()} onClick={handleExport}>↓ Export</button>
           </div>
         )}
 

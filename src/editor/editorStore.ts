@@ -57,6 +57,7 @@ interface EditorStore {
   activePlayLevel: Level | null   // level sent to game for playtesting
 
   createLevel: (name?: string) => string
+  importLevel: (level: Level) => void
   renameLevel: (id: string, name: string) => void
   deleteLevel: (id: string) => void
   setCurrentLevel: (id: string | null) => void
@@ -89,6 +90,16 @@ export const useEditorStore = create<EditorStore>()(
         const id = newLid()
         set((s) => ({ levels: [...s.levels, { id, name, objects: [] }], currentLevelId: id }))
         return id
+      },
+
+      importLevel: (level) => {
+        const id = newLid()
+        const imported: Level = {
+          ...level,
+          id,
+          objects: level.objects.map((o) => ({ ...o, id: newOid() })),
+        }
+        set((s) => ({ levels: [...s.levels, imported], currentLevelId: id }))
       },
 
       renameLevel: (id, name) =>
