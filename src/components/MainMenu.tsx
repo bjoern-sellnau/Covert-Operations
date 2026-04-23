@@ -109,7 +109,7 @@ export function MainMenu() {
       </button>
 
       <div style={{ color: '#334455', fontSize: 12, marginTop: 40, letterSpacing: 2 }}>
-        WASD · AIM WITH MOUSE · CLICK OR SPACE TO FIRE
+        WASD · AIM WITH MOUSE · CLICK OR SPACE TO FIRE · HOLD SHIFT TO SLOW TIME
       </div>
     </div>
   )

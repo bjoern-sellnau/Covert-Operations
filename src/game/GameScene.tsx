@@ -16,6 +16,12 @@ import {
   ENEMY_CONFIGS,
   INVINCIBLE_DURATION,
   WAVE_BREAK_DURATION,
+  BULLET_TIME_SCALE,
+  BULLET_TIME_PLAYER_REAL,
+  FOCUS_MAX,
+  FOCUS_DRAIN_RATE,
+  FOCUS_REGEN_RATE,
+  FOCUS_MIN_ACTIVATE,
 } from './types'
 import { Arena } from './Arena'
 import { PlayerMesh } from './PlayerMesh'
@@ -29,11 +35,18 @@ const _toMouse = new THREE.Vector2()
 const _toPlayer = new THREE.Vector2()
 const _diff = new THREE.Vector2()
 
+// Pre-allocated colors for smooth lighting lerp
+const _btAmbientColor = new THREE.Color(0xaaccff)
+const _normalAmbientColor = new THREE.Color(0x4488ff)
+const _btDirColor = new THREE.Color(0x6688cc)
+const _normalDirColor = new THREE.Color(0xffffff)
+
 export function GameScene() {
   const { camera } = useThree()
   const input = useInput()
   const setPhase = useGameStore((s) => s.setPhase)
   const updateHUD = useGameStore((s) => s.updateHUD)
+  const setBulletTime = useGameStore((s) => s.setBulletTime)
   const setEnemyIds = useGameStore((s) => s.setEnemyIds)
   const setBulletIds = useGameStore((s) => s.setBulletIds)
   const setWaveMessage = useGameStore((s) => s.setWaveMessage)
@@ -42,7 +55,10 @@ export function GameScene() {
   const bulletIds = useGameStore((s) => s.bulletIds)
 
   const playerGroupRef = useRef<THREE.Group>(null)
+  const ambientRef = useRef<THREE.AmbientLight>(null)
+  const dirLightRef = useRef<THREE.DirectionalLight>(null)
   const hudTimer = useRef(0)
+  const btTimer = useRef(0)
   const phaseRef = useRef(phase)
 
   useEffect(() => {
@@ -67,17 +83,52 @@ export function GameScene() {
   useFrame((state, delta) => {
     if (phaseRef.current !== 'playing') return
 
-    const dt = Math.min(delta, 0.05)
+    const rawDt = Math.min(delta, 0.05)
     const es = entityStore
     const now = state.clock.elapsedTime
+    const keys = input.current.keys
 
-    // --- Mouse world position ---
+    // ── Bullet Time: focus drain / regen ────────────────────────────────────
+    const wantBT = keys.has('ShiftLeft') || keys.has('ShiftRight')
+    if (wantBT && es.focus >= FOCUS_MIN_ACTIVATE) {
+      es.isBulletTime = true
+      es.focus = Math.max(0, es.focus - FOCUS_DRAIN_RATE * delta)
+      if (es.focus === 0) es.isBulletTime = false
+    } else {
+      es.isBulletTime = false
+      es.focus = Math.min(FOCUS_MAX, es.focus + FOCUS_REGEN_RATE * delta)
+    }
+
+    // Time scale: bullet time slows the world; player gets a separate dt
+    const timeScale = es.isBulletTime ? BULLET_TIME_SCALE : 1.0
+    const dt = rawDt * timeScale
+    // Player moves at 50% real speed during BT (much faster relative to enemies)
+    const playerDt = es.isBulletTime ? rawDt * BULLET_TIME_PLAYER_REAL : rawDt
+
+    // ── Scene lighting: smooth lerp between normal and bullet-time colors ───
+    if (ambientRef.current) {
+      ambientRef.current.color.lerp(es.isBulletTime ? _btAmbientColor : _normalAmbientColor, 0.07)
+      ambientRef.current.intensity = THREE.MathUtils.lerp(
+        ambientRef.current.intensity,
+        es.isBulletTime ? 0.7 : 0.25,
+        0.07,
+      )
+    }
+    if (dirLightRef.current) {
+      dirLightRef.current.color.lerp(es.isBulletTime ? _btDirColor : _normalDirColor, 0.07)
+      dirLightRef.current.intensity = THREE.MathUtils.lerp(
+        dirLightRef.current.intensity,
+        es.isBulletTime ? 0.5 : 1.2,
+        0.07,
+      )
+    }
+
+    // ── Mouse world position ────────────────────────────────────────────────
     _raycaster.setFromCamera(state.pointer, camera)
     _raycaster.ray.intersectPlane(_groundPlane, _mouseTarget)
     es.mouseWorld.copy(_mouseTarget)
 
-    // --- Player movement ---
-    const keys = input.current.keys
+    // ── Player movement ─────────────────────────────────────────────────────
     let dx = 0, dz = 0
     if (keys.has('KeyW') || keys.has('ArrowUp')) dz -= 1
     if (keys.has('KeyS') || keys.has('ArrowDown')) dz += 1
@@ -91,10 +142,10 @@ export function GameScene() {
     }
 
     const bound = ARENA_HALF - PLAYER_RADIUS - 0.5
-    es.player.position.x = Math.max(-bound, Math.min(bound, es.player.position.x + dx * PLAYER_SPEED * dt))
-    es.player.position.y = Math.max(-bound, Math.min(bound, es.player.position.y + dz * PLAYER_SPEED * dt))
+    es.player.position.x = Math.max(-bound, Math.min(bound, es.player.position.x + dx * PLAYER_SPEED * playerDt))
+    es.player.position.y = Math.max(-bound, Math.min(bound, es.player.position.y + dz * PLAYER_SPEED * playerDt))
 
-    // --- Player aim angle ---
+    // ── Player aim angle ────────────────────────────────────────────────────
     _toMouse.set(
       es.mouseWorld.x - es.player.position.x,
       es.mouseWorld.z - es.player.position.y,
@@ -103,14 +154,13 @@ export function GameScene() {
       es.player.angle = Math.atan2(_toMouse.x, -_toMouse.y)
     }
 
-    // --- Apply player transform ---
     if (playerGroupRef.current) {
       playerGroupRef.current.position.set(es.player.position.x, 0, es.player.position.y)
       playerGroupRef.current.rotation.y = es.player.angle
     }
 
-    // --- Shooting ---
-    es.player.shootCooldown -= dt
+    // ── Shooting (shoot cooldown uses real delta so fire rate stays constant) ─
+    es.player.shootCooldown -= delta
     const isShooting = input.current.mouseButtons.has(0) || keys.has('Space')
     if (isShooting && es.player.shootCooldown <= 0 && _toMouse.lengthSq() > 0.01) {
       es.player.shootCooldown = SHOOT_COOLDOWN
@@ -128,7 +178,7 @@ export function GameScene() {
       setBulletIds(Array.from(es.bullets.keys()))
     }
 
-    // --- Update bullets ---
+    // ── Update bullets (slowed by timeScale) ────────────────────────────────
     const bulletsToRemove: string[] = []
     for (const [id, bullet] of es.bullets) {
       bullet.position.x += bullet.velocity.x * dt
@@ -143,7 +193,7 @@ export function GameScene() {
       }
     }
 
-    // --- Update enemies ---
+    // ── Update enemies (slowed by timeScale) ────────────────────────────────
     const enemiesToRemove: string[] = []
     let scoreGained = 0
     const hitBullets = new Set<string>()
@@ -151,7 +201,6 @@ export function GameScene() {
     for (const [eid, enemy] of es.enemies) {
       const cfg = ENEMY_CONFIGS[enemy.type]
 
-      // Move toward player
       _toPlayer.set(
         es.player.position.x - enemy.position.x,
         es.player.position.y - enemy.position.y,
@@ -180,7 +229,7 @@ export function GameScene() {
         }
       }
 
-      // Enemy vs player collision (with invincibility frames)
+      // Enemy vs player collision (invincibility uses real clock, stays fair)
       if (dist < cfg.size + PLAYER_RADIUS && now > es.player.invincibleUntil) {
         es.player.health -= cfg.damage
         es.player.invincibleUntil = now + INVINCIBLE_DURATION
@@ -188,7 +237,7 @@ export function GameScene() {
       }
     }
 
-    // --- Apply removals ---
+    // ── Apply removals ───────────────────────────────────────────────────────
     let changed = false
     for (const id of bulletsToRemove) {
       if (es.bullets.delete(id)) changed = true
@@ -203,7 +252,7 @@ export function GameScene() {
 
     es.score += scoreGained
 
-    // --- Wave management ---
+    // ── Wave management ─────────────────────────────────────────────────────
     if (es.enemies.size === 0 && !es.inWaveBreak) {
       es.inWaveBreak = true
       es.waveBreakTimer = WAVE_BREAK_DURATION
@@ -220,22 +269,25 @@ export function GameScene() {
       }
     }
 
-    // --- Game over ---
+    // ── Game over ────────────────────────────────────────────────────────────
     if (es.player.health <= 0) {
       setPhase('gameover')
       useGameStore.getState().updateHUD(0, es.score, es.wave)
       return
     }
 
-    // --- Throttled HUD update ---
-    hudTimer.current += dt
+    // ── Throttled HUD update (use real delta for consistent refresh rate) ───
+    hudTimer.current += delta
     if (hudTimer.current >= 0.08) {
       hudTimer.current = 0
-      updateHUD(
-        Math.max(0, Math.ceil(es.player.health)),
-        es.score,
-        es.wave,
-      )
+      updateHUD(Math.max(0, Math.ceil(es.player.health)), es.score, es.wave)
+    }
+
+    // Bullet time HUD updates more frequently for responsive focus bar
+    btTimer.current += delta
+    if (btTimer.current >= 0.03) {
+      btTimer.current = 0
+      setBulletTime(Math.round(es.focus), es.isBulletTime)
     }
   })
 
@@ -251,8 +303,9 @@ export function GameScene() {
       {bulletIds.map((id) => (
         <BulletMesh key={id} id={id} />
       ))}
-      <ambientLight intensity={0.25} color="#4488ff" />
+      <ambientLight ref={ambientRef} intensity={0.25} color="#4488ff" />
       <directionalLight
+        ref={dirLightRef}
         position={[5, 15, 5]}
         intensity={1.2}
         color="#ffffff"

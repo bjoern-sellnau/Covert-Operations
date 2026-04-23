@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import type { EnemyType } from './types'
+import { FOCUS_MAX } from './types'
 
 export interface EnemyData {
   id: string
@@ -43,6 +44,8 @@ function makeEntityStore() {
     inWaveBreak: false,
     enemyIdCounter: 0,
     bulletIdCounter: 0,
+    focus: FOCUS_MAX,
+    isBulletTime: false,
   }
 }
 
@@ -62,4 +65,6 @@ export function resetEntityStore() {
   s.wave = 1
   s.waveBreakTimer = 0
   s.inWaveBreak = false
+  s.focus = FOCUS_MAX
+  s.isBulletTime = false
 }

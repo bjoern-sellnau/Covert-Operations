@@ -57,3 +57,11 @@ export const SHOOT_COOLDOWN = 0.18
 export const PLAYER_MAX_HEALTH = 100
 export const INVINCIBLE_DURATION = 0.8
 export const WAVE_BREAK_DURATION = 3.5
+
+// Bullet time
+export const BULLET_TIME_SCALE = 0.15        // world runs at 15% speed
+export const BULLET_TIME_PLAYER_REAL = 0.5   // player moves at 50% real-world speed during BT
+export const FOCUS_MAX = 100
+export const FOCUS_DRAIN_RATE = 28           // per real second while active
+export const FOCUS_REGEN_RATE = 13           // per real second while inactive
+export const FOCUS_MIN_ACTIVATE = 20         // minimum focus needed to start BT
