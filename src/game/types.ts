@@ -105,3 +105,22 @@ export const FOCUS_MIN_ACTIVATE = 20
 
 // Shop
 export const STARTING_CREDITS = 500
+export const AKIMBO_PRICE = 250
+
+// Maneuvers
+export const DIVE_SPEED     = 18
+export const DIVE_DURATION  = 0.55
+export const DIVE_COOLDOWN  = 1.5
+export const SPIN_DURATION  = 1.4
+export const SPIN_COOLDOWN  = 2.8
+export const SPIN_FIRE_RATE = 0.09
+
+// Grenades
+export const GRENADE_SPEED    = 12
+export const GRENADE_FUSE     = 2.2
+export const GRENADE_BOUNCE   = 2
+export const GRENADE_RADIUS   = 3.5
+export const GRENADE_DAMAGE   = 65
+
+// Ricochets
+export const MAX_BOUNCES = 2

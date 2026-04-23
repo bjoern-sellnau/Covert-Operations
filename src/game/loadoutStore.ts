@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import {
   WEAPON_CONFIGS, EQUIPMENT_CONFIGS, AMMO_CONFIGS,
-  STARTING_CREDITS,
+  STARTING_CREDITS, AKIMBO_PRICE,
   type WeaponId, type EquipmentId, type AmmoId,
 } from './types'
 
@@ -13,6 +13,7 @@ interface LoadoutStore {
   ownedEquipment: EquipmentId[]
   selectedAmmo: AmmoId
   ownedAmmo: AmmoId[]
+  isAkimbo: boolean
 
   addCredits: (n: number) => void
   buyWeapon: (id: WeaponId) => boolean
@@ -20,6 +21,8 @@ interface LoadoutStore {
   buyEquipment: (id: EquipmentId) => boolean
   buyAmmo: (id: AmmoId) => boolean
   selectAmmo: (id: AmmoId) => void
+  buyAkimbo: () => boolean
+  toggleAkimbo: () => void
   getMaxAmmo: () => number
   getDamageBonus: () => number
 }
@@ -33,6 +36,7 @@ export const useLoadoutStore = create<LoadoutStore>()(
       ownedEquipment: [],
       selectedAmmo: 'standard',
       ownedAmmo: ['standard'],
+      isAkimbo: false,
 
       addCredits: (n) => set((s) => ({ credits: s.credits + n })),
 
@@ -90,6 +94,23 @@ export const useLoadoutStore = create<LoadoutStore>()(
 
       selectAmmo: (id) => {
         if (get().ownedAmmo.includes(id)) set({ selectedAmmo: id })
+      },
+
+      buyAkimbo: () => {
+        const s = get()
+        if (s.isAkimbo) return true
+        if (s.credits < AKIMBO_PRICE) return false
+        const w = s.selectedWeapon
+        if (w !== 'pistol' && w !== 'smg') return false
+        set((st) => ({ credits: st.credits - AKIMBO_PRICE, isAkimbo: true }))
+        return true
+      },
+
+      toggleAkimbo: () => {
+        const s = get()
+        if (!s.isAkimbo) return
+        const w = s.selectedWeapon
+        if (w !== 'pistol' && w !== 'smg') return
       },
 
       getMaxAmmo: () => {

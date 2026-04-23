@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useGameStore } from '../store/gameStore'
 import { useLoadoutStore } from '../game/loadoutStore'
 import {
-  WEAPON_CONFIGS, EQUIPMENT_CONFIGS, AMMO_CONFIGS,
+  WEAPON_CONFIGS, EQUIPMENT_CONFIGS, AMMO_CONFIGS, AKIMBO_PRICE,
   type WeaponId, type EquipmentId, type AmmoId,
 } from '../game/types'
 
@@ -340,11 +340,72 @@ function CharacterPanel() {
   )
 }
 
+// ── Akimbo upgrade card ──────────────────────────────────────────────────────
+
+function AkimboCard() {
+  const { isAkimbo, selectedWeapon, credits, buyAkimbo } = useLoadoutStore()
+  const compatible = selectedWeapon === 'pistol' || selectedWeapon === 'smg'
+  const canAfford  = credits >= AKIMBO_PRICE
+
+  return (
+    <div
+      style={{
+        background: isAkimbo ? '#1a0a2e' : '#080812',
+        border: `1px solid ${isAkimbo ? '#cc44ff' : compatible ? '#331144' : '#111122'}`,
+        borderRadius: 4,
+        padding: '14px 16px',
+        cursor: compatible && !isAkimbo ? 'pointer' : 'default',
+        transition: 'border-color 0.15s',
+        boxShadow: isAkimbo ? '0 0 14px #cc44ff33, inset 0 0 20px #cc44ff11' : 'none',
+        opacity: compatible ? 1 : 0.5,
+      }}
+      onClick={() => compatible && !isAkimbo && buyAkimbo()}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+        <div>
+          <div style={{ color: isAkimbo ? '#cc88ff' : '#cceeff', fontSize: 14, fontWeight: 'bold', letterSpacing: 1 }}>
+            AKIMBO UPGRADE
+          </div>
+          <div style={{ color: '#445566', fontSize: 11, marginTop: 2 }}>Dual Wield — Pistole / MP5</div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          {isAkimbo ? (
+            <div style={{ color: '#cc88ff', fontSize: 11, letterSpacing: 2, padding: '3px 8px', border: '1px solid #cc44ff', borderRadius: 2 }}>
+              AKTIV
+            </div>
+          ) : (
+            <div style={{ color: canAfford && compatible ? '#ffee00' : '#664400', fontSize: 13, fontWeight: 'bold' }}>
+              {AKIMBO_PRICE} CR
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div style={{ color: '#cc44ff', fontSize: 12, fontWeight: 'bold', marginBottom: 6 }}>
+        ×2 Schüsse &nbsp;·&nbsp; Q/E Ballett-Spin &nbsp;·&nbsp; Zweiter Lauf
+      </div>
+      <div style={{ color: '#445566', fontSize: 11, lineHeight: 1.4 }}>
+        Zwei Pistolen gleichzeitig. Verbraucht doppelt Munition. Schaltet Ballett-Spin-Manöver frei (Q/E).
+      </div>
+
+      {!compatible && (
+        <div style={{ color: '#553300', fontSize: 10, marginTop: 8, letterSpacing: 1 }}>
+          NUR MIT PISTOLE ODER MP5
+        </div>
+      )}
+      {compatible && !isAkimbo && !canAfford && (
+        <div style={{ color: '#442200', fontSize: 10, marginTop: 6, letterSpacing: 1 }}>NICHT GENUG CREDITS</div>
+      )}
+    </div>
+  )
+}
+
 // ── Main Shop ────────────────────────────────────────────────────────────────
 
 export function Shop() {
   const [category, setCategory] = useState<Category>('waffen')
-  const setPhase = useGameStore((s) => s.setPhase)
+  const setPhase    = useGameStore((s) => s.setPhase)
+  const setGameMode = useGameStore((s) => s.setGameMode)
   const { credits } = useLoadoutStore()
 
   const tabStyle = (active: boolean): React.CSSProperties => ({
@@ -430,6 +491,8 @@ export function Shop() {
               {(['pistol', 'smg', 'shotgun', 'rifle'] as WeaponId[]).map((id) => (
                 <WeaponCard key={id} id={id} />
               ))}
+              <div style={{ color: '#334455', fontSize: 10, letterSpacing: 3, marginTop: 8, marginBottom: 4 }}>UPGRADES</div>
+              <AkimboCard />
             </>
           )}
 
@@ -479,7 +542,7 @@ export function Shop() {
         </button>
 
         <button
-          onClick={() => setPhase('playing')}
+          onClick={() => { setGameMode('arena'); setPhase('playing') }}
           style={{
             background: '#00aaff22', border: '2px solid #00aaff', color: '#00ccff',
             fontSize: 14, letterSpacing: 4, padding: '12px 36px', cursor: 'pointer',

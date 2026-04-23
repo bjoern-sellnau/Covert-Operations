@@ -17,6 +17,7 @@ export interface BulletData {
   velocity: THREE.Vector2
   lifetime: number
   damage: number
+  bounces: number
 }
 
 export interface PlayerData {
@@ -25,6 +26,59 @@ export interface PlayerData {
   health: number
   shootCooldown: number
   invincibleUntil: number
+}
+
+export interface GrenadeData {
+  id: string
+  x: number
+  z: number
+  vx: number
+  vz: number
+  timer: number
+  bounces: number
+}
+
+export type ParticleType = 'blood' | 'explosion' | 'spark'
+
+export interface ParticleData {
+  active: boolean
+  x: number
+  y: number
+  z: number
+  vx: number
+  vy: number
+  vz: number
+  life: number
+  maxLife: number
+  type: ParticleType
+  scale: number
+}
+
+export interface DecalData {
+  active: boolean
+  x: number
+  z: number
+  rotY: number
+  size: number
+  age: number
+  maxAge: number
+}
+
+const PARTICLE_POOL = 250
+const DECAL_POOL    = 60
+
+function makeParticlePool(): ParticleData[] {
+  return Array.from({ length: PARTICLE_POOL }, () => ({
+    active: false, x: 0, y: 0, z: 0,
+    vx: 0, vy: 0, vz: 0,
+    life: 0, maxLife: 1, type: 'blood' as ParticleType, scale: 1,
+  }))
+}
+
+function makeDecalPool(): DecalData[] {
+  return Array.from({ length: DECAL_POOL }, () => ({
+    active: false, x: 0, z: 0, rotY: 0, size: 0.4, age: 0, maxAge: 18,
+  }))
 }
 
 function makeEntityStore() {
@@ -50,6 +104,24 @@ function makeEntityStore() {
     ammo: 48,
     maxAmmo: 48,
     creditsEarned: 0,
+    // Maneuvers
+    maneuver: 'none' as 'none' | 'dive' | 'spin',
+    maneuverTimer: 0,
+    maneuverDx: 0,
+    maneuverDz: 0,
+    spinDir: 1,
+    diveCooldown: 0,
+    spinCooldown: 0,
+    spinFireTimer: 0,
+    // Grenades
+    grenadeIdCounter: 0,
+    grenades: [] as GrenadeData[],
+    grenadeCount: 3,
+    // Akimbo
+    isAkimbo: false,
+    // Particles & decals
+    particles: makeParticlePool(),
+    decals: makeDecalPool(),
   }
 }
 
@@ -74,4 +146,89 @@ export function resetEntityStore() {
   s.ammo = 48
   s.maxAmmo = 48
   s.creditsEarned = 0
+  s.maneuver = 'none'
+  s.maneuverTimer = 0
+  s.maneuverDx = 0
+  s.maneuverDz = 0
+  s.spinDir = 1
+  s.diveCooldown = 0
+  s.spinCooldown = 0
+  s.spinFireTimer = 0
+  s.grenades = []
+  s.grenadeCount = 3
+  s.isAkimbo = false
+  for (const p of s.particles) p.active = false
+  for (const d of s.decals) d.active = false
+}
+
+export function spawnParticles(
+  x: number, z: number,
+  type: ParticleType,
+  count: number,
+) {
+  if (count <= 0) return
+  const pool = entityStore.particles
+  let spawned = 0
+  for (let i = 0; i < pool.length && spawned < count; i++) {
+    if (pool[i].active) continue
+    const p = pool[i]
+    p.active = true
+    p.type = type
+    p.x = x
+    p.y = type === 'spark' ? 0.05 : 0.2
+    p.z = z
+    if (type === 'blood') {
+      p.vx = (Math.random() - 0.5) * 4
+      p.vy = Math.random() * 2 + 0.5
+      p.vz = (Math.random() - 0.5) * 4
+      p.life = 0.5 + Math.random() * 0.5
+      p.maxLife = p.life
+      p.scale = 0.06 + Math.random() * 0.06
+    } else if (type === 'explosion') {
+      const speed = 2 + Math.random() * 5
+      const angle = Math.random() * Math.PI * 2
+      const elev = Math.random() * 0.8
+      p.vx = Math.cos(angle) * speed * Math.cos(elev)
+      p.vy = Math.sin(elev) * speed + 1
+      p.vz = Math.sin(angle) * speed * Math.cos(elev)
+      p.life = 0.6 + Math.random() * 0.6
+      p.maxLife = p.life
+      p.scale = 0.1 + Math.random() * 0.1
+    } else {
+      // spark
+      const speed = 3 + Math.random() * 4
+      const angle = Math.random() * Math.PI * 2
+      p.vx = Math.cos(angle) * speed
+      p.vy = Math.random() * 1.5 + 0.3
+      p.vz = Math.sin(angle) * speed
+      p.life = 0.2 + Math.random() * 0.3
+      p.maxLife = p.life
+      p.scale = 0.03 + Math.random() * 0.03
+    }
+    spawned++
+  }
+}
+
+export function spawnDecal(x: number, z: number, size: number) {
+  const pool = entityStore.decals
+  // Find inactive slot, or reuse oldest
+  let idx = pool.findIndex((d) => !d.active)
+  if (idx === -1) {
+    // Reuse the oldest (lowest age ratio)
+    let oldest = 0
+    let minRatio = Infinity
+    for (let i = 0; i < pool.length; i++) {
+      const ratio = pool[i].age / pool[i].maxAge
+      if (ratio < minRatio) { minRatio = ratio; oldest = i }
+    }
+    idx = oldest
+  }
+  const d = pool[idx]
+  d.active = true
+  d.x = x
+  d.z = z
+  d.rotY = Math.random() * Math.PI * 2
+  d.size = size
+  d.age = 0
+  d.maxAge = 15 + Math.random() * 10
 }
