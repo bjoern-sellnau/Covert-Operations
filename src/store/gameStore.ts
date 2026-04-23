@@ -16,8 +16,10 @@ interface GameStore {
   creditsEarned: number
   fpsMode: boolean
   isPlaytesting: boolean
+  gameMode: 'arena' | 'skydive'
 
   setPhase: (phase: GamePhase) => void
+  setGameMode: (m: 'arena' | 'skydive') => void
   updateHUD: (health: number, score: number, wave: number, ammo: number, maxAmmo: number, credits: number) => void
   setBulletTime: (focus: number, active: boolean) => void
   setEnemyIds: (ids: string[]) => void
@@ -43,8 +45,10 @@ export const useGameStore = create<GameStore>((set) => ({
   creditsEarned: 0,
   fpsMode: false,
   isPlaytesting: false,
+  gameMode: 'arena',
 
   setPhase: (phase) => set({ phase }),
+  setGameMode: (gameMode) => set({ gameMode }),
   updateHUD: (health, score, wave, ammo, maxAmmo, creditsEarned) =>
     set({ health, score, wave, ammo, maxAmmo, creditsEarned }),
   setBulletTime: (focus, isBulletTime) => set({ focus, isBulletTime }),
@@ -59,5 +63,6 @@ export const useGameStore = create<GameStore>((set) => ({
       enemyIds: [], bulletIds: [], waveMessage: '',
       focus: 100, isBulletTime: false,
       ammo: 48, maxAmmo: 48, creditsEarned: 0, fpsMode: false,
+      gameMode: 'arena',
     }),
 }))

@@ -2,13 +2,15 @@ import { useGameStore } from '../store/gameStore'
 import { useLoadoutStore } from '../game/loadoutStore'
 
 export function GameOver() {
-  const setPhase = useGameStore((s) => s.setPhase)
+  const setPhase       = useGameStore((s) => s.setPhase)
   const setPlaytesting = useGameStore((s) => s.setPlaytesting)
-  const score = useGameStore((s) => s.score)
-  const wave = useGameStore((s) => s.wave)
-  const creditsEarned = useGameStore((s) => s.creditsEarned)
-  const isPlaytesting = useGameStore((s) => s.isPlaytesting)
-  const { credits } = useLoadoutStore()
+  const setGameMode    = useGameStore((s) => s.setGameMode)
+  const score          = useGameStore((s) => s.score)
+  const wave           = useGameStore((s) => s.wave)
+  const creditsEarned  = useGameStore((s) => s.creditsEarned)
+  const isPlaytesting  = useGameStore((s) => s.isPlaytesting)
+  const gameMode       = useGameStore((s) => s.gameMode)
+  const { credits }    = useLoadoutStore()
 
   return (
     <div style={{
@@ -76,6 +78,34 @@ export function GameOver() {
           >
             Zurück zum Editor
           </button>
+        ) : gameMode === 'skydive' ? (
+          <>
+            <button
+              onClick={() => { setGameMode('skydive'); setPhase('skydive') }}
+              style={{
+                background: '#ff880022', border: '2px solid #ff8800', color: '#ff8800',
+                fontSize: 14, letterSpacing: 4, padding: '14px 32px', cursor: 'pointer',
+                fontFamily: 'inherit', textTransform: 'uppercase', transition: 'all 0.15s',
+                boxShadow: '0 0 14px #ff880044',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = '#ff880044'; e.currentTarget.style.color = '#ffffff' }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = '#ff880022'; e.currentTarget.style.color = '#ff8800' }}
+            >
+              Nochmal
+            </button>
+            <button
+              onClick={() => setPhase('menu')}
+              style={{
+                background: 'transparent', border: '1px solid #332222', color: '#443333',
+                fontSize: 14, letterSpacing: 4, padding: '14px 32px', cursor: 'pointer',
+                fontFamily: 'inherit', textTransform: 'uppercase', transition: 'all 0.15s',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = '#776666'; e.currentTarget.style.borderColor = '#554444' }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = '#443333'; e.currentTarget.style.borderColor = '#332222' }}
+            >
+              Menü
+            </button>
+          </>
         ) : (
           <>
             <button

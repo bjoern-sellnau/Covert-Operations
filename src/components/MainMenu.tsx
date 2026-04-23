@@ -2,7 +2,8 @@ import { useGameStore } from '../store/gameStore'
 import { useLoadoutStore } from '../game/loadoutStore'
 
 export function MainMenu() {
-  const setPhase = useGameStore((s) => s.setPhase)
+  const setPhase    = useGameStore((s) => s.setPhase)
+  const setGameMode = useGameStore((s) => s.setGameMode)
   const { credits } = useLoadoutStore()
 
   const bigBtn = (color: string): React.CSSProperties => ({
@@ -70,12 +71,21 @@ export function MainMenu() {
         </button>
 
         <button
+          style={{ ...bigBtn('#ff8800'), fontSize: 13, padding: '11px 36px' }}
+          onClick={() => { setGameMode('skydive'); setPhase('skydive') }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = '#ff880044'; e.currentTarget.style.color = '#fff' }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = '#ff880022'; e.currentTarget.style.color = '#ff8800' }}
+        >
+          ↓ Skydive Infiltration
+        </button>
+
+        <button
           style={{
             background: 'transparent', border: '1px solid #334455', color: '#445566',
             fontSize: 12, letterSpacing: 4, padding: '9px 36px', cursor: 'pointer',
             fontFamily: 'inherit', textTransform: 'uppercase', transition: 'all 0.15s',
           }}
-          onClick={() => setPhase('playing')}
+          onClick={() => { setGameMode('arena'); setPhase('playing') }}
           onMouseEnter={(e) => { e.currentTarget.style.color = '#aabbcc'; e.currentTarget.style.borderColor = '#667788' }}
           onMouseLeave={(e) => { e.currentTarget.style.color = '#445566'; e.currentTarget.style.borderColor = '#334455' }}
         >

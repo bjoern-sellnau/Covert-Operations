@@ -1,4 +1,4 @@
-export type GamePhase = 'menu' | 'shop' | 'playing' | 'gameover' | 'editor'
+export type GamePhase = 'menu' | 'shop' | 'playing' | 'gameover' | 'editor' | 'skydive' | 'skydive_win'
 
 export type EnemyType = 'basic' | 'fast' | 'tank'
 export type WeaponId = 'pistol' | 'smg' | 'shotgun' | 'rifle'

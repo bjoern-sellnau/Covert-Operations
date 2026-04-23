@@ -5,15 +5,17 @@ import { MainMenu } from './components/MainMenu'
 import { GameOver } from './components/GameOver'
 import { Shop } from './components/Shop'
 import { Editor } from './editor/Editor'
+import { Skydive } from './skydive/Skydive'
+import { SkydiveWin } from './components/SkydiveWin'
 
 export function App() {
-  const phase = useGameStore((s) => s.phase)
+  const phase        = useGameStore((s) => s.phase)
   const isBulletTime = useGameStore((s) => s.isBulletTime)
-  const fpsMode = useGameStore((s) => s.fpsMode)
+  const fpsMode      = useGameStore((s) => s.fpsMode)
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}>
-      {/* Game canvas (always mounted, gated by phase in GameScene) */}
+      {/* Arena game canvas (always mounted, gated by phase in GameScene) */}
       <div style={{
         position: 'absolute', inset: 0,
         filter: isBulletTime ? 'saturate(0.25) brightness(0.85)' : 'none',
@@ -27,6 +29,13 @@ export function App() {
       {phase === 'editor' && (
         <div style={{ position: 'absolute', inset: 0 }}>
           <Editor />
+        </div>
+      )}
+
+      {/* Skydive canvas */}
+      {phase === 'skydive' && (
+        <div style={{ position: 'absolute', inset: 0 }}>
+          <Skydive />
         </div>
       )}
 
@@ -63,10 +72,11 @@ export function App() {
         </div>
       )}
 
-      {phase === 'playing' && <HUD />}
-      {phase === 'menu' && <MainMenu />}
-      {phase === 'shop' && <Shop />}
-      {phase === 'gameover' && <GameOver />}
+      {phase === 'playing'     && <HUD />}
+      {phase === 'menu'        && <MainMenu />}
+      {phase === 'shop'        && <Shop />}
+      {phase === 'gameover'    && <GameOver />}
+      {phase === 'skydive_win' && <SkydiveWin />}
     </div>
   )
 }
