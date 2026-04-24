@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import type { ScriptEntity, ScriptEntityType } from './scriptTypes'
+import { defaultEntity } from './scriptTypes'
 
 export type ObjectType = 'wall' | 'pillar' | 'cover' | 'crate' | 'spawn'
 export type ViewMode = 'topdown' | 'perspective' | 'fps'
@@ -19,6 +21,8 @@ export interface Level {
   id: string
   name: string
   objects: LevelObject[]
+  scriptEntities: ScriptEntity[]
+  fogOfWar: boolean
 }
 
 export interface ObjectTypeCfg {
@@ -69,6 +73,17 @@ interface EditorStore {
   selectObject: (id: string | null) => void
   getSelectedObject: () => LevelObject | null
 
+  // Script entity CRUD
+  selectedScriptId: string | null
+  scriptPlaceType: ScriptEntityType | null
+  addScriptEntity: (type: ScriptEntityType, x: number, z: number) => ScriptEntity
+  updateScriptEntity: (id: string, changes: Partial<ScriptEntity>) => void
+  deleteScriptEntity: (id: string) => void
+  selectScriptEntity: (id: string | null) => void
+  getSelectedScriptEntity: () => ScriptEntity | null
+  setScriptPlaceType: (t: ScriptEntityType | null) => void
+  toggleFogOfWar: () => void
+
   setViewMode: (m: ViewMode) => void
   setToolMode: (m: ToolMode) => void
   setPlaceType: (t: ObjectType) => void
@@ -81,6 +96,8 @@ export const useEditorStore = create<EditorStore>()(
       levels: [],
       currentLevelId: null,
       selectedObjectId: null,
+      selectedScriptId: null,
+      scriptPlaceType: null,
       viewMode: 'topdown',
       toolMode: 'select',
       placeType: 'wall',
@@ -88,7 +105,7 @@ export const useEditorStore = create<EditorStore>()(
 
       createLevel: (name = 'Neues Level') => {
         const id = newLid()
-        set((s) => ({ levels: [...s.levels, { id, name, objects: [] }], currentLevelId: id }))
+        set((s) => ({ levels: [...s.levels, { id, name, objects: [], scriptEntities: [], fogOfWar: false }], currentLevelId: id }))
         return id
       },
 
@@ -98,6 +115,8 @@ export const useEditorStore = create<EditorStore>()(
           ...level,
           id,
           objects: level.objects.map((o) => ({ ...o, id: newOid() })),
+          scriptEntities: level.scriptEntities ?? [],
+          fogOfWar: level.fogOfWar ?? false,
         }
         set((s) => ({ levels: [...s.levels, imported], currentLevelId: id }))
       },
@@ -111,7 +130,7 @@ export const useEditorStore = create<EditorStore>()(
           currentLevelId: s.currentLevelId === id ? (s.levels.find((l) => l.id !== id)?.id ?? null) : s.currentLevelId,
         })),
 
-      setCurrentLevel: (id) => set({ currentLevelId: id, selectedObjectId: null }),
+      setCurrentLevel: (id) => set({ currentLevelId: id, selectedObjectId: null, selectedScriptId: null }),
 
       getCurrentLevel: () => {
         const { levels, currentLevelId } = get()
@@ -153,6 +172,58 @@ export const useEditorStore = create<EditorStore>()(
         const { getCurrentLevel, selectedObjectId } = get()
         return getCurrentLevel()?.objects.find((o) => o.id === selectedObjectId) ?? null
       },
+
+      addScriptEntity: (type, x, z) => {
+        const entity = defaultEntity(type, x, z)
+        set((s) => ({
+          levels: s.levels.map((l) =>
+            l.id === s.currentLevelId
+              ? { ...l, scriptEntities: [...(l.scriptEntities ?? []), entity] }
+              : l,
+          ),
+          selectedScriptId: entity.id,
+        }))
+        return entity
+      },
+
+      updateScriptEntity: (id, changes) =>
+        set((s) => ({
+          levels: s.levels.map((l) =>
+            l.id === s.currentLevelId
+              ? {
+                  ...l,
+                  scriptEntities: (l.scriptEntities ?? []).map((e) =>
+                    e.id === id ? ({ ...e, ...changes } as ScriptEntity) : e,
+                  ),
+                }
+              : l,
+          ),
+        })),
+
+      deleteScriptEntity: (id) =>
+        set((s) => ({
+          levels: s.levels.map((l) =>
+            l.id === s.currentLevelId
+              ? { ...l, scriptEntities: (l.scriptEntities ?? []).filter((e) => e.id !== id) }
+              : l,
+          ),
+          selectedScriptId: s.selectedScriptId === id ? null : s.selectedScriptId,
+        })),
+
+      selectScriptEntity: (id) => set({ selectedScriptId: id }),
+      setScriptPlaceType: (scriptPlaceType) => set({ scriptPlaceType }),
+
+      getSelectedScriptEntity: () => {
+        const { getCurrentLevel, selectedScriptId } = get()
+        return getCurrentLevel()?.scriptEntities?.find((e) => e.id === selectedScriptId) ?? null
+      },
+
+      toggleFogOfWar: () =>
+        set((s) => ({
+          levels: s.levels.map((l) =>
+            l.id === s.currentLevelId ? { ...l, fogOfWar: !l.fogOfWar } : l,
+          ),
+        })),
 
       setViewMode: (viewMode) => set({ viewMode }),
       setToolMode: (toolMode) => set({ toolMode }),

@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import * as THREE from 'three'
 import type { Level, LevelObject } from '../editor/editorStore'
 import { OBJECT_TYPE_CFGS } from '../editor/editorStore'
+import { getClosedDoorColliders } from './ScriptEngine'
 
 // ── Shared geometry ──────────────────────────────────────────────────────────
 const _boxGeo = new THREE.BoxGeometry(1, 1, 1)
@@ -80,7 +81,7 @@ function circleCircle(
   return { pen: false, nx: 0, nz: 0, depth: 0 }
 }
 
-/** Push a circle out of all level objects. Returns the new position. */
+/** Push a circle out of all level objects + closed script doors. Returns the new position. */
 export function resolveCircleVsLevel(
   cx: number, cz: number, radius: number,
   level: Level,
@@ -92,12 +93,18 @@ export function resolveCircleVsLevel(
 
     let res: { pen: boolean; nx: number; nz: number; depth: number }
     if (cfg.collisionRadius > 0) {
-      // Cylinder: circle vs circle
       res = circleCircle(rx, rz, radius, obj.x, obj.z, cfg.collisionRadius * Math.max(obj.sx, obj.sz))
     } else {
-      // Box: circle vs AABB (assume rotY ≈ 0 for now)
       res = circleAABB(rx, rz, radius, obj.x, obj.z, (obj.sx * 1) / 2, (obj.sz * 1) / 2)
     }
+    if (res.pen) {
+      rx += res.nx * res.depth
+      rz += res.nz * res.depth
+    }
+  }
+  // Closed script doors
+  for (const door of getClosedDoorColliders()) {
+    const res = circleAABB(rx, rz, radius, door.x, door.z, door.hw, door.hd)
     if (res.pen) {
       rx += res.nx * res.depth
       rz += res.nz * res.depth
@@ -106,7 +113,7 @@ export function resolveCircleVsLevel(
   return { x: rx, z: rz }
 }
 
-/** Returns true if a point (with small radius) intersects any solid level object. */
+/** Returns true if a point (with small radius) intersects any solid level object or closed door. */
 export function pointIntersectsLevel(
   px: number, pz: number, pr: number,
   level: Level,
@@ -121,6 +128,9 @@ export function pointIntersectsLevel(
       pen = circleAABB(px, pz, pr, obj.x, obj.z, obj.sx / 2, obj.sz / 2).pen
     }
     if (pen) return true
+  }
+  for (const door of getClosedDoorColliders()) {
+    if (circleAABB(px, pz, pr, door.x, door.z, door.hw, door.hd).pen) return true
   }
   return false
 }

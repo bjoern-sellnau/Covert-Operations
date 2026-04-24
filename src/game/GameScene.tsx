@@ -27,6 +27,8 @@ import { PlayerMesh } from './PlayerMesh'
 import { EnemyMesh } from './EnemyMesh'
 import { BulletMesh } from './BulletMesh'
 import { ParticleSystem } from './ParticleSystem'
+import { ScriptEngine, resetScriptRuntime } from './ScriptEngine'
+import { FogOfWar } from './FogOfWar'
 
 const _groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
 const _raycaster   = new THREE.Raycaster()
@@ -59,6 +61,7 @@ export function GameScene() {
   const phase           = useGameStore((s) => s.phase)
   const enemyIds        = useGameStore((s) => s.enemyIds)
   const bulletIds       = useGameStore((s) => s.bulletIds)
+  const activePlayLevel = useEditorStore((s) => s.activePlayLevel)
 
   const playerGroupRef    = useRef<THREE.Group>(null)
   const ambientRef        = useRef<THREE.AmbientLight>(null)
@@ -86,6 +89,7 @@ export function GameScene() {
   useEffect(() => {
     if (phase !== 'playing') return
     resetEntityStore()
+    resetScriptRuntime()
     useGameStore.getState().reset()
 
     const loadout = useLoadoutStore.getState()
@@ -716,6 +720,10 @@ export function GameScene() {
       />
 
       <ParticleSystem />
+
+      {/* Script system */}
+      {activePlayLevel && <ScriptEngine level={activePlayLevel} />}
+      {activePlayLevel?.fogOfWar && <FogOfWar />}
 
       <ambientLight ref={ambientRef} intensity={0.25} color="#4488ff" />
       <directionalLight ref={dirLightRef} position={[5, 15, 5]} intensity={1.2} color="#ffffff" castShadow />

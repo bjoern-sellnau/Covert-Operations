@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { useEditorStore, OBJECT_TYPE_CFGS, type ObjectType, type ViewMode, type ToolMode, type Level } from './editorStore'
 import { useGameStore } from '../store/gameStore'
+import { ScriptPanel } from './ScriptPanel'
 
 const C = {
   bg: '#08080f',
@@ -160,6 +161,7 @@ export function EditorHUD() {
   const setPhase = useGameStore((s) => s.setPhase)
   const setPlaytesting = useGameStore((s) => s.setPlaytesting)
   const [fpsCursor, setFpsCursor] = useState(false)
+  const [rightTab, setRightTab] = useState<'props' | 'script'>('props')
   const lockedRef = useRef(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -203,7 +205,6 @@ export function EditorHUD() {
     setPhase('playing')
   }
 
-  // FPS click-to-lock hint
   const handleCanvasClick = () => {
     if (viewMode === 'fps' && !lockedRef.current) {
       lockedRef.current = true
@@ -220,7 +221,7 @@ export function EditorHUD() {
 
   const topH = 48
   const leftW = 168
-  const rightW = 192
+  const rightW = 220
 
   return (
     <div
@@ -234,7 +235,6 @@ export function EditorHUD() {
         display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px',
         pointerEvents: 'auto',
       }}>
-        {/* View mode */}
         <div style={{ display: 'flex', gap: 4 }}>
           {viewModes.map(([m, label]) => (
             <button key={m} style={btn(viewMode === m)} onClick={() => setViewMode(m)}>{label}</button>
@@ -243,7 +243,6 @@ export function EditorHUD() {
 
         <div style={{ width: 1, height: 28, background: C.border }} />
 
-        {/* Tool mode */}
         <div style={{ display: 'flex', gap: 4 }}>
           {toolModes.map(([m, label]) => (
             <button key={m} style={btn(toolMode === m, m === 'delete')} onClick={() => setToolMode(m)}>{label}</button>
@@ -252,16 +251,12 @@ export function EditorHUD() {
 
         <div style={{ width: 1, height: 28, background: C.border }} />
 
-        {/* New level */}
         <button style={btn()} onClick={() => createLevel()}>+ Level</button>
-
-        {/* Import */}
         <button style={btn()} onClick={() => fileInputRef.current?.click()}>↑ Import</button>
         <input ref={fileInputRef} type="file" accept=".json" style={{ display: 'none' }} onChange={handleImport} />
 
         <div style={{ flex: 1 }} />
 
-        {/* Current level name + export */}
         {currentLevelId && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ color: C.textDim, fontSize: 11 }}>{getCurrentLevel()?.name ?? '—'}</div>
@@ -271,7 +266,6 @@ export function EditorHUD() {
 
         <div style={{ width: 1, height: 28, background: C.border }} />
 
-        {/* Play test */}
         <button
           style={{
             ...btn(),
@@ -322,14 +316,39 @@ export function EditorHUD() {
         <LevelList />
       </div>
 
-      {/* ── Right panel: properties ── */}
+      {/* ── Right panel: tabs ── */}
       <div style={{
         ...panelStyle,
         top: topH, right: 0, bottom: 0, width: rightW,
-        padding: '12px', overflowY: 'auto', pointerEvents: 'auto',
+        padding: '0', pointerEvents: 'auto',
+        display: 'flex', flexDirection: 'column',
       }}>
-        <div style={{ color: C.textDim, fontSize: 9, letterSpacing: 3, marginBottom: 12 }}>EIGENSCHAFTEN</div>
-        <PropertiesPanel />
+        {/* Tab header */}
+        <div style={{ display: 'flex', borderBottom: `1px solid ${C.border}` }}>
+          {(['props', 'script'] as const).map((tab) => (
+            <button
+              key={tab}
+              style={{
+                flex: 1, padding: '10px 6px', cursor: 'pointer', fontFamily: 'inherit',
+                fontSize: 10, letterSpacing: 2, textTransform: 'uppercase',
+                background: rightTab === tab ? '#001a33' : 'transparent',
+                border: 'none',
+                borderBottom: `2px solid ${rightTab === tab ? C.accent : 'transparent'}`,
+                color: rightTab === tab ? C.accent : C.textDim,
+                transition: 'all 0.12s',
+              }}
+              onClick={() => setRightTab(tab)}
+            >
+              {tab === 'props' ? 'Eigenschaften' : 'Skript'}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab content */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: 12 }}>
+          {rightTab === 'props' && <PropertiesPanel />}
+          {rightTab === 'script' && <ScriptPanel />}
+        </div>
       </div>
 
       {/* ── FPS hints ── */}
@@ -346,7 +365,6 @@ export function EditorHUD() {
         </div>
       )}
 
-      {/* ── Center crosshair info strip ── */}
       <div style={{
         position: 'absolute',
         bottom: 12, left: '50%', transform: 'translateX(-50%)',
