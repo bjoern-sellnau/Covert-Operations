@@ -9,8 +9,14 @@ function getWaveComposition(wave: number): EnemyType[] {
 
   for (let i = 0; i < count; i++) {
     const r = Math.random()
-    if (wave >= 4 && r < 0.25) {
+    if (wave >= 7 && r < 0.10) {
+      types.push('juggernaut')
+    } else if (wave >= 5 && r < 0.20) {
+      types.push('berserker')
+    } else if (wave >= 4 && r < 0.35) {
       types.push('tank')
+    } else if (wave >= 3 && r < 0.30) {
+      types.push('flanker')
     } else if (wave >= 2 && r < 0.45) {
       types.push('fast')
     } else {
@@ -45,6 +51,8 @@ export function spawnWave(wave: number): string[] {
       type,
       hitTime: -999,
       lastDamageTime: -999,
+      aiTimer: 0,
+      aiState: Math.random() > 0.5 ? 0 : 1,
     })
     ids.push(id)
   }

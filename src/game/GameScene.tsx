@@ -158,11 +158,15 @@ export function GameScene() {
   useFrame((state, delta) => {
     if (phaseRef.current !== 'playing') return
 
-    const rawDt = Math.min(delta, 0.05)
-    const es    = entityStore
-    const now   = state.clock.elapsedTime
-    const keys  = input.current.keys
-    const level = activeLevelRef.current
+    const rawDt  = Math.min(delta, 0.05)
+    const es     = entityStore
+    const now    = state.clock.elapsedTime
+    const keys   = input.current.keys
+    const level  = activeLevelRef.current
+    const grav   = activeLevelRef.current?.gravity ?? 'normal'
+    // Moon: grenades bounce more, travel further; heavy: wider blasts
+    const bounceDamp  = grav === 'moon' ? 0.9 : 0.7
+    const extraBounce = grav === 'moon' ? 2 : 0
     const bloodIntensity = useSettingsStore.getState().bloodIntensity
 
     // ── Edge detection ────────────────────────────────────────────────────────
@@ -499,12 +503,13 @@ export function GameScene() {
       g.timer  -= rawDt
 
       const half = ARENA_HALF - 0.25
+      const maxGB = GRENADE_BOUNCE + extraBounce
       if (Math.abs(g.x) > half) {
-        if (g.bounces < GRENADE_BOUNCE) { g.vx = -g.vx * 0.7; g.x = Math.sign(g.x) * half; g.bounces++ }
+        if (g.bounces < maxGB) { g.vx = -g.vx * bounceDamp; g.x = Math.sign(g.x) * half; g.bounces++ }
         else g.timer = 0
       }
       if (Math.abs(g.z) > half) {
-        if (g.bounces < GRENADE_BOUNCE) { g.vz = -g.vz * 0.7; g.z = Math.sign(g.z) * half; g.bounces++ }
+        if (g.bounces < maxGB) { g.vz = -g.vz * bounceDamp; g.z = Math.sign(g.z) * half; g.bounces++ }
         else g.timer = 0
       }
 
@@ -570,22 +575,23 @@ export function GameScene() {
       bn.z     += bn.vz * rawDt
       bn.timer -= rawDt
 
-      const half = ARENA_HALF - 0.25
+      const half   = ARENA_HALF - 0.25
+      const maxBnB = (wcf.maxBounces ?? 5) + extraBounce
       if (Math.abs(bn.x) > half) {
-        if (bn.bounces < (wcf.maxBounces ?? 5)) {
-          bn.vx = -bn.vx * 0.75; bn.x = Math.sign(bn.x) * half; bn.bounces++; playBananaBounce()
+        if (bn.bounces < maxBnB) {
+          bn.vx = -bn.vx * bounceDamp; bn.x = Math.sign(bn.x) * half; bn.bounces++; playBananaBounce()
         } else { bn.timer = 0 }
       }
       if (Math.abs(bn.z) > half) {
-        if (bn.bounces < (wcf.maxBounces ?? 5)) {
-          bn.vz = -bn.vz * 0.75; bn.z = Math.sign(bn.z) * half; bn.bounces++; playBananaBounce()
+        if (bn.bounces < maxBnB) {
+          bn.vz = -bn.vz * bounceDamp; bn.z = Math.sign(bn.z) * half; bn.bounces++; playBananaBounce()
         } else { bn.timer = 0 }
       }
 
       // Level collision bounce
       if (level && pointIntersectsLevel(bn.x, bn.z, 0.2, level)) {
-        if (bn.bounces < (wcf.maxBounces ?? 5)) {
-          bn.vx = -bn.vx * 0.75; bn.vz = -bn.vz * 0.75; bn.bounces++; playBananaBounce()
+        if (bn.bounces < maxBnB) {
+          bn.vx = -bn.vx * bounceDamp; bn.vz = -bn.vz * bounceDamp; bn.bounces++; playBananaBounce()
         } else { bn.timer = 0 }
       }
 
@@ -785,12 +791,52 @@ export function GameScene() {
       const dist = _toPlayer.length()
 
       if (dist > 0.05) {
-        _toPlayer.multiplyScalar(cfg.speed * dt / dist)
-        let ex = enemy.position.x + _toPlayer.x
-        let ez = enemy.position.y + _toPlayer.y
-        if (level) { const r = resolveCircleVsLevel(ex, ez, cfg.size, level); ex = r.x; ez = r.z }
-        enemy.position.x = ex
-        enemy.position.y = ez
+        let mx = _toPlayer.x / dist
+        let mz = _toPlayer.y / dist
+
+        if (enemy.type === 'berserker') {
+          // Erratic zigzag charge — oscillates perpendicular every ~0.4s
+          enemy.aiTimer += rawDt
+          if (enemy.aiTimer > 0.4) { enemy.aiTimer = 0; enemy.aiState = 1 - enemy.aiState }
+          const jitter = (enemy.aiState === 0 ? 1 : -1) * 0.55
+          mx = mx + (-mz) * jitter
+          mz = mz + mx * jitter
+          const mlen = Math.sqrt(mx * mx + mz * mz)
+          mx /= mlen; mz /= mlen
+        } else if (enemy.type === 'flanker') {
+          // Strafe sideways while closing in — switches flank side every 1.5s
+          enemy.aiTimer += rawDt
+          if (enemy.aiTimer > 1.5) { enemy.aiTimer = 0; enemy.aiState ^= 1 }
+          const side = enemy.aiState === 0 ? 1 : -1
+          // Blend: 60% toward player, 40% perpendicular
+          const px = (-mz) * side
+          const pz = mx * side
+          mx = mx * 0.6 + px * 0.4
+          mz = mz * 0.6 + pz * 0.4
+          const mlen = Math.sqrt(mx * mx + mz * mz)
+          mx /= mlen; mz /= mlen
+        } else if (enemy.type === 'juggernaut') {
+          // Slow but steady — charges directly, brief pause before reaching player
+          if (dist > 3) {
+            // Slow approach
+          } else {
+            // Close-range: speed boost to guarantee hit
+            _toPlayer.x = mx * cfg.speed * 1.5 * dt
+            _toPlayer.y = mz * cfg.speed * 1.5 * dt
+            enemy.position.x += _toPlayer.x
+            enemy.position.y += _toPlayer.y
+          }
+        }
+
+        _toPlayer.x = mx * cfg.speed * dt
+        _toPlayer.y = mz * cfg.speed * dt
+        if (enemy.type !== 'juggernaut' || dist > 3) {
+          let ex = enemy.position.x + _toPlayer.x
+          let ez = enemy.position.y + _toPlayer.y
+          if (level) { const r = resolveCircleVsLevel(ex, ez, cfg.size, level); ex = r.x; ez = r.z }
+          enemy.position.x = ex
+          enemy.position.y = ez
+        }
       }
 
       for (const [bid, bullet] of es.bullets) {

@@ -1,8 +1,9 @@
 import { useState, useRef } from 'react'
-import { useEditorStore, OBJECT_TYPE_CFGS, type ObjectType, type ViewMode, type ToolMode, type Level } from './editorStore'
+import { useEditorStore, OBJECT_TYPE_CFGS, type ObjectType, type ViewMode, type ToolMode, type Level, type GravityMode } from './editorStore'
 import { useGameStore } from '../store/gameStore'
 import { ScriptPanel } from './ScriptPanel'
 import { TEXTURE_META, DEFAULT_TEXTURE, getThumbnail, type TextureKey } from '../game/textures'
+import { PRESET_LEVELS } from './presetLevels'
 
 const C = {
   bg: '#08080f',
@@ -209,6 +210,7 @@ export function EditorHUD() {
     currentLevelId, getCurrentLevel,
     setViewMode, setToolMode, setPlaceType,
     createLevel, importLevel, setActivePlayLevel,
+    setGravity, toggleFogOfWar,
   } = useEditorStore()
 
   const setPhase = useGameStore((s) => s.setPhase)
@@ -367,6 +369,20 @@ export function EditorHUD() {
         <div style={{ height: 1, background: C.border, margin: '4px 0 12px' }} />
         <div style={{ color: C.textDim, fontSize: 9, letterSpacing: 3, marginBottom: 8 }}>LEVEL</div>
         <LevelList />
+
+        <div style={{ height: 1, background: C.border, margin: '12px 0 10px' }} />
+        <div style={{ color: C.textDim, fontSize: 9, letterSpacing: 3, marginBottom: 8 }}>VORLAGEN</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {PRESET_LEVELS.map((pl) => (
+            <button
+              key={pl.name}
+              style={{ ...btn(), textAlign: 'left', padding: '6px 10px', fontSize: 10 }}
+              onClick={() => importLevel({ ...pl })}
+            >
+              {pl.gravity === 'moon' ? '🌙 ' : ''}{pl.name}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* ── Right panel: tabs ── */}
@@ -399,7 +415,36 @@ export function EditorHUD() {
 
         {/* Tab content */}
         <div style={{ flex: 1, overflowY: 'auto', padding: 12 }}>
-          {rightTab === 'props' && <PropertiesPanel />}
+          {rightTab === 'props' && (
+            <>
+              <PropertiesPanel />
+              {currentLevelId && (
+                <div style={{ marginTop: 20, borderTop: `1px solid ${C.border}`, paddingTop: 12 }}>
+                  <div style={{ color: C.textDim, fontSize: 9, letterSpacing: 3, marginBottom: 8 }}>LEVEL-OPTIONEN</div>
+                  <div style={{ color: C.textDim, fontSize: 9, marginBottom: 4 }}>Gravitation</div>
+                  <div style={{ display: 'flex', gap: 3, marginBottom: 10 }}>
+                    {(['normal', 'moon', 'heavy'] as GravityMode[]).map((g) => {
+                      const lvl = getCurrentLevel()
+                      const active = (lvl?.gravity ?? 'normal') === g
+                      const labels: Record<GravityMode, string> = { normal: 'Normal', moon: 'Mond', heavy: 'Schwer' }
+                      return (
+                        <button key={g} style={{ ...btn(active), flex: 1, fontSize: 9, padding: '4px 4px' }}
+                          onClick={() => setGravity(g)}>
+                          {labels[g]}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <button
+                    style={{ ...btn(getCurrentLevel()?.fogOfWar ?? false), width: '100%', fontSize: 9, padding: '5px' }}
+                    onClick={toggleFogOfWar}
+                  >
+                    Nebel des Krieges {getCurrentLevel()?.fogOfWar ? 'AN' : 'AUS'}
+                  </button>
+                </div>
+              )}
+            </>
+          )}
           {rightTab === 'script' && <ScriptPanel />}
         </div>
       </div>

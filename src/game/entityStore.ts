@@ -9,6 +9,8 @@ export interface EnemyData {
   type: EnemyType
   hitTime: number
   lastDamageTime: number
+  aiTimer: number    // general-purpose per-enemy AI timer
+  aiState: number    // general-purpose per-enemy AI state integer
 }
 
 export interface BulletData {

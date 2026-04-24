@@ -1,6 +1,6 @@
 export type GamePhase = 'menu' | 'shop' | 'playing' | 'gameover' | 'editor' | 'skydive' | 'skydive_win'
 
-export type EnemyType = 'basic' | 'fast' | 'tank'
+export type EnemyType = 'basic' | 'fast' | 'tank' | 'berserker' | 'flanker' | 'juggernaut'
 export type WeaponId = 'pistol' | 'smg' | 'shotgun' | 'rifle' | 'uzi' | 'mp5' | 'm16' | 'blaster' | 'plasma' | 'bazooka' | 'flak' | 'banana'
 export type EquipmentId = 'backpack' | 'chest_pouch' | 'leg_pouch'
 export type AmmoId = 'standard' | 'hollow_point' | 'ap'
@@ -20,9 +20,12 @@ export interface EnemyConfig {
 }
 
 export const ENEMY_CONFIGS: Record<EnemyType, EnemyConfig> = {
-  basic: { speed: 2.5, health: 1, size: 0.45, damage: 8, color: '#cc2222', emissive: '#ff0000', scoreValue: 10, creditValue: 5, segments: 6 },
-  fast:  { speed: 5.0, health: 1, size: 0.3,  damage: 12, color: '#cc6600', emissive: '#ff8800', scoreValue: 25, creditValue: 10, segments: 4 },
-  tank:  { speed: 1.4, health: 4, size: 0.75, damage: 20, color: '#6600cc', emissive: '#8800ff', scoreValue: 60, creditValue: 25, segments: 8 },
+  basic:      { speed: 2.5, health: 1,  size: 0.45, damage: 8,  color: '#cc2222', emissive: '#ff0000', scoreValue: 10,  creditValue: 5,  segments: 6  },
+  fast:       { speed: 5.0, health: 1,  size: 0.3,  damage: 12, color: '#cc6600', emissive: '#ff8800', scoreValue: 25,  creditValue: 10, segments: 4  },
+  tank:       { speed: 1.4, health: 4,  size: 0.75, damage: 20, color: '#6600cc', emissive: '#8800ff', scoreValue: 60,  creditValue: 25, segments: 8  },
+  berserker:  { speed: 6.5, health: 2,  size: 0.35, damage: 22, color: '#cc0066', emissive: '#ff0044', scoreValue: 30,  creditValue: 12, segments: 5  },
+  flanker:    { speed: 3.2, health: 1,  size: 0.40, damage: 14, color: '#cc8800', emissive: '#ffaa00', scoreValue: 20,  creditValue: 8,  segments: 6  },
+  juggernaut: { speed: 1.1, health: 10, size: 1.00, damage: 40, color: '#334455', emissive: '#112233', scoreValue: 80,  creditValue: 30, segments: 10 },
 }
 
 // ── Weapons ────────────────────────────────────────────────────────────────

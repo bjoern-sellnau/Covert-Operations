@@ -138,6 +138,8 @@ function executePendingActions(
             type: action.enemyType,
             hitTime: -999,
             lastDamageTime: -999,
+            aiTimer: 0,
+            aiState: Math.random() > 0.5 ? 0 : 1,
           })
           newIds.push(id)
         }

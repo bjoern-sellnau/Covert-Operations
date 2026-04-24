@@ -18,12 +18,15 @@ export interface LevelObject {
   textureKey?: string  // overrides default texture for this object type
 }
 
+export type GravityMode = 'normal' | 'moon' | 'heavy'
+
 export interface Level {
   id: string
   name: string
   objects: LevelObject[]
   scriptEntities: ScriptEntity[]
   fogOfWar: boolean
+  gravity: GravityMode
 }
 
 export interface ObjectTypeCfg {
@@ -84,6 +87,7 @@ interface EditorStore {
   getSelectedScriptEntity: () => ScriptEntity | null
   setScriptPlaceType: (t: ScriptEntityType | null) => void
   toggleFogOfWar: () => void
+  setGravity: (g: GravityMode) => void
 
   setViewMode: (m: ViewMode) => void
   setToolMode: (m: ToolMode) => void
@@ -106,7 +110,7 @@ export const useEditorStore = create<EditorStore>()(
 
       createLevel: (name = 'Neues Level') => {
         const id = newLid()
-        set((s) => ({ levels: [...s.levels, { id, name, objects: [], scriptEntities: [], fogOfWar: false }], currentLevelId: id }))
+        set((s) => ({ levels: [...s.levels, { id, name, objects: [], scriptEntities: [], fogOfWar: false, gravity: 'normal' }], currentLevelId: id }))
         return id
       },
 
@@ -118,6 +122,7 @@ export const useEditorStore = create<EditorStore>()(
           objects: level.objects.map((o) => ({ ...o, id: newOid() })),
           scriptEntities: level.scriptEntities ?? [],
           fogOfWar: level.fogOfWar ?? false,
+          gravity: level.gravity ?? 'normal',
         }
         set((s) => ({ levels: [...s.levels, imported], currentLevelId: id }))
       },
@@ -223,6 +228,13 @@ export const useEditorStore = create<EditorStore>()(
         set((s) => ({
           levels: s.levels.map((l) =>
             l.id === s.currentLevelId ? { ...l, fogOfWar: !l.fogOfWar } : l,
+          ),
+        })),
+
+      setGravity: (gravity) =>
+        set((s) => ({
+          levels: s.levels.map((l) =>
+            l.id === s.currentLevelId ? { ...l, gravity } : l,
           ),
         })),
 
