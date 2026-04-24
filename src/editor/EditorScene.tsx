@@ -8,7 +8,7 @@ import { ENTITY_CFG } from './scriptTypes'
 import { Arena } from '../game/Arena'
 import { ARENA_HALF } from '../game/types'
 import { useInput } from '../game/useInput'
-import { getTextures, cloneForObject } from '../game/textures'
+import { getObjectTexture, DEFAULT_TEXTURE, type TextureKey } from '../game/textures'
 
 // ── Shared geometry ───────────────────────────────────────────────────────────
 const _boxGeo             = new THREE.BoxGeometry(1, 1, 1)
@@ -16,8 +16,6 @@ const _cylGeo             = new THREE.CylinderGeometry(0.5, 0.5, 1, 16)
 const _ringGeo            = new THREE.RingGeometry(0.35, 0.5, 24)
 const _planeGeo           = new THREE.PlaneGeometry(1, 1)
 const _selectedOutlineMat = new THREE.MeshBasicMaterial({ color: '#00ffff', wireframe: true })
-
-const TILE_WORLD: Record<string, number> = { wall: 2, cover: 1.5, crate: 1, pillar: 1, spawn: 1 }
 
 // ── Single level object ──────────────────────────────────────────────────────
 function EditorLevelObject({ obj }: { obj: LevelObject }) {
@@ -28,22 +26,19 @@ function EditorLevelObject({ obj }: { obj: LevelObject }) {
 
   const material = useMemo(() => {
     if (cfg.isSpawn) return null
-    const texs = getTextures()
-    const tileWorld = TILE_WORLD[obj.type] ?? 2
-    const baseTex = obj.type === 'crate' ? texs.wood
-                  : obj.type === 'pillar' ? texs.metal
-                  : texs.concrete
-    const map = cloneForObject(baseTex, obj.sx, obj.sz, tileWorld)
+    const key = (obj.textureKey as TextureKey | undefined) ?? DEFAULT_TEXTURE[obj.type]
+    const map = getObjectTexture(key, obj.sx, obj.sz)
+    const isMetal = key === 'metal' || key === 'metal_grid'
     return new THREE.MeshStandardMaterial({
       map,
-      color:            new THREE.Color(cfg.color),
-      emissive:         new THREE.Color(cfg.emissive),
+      color:             new THREE.Color(cfg.color),
+      emissive:          new THREE.Color(cfg.emissive),
       emissiveIntensity: 0.35,
-      roughness:        obj.type === 'pillar' ? 0.35 : 0.7,
-      metalness:        obj.type === 'pillar' ? 0.55 : 0.15,
+      roughness:         isMetal ? 0.35 : 0.7,
+      metalness:         isMetal ? 0.55 : 0.15,
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [obj.type, obj.sx, obj.sz])
+  }, [obj.type, obj.sx, obj.sz, obj.textureKey])
 
   const handleClick = (e: { stopPropagation: () => void }) => {
     e.stopPropagation()

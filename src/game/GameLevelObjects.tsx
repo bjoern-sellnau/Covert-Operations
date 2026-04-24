@@ -3,20 +3,11 @@ import * as THREE from 'three'
 import type { Level, LevelObject } from '../editor/editorStore'
 import { OBJECT_TYPE_CFGS } from '../editor/editorStore'
 import { getClosedDoorColliders } from './ScriptEngine'
-import { getTextures, cloneForObject } from './textures'
+import { getObjectTexture, DEFAULT_TEXTURE, type TextureKey } from './textures'
 
 // ── Shared geometry ──────────────────────────────────────────────────────────
 const _boxGeo = new THREE.BoxGeometry(1, 1, 1)
 const _cylGeo = new THREE.CylinderGeometry(0.5, 0.5, 1, 16)
-
-// Tile world-units per texture repeat, per type
-const TILE_WORLD: Record<string, number> = {
-  wall:   2,
-  cover:  1.5,
-  crate:  1,
-  pillar: 1,
-  spawn:  1,
-}
 
 function GameLevelObject({ obj }: { obj: LevelObject }) {
   const cfg = OBJECT_TYPE_CFGS[obj.type]
@@ -24,31 +15,20 @@ function GameLevelObject({ obj }: { obj: LevelObject }) {
 
   // eslint-disable-next-line react-hooks/rules-of-hooks
   const material = useMemo(() => {
-    const textures = getTextures()
-    const tileWorld = TILE_WORLD[obj.type] ?? 2
-
-    let baseTex: THREE.CanvasTexture
-    if (obj.type === 'crate') {
-      baseTex = textures.wood
-    } else if (obj.type === 'pillar') {
-      baseTex = textures.metal
-    } else {
-      baseTex = textures.concrete
-    }
-
-    const map = cloneForObject(baseTex, obj.sx, obj.sz, tileWorld)
+    const key = (obj.textureKey as TextureKey | undefined) ?? DEFAULT_TEXTURE[obj.type]
+    const map = getObjectTexture(key, obj.sx, obj.sz)
+    const isMetal = key === 'metal' || key === 'metal_grid'
 
     return new THREE.MeshStandardMaterial({
       map,
-      color:            new THREE.Color(cfg.color),
-      emissive:         new THREE.Color(cfg.emissive),
+      color:             new THREE.Color(cfg.color),
+      emissive:          new THREE.Color(cfg.emissive),
       emissiveIntensity: 0.3,
-      roughness:        obj.type === 'pillar' ? 0.35 : 0.75,
-      metalness:        obj.type === 'pillar' ? 0.55 : 0.15,
+      roughness:         isMetal ? 0.35 : 0.75,
+      metalness:         isMetal ? 0.55 : 0.15,
     })
-  // recreate only if object shape changes (not on every render)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [obj.type, obj.sx, obj.sz])
+  }, [obj.type, obj.sx, obj.sz, obj.textureKey])
 
   return (
     <mesh

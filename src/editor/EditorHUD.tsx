@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { useEditorStore, OBJECT_TYPE_CFGS, type ObjectType, type ViewMode, type ToolMode, type Level } from './editorStore'
 import { useGameStore } from '../store/gameStore'
 import { ScriptPanel } from './ScriptPanel'
+import { TEXTURE_META, DEFAULT_TEXTURE, getThumbnail, type TextureKey } from '../game/textures'
 
 const C = {
   bg: '#08080f',
@@ -50,6 +51,51 @@ function PropInput({ label, value, onChange, step = 0.5 }: {
   )
 }
 
+// ── Texture picker ────────────────────────────────────────────────────────────
+
+const TEXTURE_KEYS = Object.keys(TEXTURE_META) as TextureKey[]
+
+function TexturePicker({ current, onChange }: { current: TextureKey; onChange: (k: TextureKey) => void }) {
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+      {TEXTURE_KEYS.map((key) => {
+        const active = current === key
+        return (
+          <div
+            key={key}
+            title={TEXTURE_META[key].label}
+            onClick={() => onChange(key)}
+            style={{
+              width: 44, cursor: 'pointer',
+              border: `2px solid ${active ? C.borderHi : C.border}`,
+              borderRadius: 3,
+              boxShadow: active ? `0 0 6px ${C.borderHi}` : 'none',
+              overflow: 'hidden',
+              transition: 'all 0.1s',
+            }}
+          >
+            <img
+              src={getThumbnail(key)}
+              width={44} height={44}
+              style={{ display: 'block' }}
+              alt={TEXTURE_META[key].label}
+            />
+            <div style={{
+              background: active ? '#001a33' : '#06060e',
+              color: active ? C.accent : C.textDim,
+              fontSize: 8, letterSpacing: 0.5,
+              padding: '2px 2px', textAlign: 'center',
+              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+            }}>
+              {TEXTURE_META[key].label}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 // ── Properties panel ─────────────────────────────────────────────────────────
 function PropertiesPanel() {
   const { getSelectedObject, selectedObjectId, updateObject, deleteObject } = useEditorStore()
@@ -66,6 +112,7 @@ function PropertiesPanel() {
 
   const toDeg = (r: number) => Math.round((r * 180) / Math.PI)
   const toRad = (d: number) => (d * Math.PI) / 180
+  const currentTex = (obj.textureKey as TextureKey | undefined) ?? DEFAULT_TEXTURE[obj.type]
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
@@ -88,6 +135,12 @@ function PropertiesPanel() {
       <div style={{ color: C.textDim, fontSize: 9, letterSpacing: 2, margin: '10px 0 6px' }}>GRÖSSE</div>
       <PropInput label="SX" value={obj.sx} onChange={(v) => updateObject(selectedObjectId, { sx: Math.max(0.1, v) })} />
       <PropInput label="SZ" value={obj.sz} onChange={(v) => updateObject(selectedObjectId, { sz: Math.max(0.1, v) })} />
+
+      <div style={{ color: C.textDim, fontSize: 9, letterSpacing: 2, margin: '10px 0 6px' }}>TEXTUR</div>
+      <TexturePicker
+        current={currentTex}
+        onChange={(k) => updateObject(selectedObjectId, { textureKey: k })}
+      />
 
       <button
         style={{ ...btn(false, true), marginTop: 16, width: '100%', padding: '7px' }}

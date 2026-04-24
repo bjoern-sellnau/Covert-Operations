@@ -12,9 +12,10 @@ export interface LevelObject {
   type: ObjectType
   x: number
   z: number
-  rotY: number  // radians, snapped to 45° increments
-  sx: number    // scale X (width / diameter)
-  sz: number    // scale Z (depth)
+  rotY: number      // radians, snapped to 45° increments
+  sx: number        // scale X (width / diameter)
+  sz: number        // scale Z (depth)
+  textureKey?: string  // overrides default texture for this object type
 }
 
 export interface Level {
