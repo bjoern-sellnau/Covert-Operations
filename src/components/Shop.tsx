@@ -540,13 +540,25 @@ export function Shop() {
         <div style={{ flex: 1, padding: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
           {category === 'waffen' && (
             <>
-              <div style={{ color: '#334455', fontSize: 10, letterSpacing: 3, marginBottom: 4 }}>VERFÜGBARE WAFFEN</div>
+              <div style={{ color: '#334455', fontSize: 10, letterSpacing: 3, marginBottom: 4 }}>STANDARD</div>
               {(['pistol', 'smg', 'shotgun', 'rifle'] as WeaponId[]).map((id) => (
+                <WeaponCard key={id} id={id} />
+              ))}
+              <div style={{ color: '#334455', fontSize: 10, letterSpacing: 3, marginTop: 8, marginBottom: 4 }}>AUTOMATISCH / BURST</div>
+              {(['uzi', 'mp5', 'm16'] as WeaponId[]).map((id) => (
+                <WeaponCard key={id} id={id} />
+              ))}
+              <div style={{ color: '#223355', fontSize: 10, letterSpacing: 3, marginTop: 8, marginBottom: 4 }}>ENERGIE / SPEZIAL</div>
+              {(['blaster', 'flak'] as WeaponId[]).map((id) => (
+                <WeaponCard key={id} id={id} />
+              ))}
+              <div style={{ color: '#553322', fontSize: 10, letterSpacing: 3, marginTop: 8, marginBottom: 4 }}>SCHWERE WAFFEN</div>
+              {(['plasma', 'bazooka', 'banana'] as WeaponId[]).map((id) => (
                 <WeaponCard key={id} id={id} />
               ))}
               <div style={{ color: '#334455', fontSize: 10, letterSpacing: 3, marginTop: 8, marginBottom: 4 }}>UPGRADES</div>
               <AkimboCard />
-              <div style={{ color: '#553322', fontSize: 10, letterSpacing: 3, marginTop: 8, marginBottom: 4 }}>SCHWERE WAFFEN</div>
+              <div style={{ color: '#553322', fontSize: 10, letterSpacing: 3, marginTop: 8, marginBottom: 4 }}>BFG</div>
               <VernichterCard />
             </>
           )}

@@ -18,6 +18,9 @@ export interface BulletData {
   lifetime: number
   damage: number
   bounces: number
+  maxBounces: number
+  isEnergy: boolean   // blaster / flak visual
+  isFlak: boolean     // plays flak ricochet sound
 }
 
 export interface PlayerData {
@@ -35,6 +38,23 @@ export interface GrenadeData {
   vx: number
   vz: number
   timer: number
+  bounces: number
+}
+
+export interface ProjectileData {
+  x: number
+  z: number
+  vx: number
+  vz: number
+}
+
+export interface BananaData {
+  id: string
+  x: number
+  z: number
+  vx: number
+  vz: number
+  timer: number   // fuse timer
   bounces: number
 }
 
@@ -121,7 +141,15 @@ function makeEntityStore() {
     isAkimbo: false,
     // Vernichter
     vernichterAmmo: 1,
-    vernichterProjectile: null as { x: number; z: number; vx: number; vz: number } | null,
+    vernichterProjectile: null as ProjectileData | null,
+    // Plasma / Bazooka projectile (single in-flight)
+    weaponProjectile: null as ProjectileData | null,
+    // Banana grenades
+    bananas: [] as BananaData[],
+    bananaIdCounter: 0,
+    // Burst fire state
+    burstRemaining: 0,
+    burstTimer: 0,
     // Particles & decals
     particles: makeParticlePool(),
     decals: makeDecalPool(),
@@ -162,6 +190,10 @@ export function resetEntityStore() {
   s.isAkimbo = false
   s.vernichterAmmo = 1
   s.vernichterProjectile = null
+  s.weaponProjectile = null
+  s.bananas = []
+  s.burstRemaining = 0
+  s.burstTimer = 0
   for (const p of s.particles) p.active = false
   for (const d of s.decals) d.active = false
 }

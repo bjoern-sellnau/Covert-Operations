@@ -2,6 +2,13 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { entityStore, resetEntityStore, spawnParticles, spawnDecal } from './entityStore'
+import type { BananaData } from './entityStore'
+import {
+  WEAPON_SOUNDS,
+  playExplosionSmall, playExplosionLarge,
+  playFlakBounce, playBananaBounce, playRicochet,
+  playHit,
+} from './sounds'
 import { useGameStore } from '../store/gameStore'
 import { useLoadoutStore } from './loadoutStore'
 import { useEditorStore } from '../editor/editorStore'
@@ -66,9 +73,13 @@ export function GameScene() {
   const playerGroupRef    = useRef<THREE.Group>(null)
   const ambientRef        = useRef<THREE.AmbientLight>(null)
   const dirLightRef       = useRef<THREE.DirectionalLight>(null)
-  const grenadeMeshRefs   = useRef<(THREE.Mesh | null)[]>(Array(MAX_GRENADES).fill(null))
-  const vernichterMeshRef = useRef<THREE.Mesh>(null)
-  const vernichterLightRef = useRef<THREE.PointLight>(null)
+  const grenadeMeshRefs      = useRef<(THREE.Mesh | null)[]>(Array(MAX_GRENADES).fill(null))
+  const vernichterMeshRef    = useRef<THREE.Mesh>(null)
+  const vernichterLightRef   = useRef<THREE.PointLight>(null)
+  const weaponProjMeshRef    = useRef<THREE.Mesh>(null)
+  const weaponProjLightRef   = useRef<THREE.PointLight>(null)
+  const MAX_BANANAS = 6
+  const bananaMeshRefs       = useRef<(THREE.Mesh | null)[]>(Array(MAX_BANANAS).fill(null))
 
   const hudTimer   = useRef(0)
   const btTimer    = useRef(0)
@@ -313,6 +324,77 @@ export function GameScene() {
     const weaponCfg   = WEAPON_CONFIGS[loadout.selectedWeapon]
     const finalDamage = weaponCfg.baseDamage + AMMO_CONFIGS[loadout.selectedAmmo].damageBonus
     const isShooting  = input.current.mouseButtons.has(0)
+    const isEnergy    = loadout.selectedWeapon === 'blaster' || loadout.selectedWeapon === 'plasma'
+    const isFlakWep   = loadout.selectedWeapon === 'flak'
+    const bulletMaxBounces = weaponCfg.maxBounces ?? MAX_BOUNCES
+
+    // Helper: spawn one regular bullet
+    const spawnBullet = (angle: number, lateralOff = 0) => {
+      for (let p = 0; p < weaponCfg.pellets; p++) {
+        const ang  = angle + (Math.random() - 0.5) * 2 * weaponCfg.spread + lateralOff
+        const bDir = new THREE.Vector2(Math.sin(ang), Math.cos(ang))
+        const bid  = `bullet-${++es.bulletIdCounter}`
+        es.bullets.set(bid, {
+          id: bid,
+          position: new THREE.Vector2(
+            es.player.position.x + bDir.x * (PLAYER_RADIUS + 0.2),
+            es.player.position.y + bDir.y * (PLAYER_RADIUS + 0.2),
+          ),
+          velocity: new THREE.Vector2(bDir.x * weaponCfg.bulletSpeed, bDir.y * weaponCfg.bulletSpeed),
+          lifetime: BULLET_LIFETIME,
+          damage:   finalDamage,
+          bounces:  0,
+          maxBounces: bulletMaxBounces,
+          isEnergy,
+          isFlak: isFlakWep,
+        })
+      }
+    }
+
+    // Helper: splash explosion (plasma / bazooka / banana)
+    const doSplash = (sx: number, sz: number, radius: number, dmg: number, isLarge: boolean) => {
+      if (isLarge) playExplosionLarge()
+      else         playExplosionSmall()
+      spawnParticles(sx, sz, 'explosion', EXPL_COUNTS[bloodIntensity])
+      spawnParticles(sx, sz, 'spark', SPARK_COUNTS[bloodIntensity])
+      spawnDecal(sx, sz, radius * 0.7)
+      for (const [eid, enemy] of es.enemies) {
+        if (enemiesToRemove.includes(eid)) continue
+        _diff.set(sx - enemy.position.x, sz - enemy.position.y)
+        const dist = _diff.length()
+        if (dist < radius) {
+          const falloff = 1 - dist / radius
+          enemy.health -= Math.round(dmg * falloff)
+          enemy.hitTime = now
+          spawnParticles(enemy.position.x, enemy.position.y, 'blood', BLOOD_COUNTS[bloodIntensity])
+          if (enemy.health <= 0 && !enemiesToRemove.includes(eid)) {
+            enemiesToRemove.push(eid)
+            scoreGained   += ENEMY_CONFIGS[enemy.type].scoreValue
+            creditsGained += ENEMY_CONFIGS[enemy.type].creditValue
+          }
+        }
+      }
+      _diff.set(sx - es.player.position.x, sz - es.player.position.y)
+      if (_diff.length() < radius && now > es.player.invincibleUntil) {
+        const falloff = 1 - _diff.length() / radius
+        es.player.health -= Math.round(dmg * 0.5 * falloff)
+        es.player.invincibleUntil = now + INVINCIBLE_DURATION
+      }
+    }
+
+    // ── Burst fire continuation ───────────────────────────────────────────────
+    if (es.burstRemaining > 0) {
+      es.burstTimer -= rawDt
+      if (es.burstTimer <= 0 && es.ammo > 0) {
+        es.burstRemaining--
+        es.burstTimer = weaponCfg.burstDelay ?? 0.05
+        const bAngle = Math.atan2(_toMouse.x, _toMouse.y)
+        spawnBullet(bAngle)
+        WEAPON_SOUNDS[loadout.selectedWeapon]?.()
+        es.ammo = Math.max(0, es.ammo - 1)
+        setBulletIds(Array.from(es.bullets.keys()))
+      }
+    }
 
     // Spin auto-fire (fires both barrels)
     if (es.maneuver === 'spin' && es.ammo >= 2) {
@@ -333,42 +415,64 @@ export function GameScene() {
             lifetime: BULLET_LIFETIME,
             damage:   finalDamage,
             bounces:  0,
+            maxBounces: bulletMaxBounces,
+            isEnergy,
+            isFlak: isFlakWep,
           })
         }
         es.ammo = Math.max(0, es.ammo - 2)
+        WEAPON_SOUNDS[loadout.selectedWeapon]?.()
         setBulletIds(Array.from(es.bullets.keys()))
       }
-    } else if (isShooting && es.player.shootCooldown <= 0 && es.ammo > 0 && es.maneuver !== 'spin') {
+    } else if (isShooting && es.player.shootCooldown <= 0 && es.ammo > 0 && es.maneuver !== 'spin' && es.burstRemaining === 0) {
       es.player.shootCooldown = weaponCfg.shootCooldown
       const baseAngle = Math.atan2(_toMouse.x, _toMouse.y)
       const offsets   = es.isAkimbo ? [-0.1, 0.1] : [0]
       const ammoCost  = es.isAkimbo ? 2 : 1
 
       if (es.ammo >= ammoCost) {
-        es.ammo = Math.max(0, es.ammo - ammoCost)
-        for (const lateralOff of offsets) {
-          for (let p = 0; p < weaponCfg.pellets; p++) {
-            const ang  = baseAngle + (Math.random() - 0.5) * 2 * weaponCfg.spread + lateralOff
-            const bDir = new THREE.Vector2(Math.sin(ang), Math.cos(ang))
-            const bid  = `bullet-${++es.bulletIdCounter}`
-            es.bullets.set(bid, {
-              id: bid,
-              position: new THREE.Vector2(
-                es.player.position.x + bDir.x * (PLAYER_RADIUS + 0.2),
-                es.player.position.y + bDir.y * (PLAYER_RADIUS + 0.2),
-              ),
-              velocity: new THREE.Vector2(bDir.x * weaponCfg.bulletSpeed, bDir.y * weaponCfg.bulletSpeed),
-              lifetime: BULLET_LIFETIME,
-              damage:   finalDamage,
-              bounces:  0,
-            })
+        WEAPON_SOUNDS[loadout.selectedWeapon]?.()
+
+        if (weaponCfg.isProjectile) {
+          // Plasma / Bazooka: single slow projectile
+          es.weaponProjectile = {
+            x:  es.player.position.x + _toMouse.x * (PLAYER_RADIUS + 0.4),
+            z:  es.player.position.y + _toMouse.y * (PLAYER_RADIUS + 0.4),
+            vx: _toMouse.x * (weaponCfg.projectileSpeed ?? 8),
+            vz: _toMouse.y * (weaponCfg.projectileSpeed ?? 8),
           }
+          es.ammo = Math.max(0, es.ammo - 1)
+        } else if (weaponCfg.isBanana) {
+          // Banana grenade
+          const ang = baseAngle + (Math.random() - 0.5) * 2 * weaponCfg.spread
+          const bDir = new THREE.Vector2(Math.sin(ang), Math.cos(ang))
+          es.bananas.push({
+            id:      `banana-${++es.bananaIdCounter}`,
+            x:       es.player.position.x + bDir.x * (PLAYER_RADIUS + 0.3),
+            z:       es.player.position.y + bDir.y * (PLAYER_RADIUS + 0.3),
+            vx:      bDir.x * (weaponCfg.bulletSpeed ?? 10),
+            vz:      bDir.y * (weaponCfg.bulletSpeed ?? 10),
+            timer:   3.0,
+            bounces: 0,
+          } as BananaData)
+          es.ammo = Math.max(0, es.ammo - 1)
+        } else if (weaponCfg.burstCount && weaponCfg.burstCount > 1) {
+          // Burst fire: fire first round, queue rest
+          es.ammo = Math.max(0, es.ammo - ammoCost)
+          for (const lateralOff of offsets) spawnBullet(baseAngle, lateralOff)
+          es.burstRemaining = weaponCfg.burstCount - 1
+          es.burstTimer     = weaponCfg.burstDelay ?? 0.05
+          setBulletIds(Array.from(es.bullets.keys()))
+        } else {
+          // Standard bullet(s)
+          es.ammo = Math.max(0, es.ammo - ammoCost)
+          for (const lateralOff of offsets) spawnBullet(baseAngle, lateralOff)
+          setBulletIds(Array.from(es.bullets.keys()))
         }
-        setBulletIds(Array.from(es.bullets.keys()))
       }
     }
 
-    // ── Declare removal/score accumulators early (used by grenades + bullets) ─
+    // ── Declare removal/score accumulators ───────────────────────────────────
     const enemiesToRemove: string[] = []
     let scoreGained = 0, creditsGained = 0
 
@@ -457,6 +561,54 @@ export function GameScene() {
       if (mesh) mesh.visible = false
     }
 
+    // ── Update bananas ────────────────────────────────────────────────────────
+    const bananaIdxToRemove: number[] = []
+    for (let bi = 0; bi < es.bananas.length; bi++) {
+      const bn  = es.bananas[bi]
+      const wcf = WEAPON_CONFIGS['banana']
+      bn.x     += bn.vx * rawDt
+      bn.z     += bn.vz * rawDt
+      bn.timer -= rawDt
+
+      const half = ARENA_HALF - 0.25
+      if (Math.abs(bn.x) > half) {
+        if (bn.bounces < (wcf.maxBounces ?? 5)) {
+          bn.vx = -bn.vx * 0.75; bn.x = Math.sign(bn.x) * half; bn.bounces++; playBananaBounce()
+        } else { bn.timer = 0 }
+      }
+      if (Math.abs(bn.z) > half) {
+        if (bn.bounces < (wcf.maxBounces ?? 5)) {
+          bn.vz = -bn.vz * 0.75; bn.z = Math.sign(bn.z) * half; bn.bounces++; playBananaBounce()
+        } else { bn.timer = 0 }
+      }
+
+      // Level collision bounce
+      if (level && pointIntersectsLevel(bn.x, bn.z, 0.2, level)) {
+        if (bn.bounces < (wcf.maxBounces ?? 5)) {
+          bn.vx = -bn.vx * 0.75; bn.vz = -bn.vz * 0.75; bn.bounces++; playBananaBounce()
+        } else { bn.timer = 0 }
+      }
+
+      const mesh = bananaMeshRefs.current[bi % MAX_BANANAS]
+      if (mesh) {
+        mesh.position.set(bn.x, 0.25, bn.z)
+        mesh.visible = true
+        mesh.rotation.y += rawDt * 4
+        const mat = mesh.material as THREE.MeshStandardMaterial
+        mat.emissiveIntensity = (1 - Math.min(1, bn.timer / 3.0)) * 2.5
+      }
+
+      if (bn.timer <= 0) {
+        bananaIdxToRemove.push(bi)
+        if (mesh) mesh.visible = false
+        doSplash(bn.x, bn.z, wcf.projectileRadius ?? 3.5, wcf.projectileDamage ?? 55, true)
+      }
+    }
+    for (let i = bananaIdxToRemove.length - 1; i >= 0; i--) es.bananas.splice(bananaIdxToRemove[i], 1)
+    for (let mi = es.bananas.length; mi < MAX_BANANAS; mi++) {
+      const mesh = bananaMeshRefs.current[mi]; if (mesh) mesh.visible = false
+    }
+
     // ── Vernichter fire (R) ───────────────────────────────────────────────────
     if (rJust && es.vernichterAmmo > 0 && !es.vernichterProjectile) {
       es.vernichterAmmo--
@@ -539,6 +691,53 @@ export function GameScene() {
       if (vernichterLightRef.current) vernichterLightRef.current.visible = false
     }
 
+    // ── Update weapon projectile (plasma / bazooka) ───────────────────────────
+    if (es.weaponProjectile) {
+      const wp  = es.weaponProjectile
+      const wcf = WEAPON_CONFIGS[loadout.selectedWeapon]
+      wp.x += wp.vx * rawDt
+      wp.z += wp.vz * rawDt
+
+      const projRadius  = wcf.projectileRadius ?? 2.5
+      const projDamage  = wcf.projectileDamage ?? 30
+      const isLargeProj = loadout.selectedWeapon === 'bazooka'
+
+      if (weaponProjMeshRef.current) {
+        const pulse = Math.sin(now * 14) * 0.1 + 1
+        weaponProjMeshRef.current.position.set(wp.x, 0.35, wp.z)
+        weaponProjMeshRef.current.scale.setScalar(pulse)
+        weaponProjMeshRef.current.visible = true
+        const mat = weaponProjMeshRef.current.material as THREE.MeshStandardMaterial
+        mat.color.set(isLargeProj ? '#ff6600' : '#00ccff')
+        mat.emissive.set(isLargeProj ? '#ff2200' : '#0066ff')
+      }
+      if (weaponProjLightRef.current) {
+        weaponProjLightRef.current.position.set(wp.x, 1.2, wp.z)
+        weaponProjLightRef.current.color.set(isLargeProj ? '#ff4400' : '#00aaff')
+        weaponProjLightRef.current.visible = true
+      }
+
+      const oob = Math.abs(wp.x) > ARENA_HALF - 0.5 || Math.abs(wp.z) > ARENA_HALF - 0.5
+      let hitSomething = oob
+      if (!oob && level && pointIntersectsLevel(wp.x, wp.z, 0.25, level)) hitSomething = true
+      if (!hitSomething) {
+        for (const enemy of es.enemies.values()) {
+          _diff.set(wp.x - enemy.position.x, wp.z - enemy.position.y)
+          if (_diff.length() < ENEMY_CONFIGS[enemy.type].size + 0.4) { hitSomething = true; break }
+        }
+      }
+
+      if (hitSomething) {
+        es.weaponProjectile = null
+        if (weaponProjMeshRef.current)  weaponProjMeshRef.current.visible  = false
+        if (weaponProjLightRef.current) weaponProjLightRef.current.visible = false
+        doSplash(wp.x, wp.z, projRadius, projDamage, isLargeProj)
+      }
+    } else {
+      if (weaponProjMeshRef.current)  weaponProjMeshRef.current.visible  = false
+      if (weaponProjLightRef.current) weaponProjLightRef.current.visible = false
+    }
+
     // ── Update bullets (with ricochets) ───────────────────────────────────────
     const bulletsToRemove: string[] = []
     for (const [id, bullet] of es.bullets) {
@@ -550,21 +749,23 @@ export function GameScene() {
       if (!remove) {
         const half = ARENA_HALF - BULLET_RADIUS
         if (Math.abs(bullet.position.x) > half) {
-          if (bullet.bounces < MAX_BOUNCES) {
+          if (bullet.bounces < bullet.maxBounces) {
             bullet.velocity.x  = -bullet.velocity.x * 0.85
             bullet.damage      = Math.max(1, Math.round(bullet.damage * 0.7))
             bullet.position.x  = Math.sign(bullet.position.x) * half
             bullet.bounces++
             spawnParticles(bullet.position.x, bullet.position.y, 'spark', SPARK_COUNTS[bloodIntensity])
+            if (bullet.isFlak) playFlakBounce(); else playRicochet()
           } else { remove = true }
         }
         if (!remove && Math.abs(bullet.position.y) > half) {
-          if (bullet.bounces < MAX_BOUNCES) {
+          if (bullet.bounces < bullet.maxBounces) {
             bullet.velocity.y  = -bullet.velocity.y * 0.85
             bullet.damage      = Math.max(1, Math.round(bullet.damage * 0.7))
             bullet.position.y  = Math.sign(bullet.position.y) * half
             bullet.bounces++
             spawnParticles(bullet.position.x, bullet.position.y, 'spark', SPARK_COUNTS[bloodIntensity])
+            if (bullet.isFlak) playFlakBounce(); else playRicochet()
           } else { remove = true }
         }
         if (!remove && level && pointIntersectsLevel(bullet.position.x, bullet.position.y, BULLET_RADIUS, level)) {
@@ -600,6 +801,7 @@ export function GameScene() {
           enemy.hitTime  = now
           hitBullets.add(bid)
           bulletsToRemove.push(bid)
+          playHit()
           spawnParticles(enemy.position.x, enemy.position.y, 'blood', BLOOD_COUNTS[bloodIntensity])
           if (bloodIntensity > 0) {
             spawnDecal(enemy.position.x, enemy.position.y, 0.4 + Math.random() * 0.5)
@@ -693,6 +895,35 @@ export function GameScene() {
             emissiveIntensity={0}
             roughness={0.4}
             metalness={0.7}
+          />
+        </mesh>
+      ))}
+
+      {/* Weapon projectile (plasma / bazooka) */}
+      <mesh ref={weaponProjMeshRef} visible={false}>
+        <sphereGeometry args={[0.3, 10, 10]} />
+        <meshStandardMaterial
+          color="#00ccff"
+          emissive="#0066ff"
+          emissiveIntensity={2}
+          roughness={0.1}
+          metalness={0.2}
+          transparent
+          opacity={0.9}
+        />
+      </mesh>
+      <pointLight ref={weaponProjLightRef} visible={false} color="#00aaff" intensity={5} distance={10} decay={2} />
+
+      {/* Banana meshes */}
+      {Array.from({ length: MAX_BANANAS }, (_, i) => (
+        <mesh key={`banana-slot-${i}`} ref={(m) => { bananaMeshRefs.current[i] = m }} visible={false}>
+          <sphereGeometry args={[0.18, 6, 6]} />
+          <meshStandardMaterial
+            color="#eecc00"
+            emissive="#ffaa00"
+            emissiveIntensity={0}
+            roughness={0.5}
+            metalness={0.1}
           />
         </mesh>
       ))}
