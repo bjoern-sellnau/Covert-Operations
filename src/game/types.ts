@@ -124,3 +124,9 @@ export const GRENADE_DAMAGE   = 65
 
 // Ricochets
 export const MAX_BOUNCES = 2
+
+// Vernichter (BFG)
+export const VERNICHTER_SPEED      = 6
+export const VERNICHTER_RADIUS     = 9
+export const VERNICHTER_DAMAGE     = 500
+export const VERNICHTER_AMMO_PRICE = 300

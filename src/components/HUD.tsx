@@ -45,10 +45,12 @@ export function HUD() {
   const weaponCfg = WEAPON_CONFIGS[selectedWeapon]
   const ammoCfg   = AMMO_CONFIGS[selectedAmmo]
 
-  const [diveCd,   setDiveCd]   = useState(0)
-  const [spinCd,   setSpinCd]   = useState(0)
-  const [maneuver, setManeuver] = useState<'none' | 'dive' | 'spin'>('none')
-  const [grenades, setGrenades] = useState(3)
+  const [diveCd,      setDiveCd]      = useState(0)
+  const [spinCd,      setSpinCd]      = useState(0)
+  const [maneuver,    setManeuver]    = useState<'none' | 'dive' | 'spin'>('none')
+  const [grenades,    setGrenades]    = useState(3)
+  const [vernAmmo,    setVernAmmo]    = useState(1)
+  const [vernActive,  setVernActive]  = useState(false)
   const cdTimer = useRef(0)
 
   useFrame((_, delta) => {
@@ -59,6 +61,8 @@ export function HUD() {
       setSpinCd(Math.max(0, entityStore.spinCooldown))
       setManeuver(entityStore.maneuver)
       setGrenades(entityStore.grenadeCount)
+      setVernAmmo(entityStore.vernichterAmmo)
+      setVernActive(entityStore.vernichterProjectile !== null)
     }
   })
 
@@ -152,6 +156,19 @@ export function HUD() {
             <div style={{ color: grenades > 0 ? '#88ff44' : '#334433', fontSize: 16, textShadow: grenades > 0 ? '0 0 8px #66dd22' : 'none' }}>
               {'◉ '.repeat(grenades).trim() || '○ ○ ○'}
               {grenades > 0 && grenades < 3 ? ' ' + '○ '.repeat(3 - grenades).trim() : ''}
+            </div>
+          </div>
+
+          {/* Vernichter */}
+          <div>
+            <div style={{ color: '#445566', fontSize: 10, letterSpacing: 2 }}>VERNICHTER [R]</div>
+            <div style={{
+              color: vernActive ? '#ffaa00' : vernAmmo > 0 ? '#ff6600' : '#331100',
+              fontSize: vernAmmo > 0 ? 20 : 14, fontWeight: 'bold',
+              textShadow: vernAmmo > 0 ? '0 0 12px #ff4400' : 'none',
+              animation: vernActive ? 'btPulse 0.2s ease-in-out infinite alternate' : 'none',
+            }}>
+              {vernActive ? '◉ AKTIV' : vernAmmo > 0 ? `◉ ×${vernAmmo}` : '○ LEER'}
             </div>
           </div>
 

@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import {
   WEAPON_CONFIGS, EQUIPMENT_CONFIGS, AMMO_CONFIGS,
-  STARTING_CREDITS, AKIMBO_PRICE,
+  STARTING_CREDITS, AKIMBO_PRICE, VERNICHTER_AMMO_PRICE,
   type WeaponId, type EquipmentId, type AmmoId,
 } from './types'
 
@@ -14,6 +14,7 @@ interface LoadoutStore {
   selectedAmmo: AmmoId
   ownedAmmo: AmmoId[]
   isAkimbo: boolean
+  vernichterStock: number
 
   addCredits: (n: number) => void
   buyWeapon: (id: WeaponId) => boolean
@@ -23,6 +24,7 @@ interface LoadoutStore {
   selectAmmo: (id: AmmoId) => void
   buyAkimbo: () => boolean
   toggleAkimbo: () => void
+  buyVernichterAmmo: () => boolean
   getMaxAmmo: () => number
   getDamageBonus: () => number
 }
@@ -37,6 +39,7 @@ export const useLoadoutStore = create<LoadoutStore>()(
       selectedAmmo: 'standard',
       ownedAmmo: ['standard'],
       isAkimbo: false,
+      vernichterStock: 1,
 
       addCredits: (n) => set((s) => ({ credits: s.credits + n })),
 
@@ -111,6 +114,13 @@ export const useLoadoutStore = create<LoadoutStore>()(
         if (!s.isAkimbo) return
         const w = s.selectedWeapon
         if (w !== 'pistol' && w !== 'smg') return
+      },
+
+      buyVernichterAmmo: () => {
+        const s = get()
+        if (s.credits < VERNICHTER_AMMO_PRICE) return false
+        set((st) => ({ credits: st.credits - VERNICHTER_AMMO_PRICE, vernichterStock: st.vernichterStock + 1 }))
+        return true
       },
 
       getMaxAmmo: () => {

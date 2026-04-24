@@ -12,6 +12,7 @@ export function App() {
   const phase        = useGameStore((s) => s.phase)
   const isBulletTime = useGameStore((s) => s.isBulletTime)
   const fpsMode      = useGameStore((s) => s.fpsMode)
+  const bigExplosion = useGameStore((s) => s.bigExplosion)
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}>
@@ -70,6 +71,16 @@ export function App() {
         }}>
           +
         </div>
+      )}
+
+      {/* Vernichter explosion flash */}
+      {bigExplosion && (
+        <div style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none',
+          background: 'radial-gradient(ellipse at center, rgba(255,120,0,0.7) 0%, rgba(255,30,0,0.4) 50%, transparent 100%)',
+          animation: 'btPulse 0.4s ease-out forwards',
+          mixBlendMode: 'screen',
+        }} />
       )}
 
       {phase === 'playing'     && <HUD />}

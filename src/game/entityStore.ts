@@ -119,6 +119,9 @@ function makeEntityStore() {
     grenadeCount: 3,
     // Akimbo
     isAkimbo: false,
+    // Vernichter
+    vernichterAmmo: 1,
+    vernichterProjectile: null as { x: number; z: number; vx: number; vz: number } | null,
     // Particles & decals
     particles: makeParticlePool(),
     decals: makeDecalPool(),
@@ -157,6 +160,8 @@ export function resetEntityStore() {
   s.grenades = []
   s.grenadeCount = 3
   s.isAkimbo = false
+  s.vernichterAmmo = 1
+  s.vernichterProjectile = null
   for (const p of s.particles) p.active = false
   for (const d of s.decals) d.active = false
 }

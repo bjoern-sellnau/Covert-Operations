@@ -20,6 +20,7 @@ import {
   SPIN_DURATION, SPIN_COOLDOWN, SPIN_FIRE_RATE,
   GRENADE_SPEED, GRENADE_FUSE, GRENADE_BOUNCE, GRENADE_RADIUS, GRENADE_DAMAGE,
   MAX_BOUNCES,
+  VERNICHTER_SPEED, VERNICHTER_RADIUS, VERNICHTER_DAMAGE,
 } from './types'
 import { Arena } from './Arena'
 import { PlayerMesh } from './PlayerMesh'
@@ -45,23 +46,26 @@ const MAX_GRENADES = 6
 export function GameScene() {
   const { camera, gl } = useThree()
   const input          = useInput()
-  const setPhase       = useGameStore((s) => s.setPhase)
-  const updateHUD      = useGameStore((s) => s.updateHUD)
-  const setBulletTime  = useGameStore((s) => s.setBulletTime)
-  const setEnemyIds    = useGameStore((s) => s.setEnemyIds)
-  const setBulletIds   = useGameStore((s) => s.setBulletIds)
-  const setWaveMessage = useGameStore((s) => s.setWaveMessage)
-  const setFpsMode     = useGameStore((s) => s.setFpsMode)
-  const isPlaytesting  = useGameStore((s) => s.isPlaytesting)
-  const setPlaytesting = useGameStore((s) => s.setPlaytesting)
-  const phase          = useGameStore((s) => s.phase)
-  const enemyIds       = useGameStore((s) => s.enemyIds)
-  const bulletIds      = useGameStore((s) => s.bulletIds)
+  const setPhase        = useGameStore((s) => s.setPhase)
+  const updateHUD       = useGameStore((s) => s.updateHUD)
+  const setBulletTime   = useGameStore((s) => s.setBulletTime)
+  const setEnemyIds     = useGameStore((s) => s.setEnemyIds)
+  const setBulletIds    = useGameStore((s) => s.setBulletIds)
+  const setWaveMessage  = useGameStore((s) => s.setWaveMessage)
+  const setFpsMode      = useGameStore((s) => s.setFpsMode)
+  const isPlaytesting   = useGameStore((s) => s.isPlaytesting)
+  const setPlaytesting  = useGameStore((s) => s.setPlaytesting)
+  const setBigExplosion = useGameStore((s) => s.setBigExplosion)
+  const phase           = useGameStore((s) => s.phase)
+  const enemyIds        = useGameStore((s) => s.enemyIds)
+  const bulletIds       = useGameStore((s) => s.bulletIds)
 
-  const playerGroupRef  = useRef<THREE.Group>(null)
-  const ambientRef      = useRef<THREE.AmbientLight>(null)
-  const dirLightRef     = useRef<THREE.DirectionalLight>(null)
-  const grenadeMeshRefs = useRef<(THREE.Mesh | null)[]>(Array(MAX_GRENADES).fill(null))
+  const playerGroupRef    = useRef<THREE.Group>(null)
+  const ambientRef        = useRef<THREE.AmbientLight>(null)
+  const dirLightRef       = useRef<THREE.DirectionalLight>(null)
+  const grenadeMeshRefs   = useRef<(THREE.Mesh | null)[]>(Array(MAX_GRENADES).fill(null))
+  const vernichterMeshRef = useRef<THREE.Mesh>(null)
+  const vernichterLightRef = useRef<THREE.PointLight>(null)
 
   const hudTimer   = useRef(0)
   const btTimer    = useRef(0)
@@ -74,6 +78,7 @@ export function GameScene() {
   const qPrev     = useRef(false)
   const ePrev     = useRef(false)
   const gPrev     = useRef(false)
+  const rPrev     = useRef(false)
 
   useEffect(() => { phaseRef.current = phase }, [phase])
 
@@ -90,6 +95,7 @@ export function GameScene() {
     entityStore.isAkimbo      = loadout.isAkimbo &&
       (loadout.selectedWeapon === 'pistol' || loadout.selectedWeapon === 'smg')
     entityStore.grenadeCount  = 3
+    entityStore.vernichterAmmo = loadout.vernichterStock
 
     activeLevelRef.current = useEditorStore.getState().activePlayLevel
 
@@ -149,14 +155,17 @@ export function GameScene() {
     const qDown     = keys.has('KeyQ')
     const eDown     = keys.has('KeyE')
     const gDown     = keys.has('KeyG')
+    const rDown     = keys.has('KeyR')
     const spaceJust = spaceDown && !spacePrev.current
     const qJust     = qDown     && !qPrev.current
     const eJust     = eDown     && !ePrev.current
     const gJust     = gDown     && !gPrev.current
+    const rJust     = rDown     && !rPrev.current
     spacePrev.current = spaceDown
     qPrev.current     = qDown
     ePrev.current     = eDown
     gPrev.current     = gDown
+    rPrev.current     = rDown
 
     // ── Bullet time ───────────────────────────────────────────────────────────
     const wantBT     = keys.has('ShiftLeft') || keys.has('ShiftRight')
@@ -444,6 +453,88 @@ export function GameScene() {
       if (mesh) mesh.visible = false
     }
 
+    // ── Vernichter fire (R) ───────────────────────────────────────────────────
+    if (rJust && es.vernichterAmmo > 0 && !es.vernichterProjectile) {
+      es.vernichterAmmo--
+      es.vernichterProjectile = {
+        x:  es.player.position.x + _toMouse.x * (PLAYER_RADIUS + 0.6),
+        z:  es.player.position.y + _toMouse.y * (PLAYER_RADIUS + 0.6),
+        vx: _toMouse.x * VERNICHTER_SPEED,
+        vz: _toMouse.y * VERNICHTER_SPEED,
+      }
+    }
+
+    // ── Update Vernichter projectile ──────────────────────────────────────────
+    if (es.vernichterProjectile) {
+      const vp = es.vernichterProjectile
+      vp.x += vp.vx * rawDt
+      vp.z += vp.vz * rawDt
+
+      // Pulsing glow mesh
+      if (vernichterMeshRef.current) {
+        const pulse = Math.sin(now * 12) * 0.15 + 1
+        vernichterMeshRef.current.position.set(vp.x, 0.4, vp.z)
+        vernichterMeshRef.current.scale.setScalar(pulse)
+        vernichterMeshRef.current.visible = true
+        const mat = vernichterMeshRef.current.material as THREE.MeshStandardMaterial
+        mat.emissiveIntensity = 1.5 + Math.sin(now * 20) * 0.5
+      }
+      if (vernichterLightRef.current) {
+        vernichterLightRef.current.position.set(vp.x, 1.5, vp.z)
+        vernichterLightRef.current.visible = true
+      }
+
+      // Hit wall → explode
+      const oob = Math.abs(vp.x) > ARENA_HALF - 0.5 || Math.abs(vp.z) > ARENA_HALF - 0.5
+      // Hit enemy → explode
+      let hitEnemy = false
+      for (const enemy of es.enemies.values()) {
+        _diff.set(vp.x - enemy.position.x, vp.z - enemy.position.y)
+        if (_diff.length() < ENEMY_CONFIGS[enemy.type].size + 0.6) { hitEnemy = true; break }
+      }
+
+      if (oob || hitEnemy) {
+        // EXPLOSION
+        es.vernichterProjectile = null
+        if (vernichterMeshRef.current)  vernichterMeshRef.current.visible  = false
+        if (vernichterLightRef.current) vernichterLightRef.current.visible = false
+
+        // Massive particles — ignore blood intensity, always maximum
+        spawnParticles(vp.x, vp.z, 'explosion', 80)
+        spawnParticles(vp.x, vp.z, 'explosion', 60)
+        spawnParticles(vp.x, vp.z, 'spark', 40)
+        spawnDecal(vp.x, vp.z, 3.5)
+        spawnDecal(vp.x + 1, vp.z + 1, 2)
+        spawnDecal(vp.x - 1, vp.z - 0.5, 1.5)
+
+        // Kill all enemies in radius
+        for (const [eid, enemy] of es.enemies) {
+          if (enemiesToRemove.includes(eid)) continue
+          _diff.set(vp.x - enemy.position.x, vp.z - enemy.position.y)
+          const dist = _diff.length()
+          if (dist < VERNICHTER_RADIUS) {
+            const falloff = 1 - dist / VERNICHTER_RADIUS
+            enemy.health -= Math.round(VERNICHTER_DAMAGE * falloff)
+            spawnParticles(enemy.position.x, enemy.position.y, 'blood', 20)
+            spawnParticles(enemy.position.x, enemy.position.y, 'explosion', 10)
+            if (enemy.health <= 0 && !enemiesToRemove.includes(eid)) {
+              enemiesToRemove.push(eid)
+              scoreGained   += ENEMY_CONFIGS[enemy.type].scoreValue * 3
+              creditsGained += ENEMY_CONFIGS[enemy.type].creditValue
+            }
+          }
+        }
+
+        // Screen flash
+        setBigExplosion(true)
+        setTimeout(() => setBigExplosion(false), 400)
+      }
+    } else {
+      // Hide when inactive
+      if (vernichterMeshRef.current)  vernichterMeshRef.current.visible  = false
+      if (vernichterLightRef.current) vernichterLightRef.current.visible = false
+    }
+
     // ── Update bullets (with ricochets) ───────────────────────────────────────
     const bulletsToRemove: string[] = []
     for (const [id, bullet] of es.bullets) {
@@ -601,6 +692,28 @@ export function GameScene() {
           />
         </mesh>
       ))}
+
+      {/* Vernichter projectile */}
+      <mesh ref={vernichterMeshRef} visible={false}>
+        <sphereGeometry args={[0.6, 12, 12]} />
+        <meshStandardMaterial
+          color="#ff6600"
+          emissive="#ff2200"
+          emissiveIntensity={1.5}
+          roughness={0.1}
+          metalness={0.3}
+          transparent
+          opacity={0.92}
+        />
+      </mesh>
+      <pointLight
+        ref={vernichterLightRef}
+        visible={false}
+        color="#ff4400"
+        intensity={8}
+        distance={12}
+        decay={2}
+      />
 
       <ParticleSystem />
 

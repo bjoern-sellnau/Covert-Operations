@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useGameStore } from '../store/gameStore'
 import { useLoadoutStore } from '../game/loadoutStore'
 import {
-  WEAPON_CONFIGS, EQUIPMENT_CONFIGS, AMMO_CONFIGS, AKIMBO_PRICE,
+  WEAPON_CONFIGS, EQUIPMENT_CONFIGS, AMMO_CONFIGS, AKIMBO_PRICE, VERNICHTER_AMMO_PRICE,
   type WeaponId, type EquipmentId, type AmmoId,
 } from '../game/types'
 
@@ -340,6 +340,59 @@ function CharacterPanel() {
   )
 }
 
+// ── Vernichter card ──────────────────────────────────────────────────────────
+
+function VernichterCard() {
+  const { credits, vernichterStock, buyVernichterAmmo } = useLoadoutStore()
+  const canAfford = credits >= VERNICHTER_AMMO_PRICE
+
+  return (
+    <div
+      style={{
+        background: '#120800',
+        border: '1px solid #ff440044',
+        borderRadius: 4,
+        padding: '14px 16px',
+        cursor: canAfford ? 'pointer' : 'default',
+        transition: 'border-color 0.15s',
+        boxShadow: '0 0 20px #ff220022, inset 0 0 30px #ff110011',
+      }}
+      onClick={() => canAfford && buyVernichterAmmo()}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+        <div>
+          <div style={{ color: '#ff6600', fontSize: 16, fontWeight: 'bold', letterSpacing: 2, textShadow: '0 0 12px #ff4400' }}>
+            VERNICHTER
+          </div>
+          <div style={{ color: '#554433', fontSize: 11, marginTop: 2, letterSpacing: 1 }}>BFG-9000 · Klasse S · [R]-Taste</div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ color: '#ff6600', fontSize: 11, letterSpacing: 2, padding: '3px 8px', border: '1px solid #ff4400', borderRadius: 2, marginBottom: 4 }}>
+            ×{vernichterStock} VORRAT
+          </div>
+          <div style={{ color: canAfford ? '#ffee00' : '#664400', fontSize: 13, fontWeight: 'bold' }}>
+            {VERNICHTER_AMMO_PRICE} CR / Schuss
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
+        <div style={{ color: '#ff4400', fontSize: 12, fontWeight: 'bold' }}>Radius: 9m</div>
+        <div style={{ color: '#ff4400', fontSize: 12, fontWeight: 'bold' }}>Schaden: MAXIMAL</div>
+        <div style={{ color: '#ff4400', fontSize: 12, fontWeight: 'bold' }}>Tempo: langsam</div>
+      </div>
+      <div style={{ color: '#554433', fontSize: 11, lineHeight: 1.5 }}>
+        Langsames Plasmaprojektil. Explodiert bei Aufprall. Vernichtet alles im Umkreis sofort.
+        Kein Freund-Feind-Schutz. Eigene Deckung empfohlen.
+      </div>
+
+      {!canAfford && (
+        <div style={{ color: '#442200', fontSize: 10, marginTop: 6, letterSpacing: 1 }}>NICHT GENUG CREDITS</div>
+      )}
+    </div>
+  )
+}
+
 // ── Akimbo upgrade card ──────────────────────────────────────────────────────
 
 function AkimboCard() {
@@ -493,6 +546,8 @@ export function Shop() {
               ))}
               <div style={{ color: '#334455', fontSize: 10, letterSpacing: 3, marginTop: 8, marginBottom: 4 }}>UPGRADES</div>
               <AkimboCard />
+              <div style={{ color: '#553322', fontSize: 10, letterSpacing: 3, marginTop: 8, marginBottom: 4 }}>SCHWERE WAFFEN</div>
+              <VernichterCard />
             </>
           )}
 
