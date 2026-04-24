@@ -5,6 +5,61 @@ import { useLoadoutStore } from '../game/loadoutStore'
 import { entityStore } from '../game/entityStore'
 import { PLAYER_MAX_HEALTH, FOCUS_MAX, WEAPON_CONFIGS, AMMO_CONFIGS, DIVE_COOLDOWN, SPIN_COOLDOWN } from '../game/types'
 
+function P2Panel() {
+  const p2Active  = useGameStore((s) => s.p2Active)
+  const p2Health  = useGameStore((s) => s.p2Health)
+  const p2Ammo    = useGameStore((s) => s.p2Ammo)
+  const p2MaxAmmo = useGameStore((s) => s.p2MaxAmmo)
+
+  if (!p2Active) {
+    return (
+      <div style={{
+        position: 'absolute', bottom: 20, left: 20,
+        color: '#334455', fontSize: 10, letterSpacing: 2,
+      }}>
+        PFEILTASTEN / GAMEPAD = SPIELER 2
+      </div>
+    )
+  }
+
+  const hpPct    = Math.max(0, p2Health / PLAYER_MAX_HEALTH) * 100
+  const hpColor  = hpPct > 50 ? '#ff8833' : hpPct > 25 ? '#ffaa00' : '#ff3300'
+  const ammoPct  = p2MaxAmmo > 0 ? (p2Ammo / p2MaxAmmo) * 100 : 0
+  const p2Grens  = entityStore.grenadeCount2
+
+  return (
+    <div style={{
+      position: 'absolute', bottom: 20, left: 20,
+      background: '#08080fcc', border: '1px solid #ff440044',
+      borderRadius: 4, padding: '10px 14px', minWidth: 160,
+      backdropFilter: 'blur(4px)',
+    }}>
+      <div style={{ color: '#ff6600', fontSize: 10, letterSpacing: 3, marginBottom: 8, textShadow: '0 0 6px #ff4400' }}>
+        SPIELER 2
+      </div>
+      <div style={{ color: '#88aacc', fontSize: 9, letterSpacing: 2, marginBottom: 3 }}>HEALTH</div>
+      <div style={{ height: 7, background: '#111122', border: `1px solid #ff440033`, borderRadius: 2, overflow: 'hidden', marginBottom: 3 }}>
+        <div style={{ height: '100%', width: `${hpPct}%`, background: hpColor, transition: 'width 0.1s', boxShadow: `0 0 5px ${hpColor}` }} />
+      </div>
+      <div style={{ color: hpColor, fontSize: 11, fontWeight: 'bold', marginBottom: 8 }}>
+        {p2Health <= 0 ? 'TOT' : `${p2Health} / ${PLAYER_MAX_HEALTH}`}
+      </div>
+      <div style={{ color: '#88aacc', fontSize: 9, letterSpacing: 2, marginBottom: 3 }}>MUNITION</div>
+      <div style={{ height: 5, background: '#111122', borderRadius: 2, overflow: 'hidden', marginBottom: 3 }}>
+        <div style={{ height: '100%', width: `${ammoPct}%`, background: '#ff8844', transition: 'width 0.05s' }} />
+      </div>
+      <div style={{ color: '#cc6644', fontSize: 10, marginBottom: 8 }}>{p2Ammo} / {p2MaxAmmo}</div>
+      <div style={{ color: p2Grens > 0 ? '#88ff44' : '#334433', fontSize: 13 }}>
+        {'◉ '.repeat(p2Grens).trim() || '○'}
+        {p2Grens > 0 && p2Grens < 3 ? ' ' + '○ '.repeat(3 - p2Grens).trim() : ''}
+      </div>
+      <div style={{ color: '#334455', fontSize: 9, letterSpacing: 1, marginTop: 8 }}>
+        ↑↓←→ Bewegen · RCtrl Schießen<br />RShift Granate · Gamepad OK
+      </div>
+    </div>
+  )
+}
+
 function ManeuverBar({ label, cooldown, maxCooldown, color, active }: {
   label: string; cooldown: number; maxCooldown: number; color: string; active: boolean
 }) {
@@ -211,6 +266,8 @@ export function HUD() {
         WASD — Bewegen &nbsp;|&nbsp; LMT — Schießen &nbsp;|&nbsp; Space — Dive &nbsp;|&nbsp; G — Granate &nbsp;|&nbsp; Shift — Bullet Time
         {canAkimbo ? ' | Q/E — Ballett-Spin' : ''}
       </div>
+
+      <P2Panel />
     </div>
   )
 }

@@ -57,6 +57,7 @@ export function GameScene() {
   const input          = useInput()
   const setPhase        = useGameStore((s) => s.setPhase)
   const updateHUD       = useGameStore((s) => s.updateHUD)
+  const updateP2HUD     = useGameStore((s) => s.updateP2HUD)
   const setBulletTime   = useGameStore((s) => s.setBulletTime)
   const setEnemyIds     = useGameStore((s) => s.setEnemyIds)
   const setBulletIds    = useGameStore((s) => s.setBulletIds)
@@ -71,6 +72,7 @@ export function GameScene() {
   const activePlayLevel = useEditorStore((s) => s.activePlayLevel)
 
   const playerGroupRef    = useRef<THREE.Group>(null)
+  const player2GroupRef   = useRef<THREE.Group>(null)
   const ambientRef        = useRef<THREE.AmbientLight>(null)
   const dirLightRef       = useRef<THREE.DirectionalLight>(null)
   const grenadeMeshRefs      = useRef<(THREE.Mesh | null)[]>(Array(MAX_GRENADES).fill(null))
@@ -87,12 +89,17 @@ export function GameScene() {
   const fpsModeRef = useRef(false)
   const activeLevelRef = useRef<Level | null>(null)
 
-  // Edge-detection refs
+  // Edge-detection refs — P1
   const spacePrev = useRef(false)
   const qPrev     = useRef(false)
   const ePrev     = useRef(false)
   const gPrev     = useRef(false)
   const rPrev     = useRef(false)
+  // Edge-detection refs — P2
+  const p2GrenPrev   = useRef(false)
+  const p2GpShootPrev = useRef(false)
+  const p2GpGrenPrev  = useRef(false)
+  const hudP2Timer    = useRef(0)
 
   useEffect(() => { phaseRef.current = phase }, [phase])
 
@@ -104,13 +111,16 @@ export function GameScene() {
     useGameStore.getState().reset()
 
     const loadout = useLoadoutStore.getState()
-    entityStore.ammo          = loadout.getMaxAmmo()
-    entityStore.maxAmmo       = entityStore.ammo
-    entityStore.creditsEarned = 0
-    entityStore.isAkimbo      = loadout.isAkimbo &&
+    entityStore.ammo           = loadout.getMaxAmmo()
+    entityStore.maxAmmo        = entityStore.ammo
+    entityStore.creditsEarned  = 0
+    entityStore.isAkimbo       = loadout.isAkimbo &&
       (loadout.selectedWeapon === 'pistol' || loadout.selectedWeapon === 'smg')
-    entityStore.grenadeCount  = 3
+    entityStore.grenadeCount   = 3
     entityStore.vernichterAmmo = loadout.vernichterStock
+    entityStore.ammo2          = loadout.getMaxAmmo()
+    entityStore.maxAmmo2       = entityStore.ammo2
+    entityStore.grenadeCount2  = 3
 
     activeLevelRef.current = useEditorStore.getState().activePlayLevel
 
@@ -322,15 +332,150 @@ export function GameScene() {
       playerGroupRef.current.visible    = !fpsModeRef.current
     }
 
+    // ── Weapon config (used by both P1 and P2 shooting) ──────────────────────
+    const loadout          = useLoadoutStore.getState()
+    const weaponCfg        = WEAPON_CONFIGS[loadout.selectedWeapon]
+    const finalDamage      = weaponCfg.baseDamage + AMMO_CONFIGS[loadout.selectedAmmo].damageBonus
+    const isEnergy         = loadout.selectedWeapon === 'blaster' || loadout.selectedWeapon === 'plasma'
+    const isFlakWep        = loadout.selectedWeapon === 'flak'
+    const bulletMaxBounces = weaponCfg.maxBounces ?? MAX_BOUNCES
+
+    // ── Player 2 — keyboard (Arrows + RCtrl shoot + RShift grenade) ──────────
+    // Also: gamepad index 1 (or index 0 if P1 is on keyboard)
+    {
+      // Read gamepad for P2 (any connected gamepad)
+      const gamepads = navigator.getGamepads()
+      const gp = gamepads[0] ?? gamepads[1] ?? null
+
+      const p2ArrowUp    = keys.has('ArrowUp')
+      const p2ArrowDown  = keys.has('ArrowDown')
+      const p2ArrowLeft  = keys.has('ArrowLeft')
+      const p2ArrowRight = keys.has('ArrowRight')
+      const p2ShootKey   = keys.has('ControlRight') || keys.has('NumpadEnter')
+      const p2GrenKey    = keys.has('ShiftRight')   || keys.has('Numpad0')
+
+      const gpLX  = gp ? (Math.abs(gp.axes[0]) > 0.15 ? gp.axes[0] : 0) : 0
+      const gpLY  = gp ? (Math.abs(gp.axes[1]) > 0.15 ? gp.axes[1] : 0) : 0
+      const gpRX  = gp ? (Math.abs(gp.axes[2]) > 0.15 ? gp.axes[2] : 0) : 0
+      const gpRY  = gp ? (Math.abs(gp.axes[3]) > 0.15 ? gp.axes[3] : 0) : 0
+      const gpShoot = gp ? (gp.buttons[7]?.pressed || gp.buttons[5]?.pressed) : false
+      const gpGren  = gp ? (gp.buttons[4]?.pressed || gp.buttons[6]?.pressed) : false
+
+      const p2Moving = p2ArrowUp || p2ArrowDown || p2ArrowLeft || p2ArrowRight
+        || Math.abs(gpLX) > 0.15 || Math.abs(gpLY) > 0.15
+
+      // Activate P2 on first input
+      if ((p2Moving || p2ShootKey || gp) && !es.player2Active) {
+        es.player2Active = true
+        es.player2.position.set(es.player.position.x + 1.5, es.player.position.y + 1.5)
+      }
+
+      if (es.player2Active && es.player2.health > 0) {
+        const p2 = es.player2
+
+        // Movement
+        let p2dx = 0, p2dz = 0
+        if (p2ArrowUp)    p2dz -= 1
+        if (p2ArrowDown)  p2dz += 1
+        if (p2ArrowLeft)  p2dx -= 1
+        if (p2ArrowRight) p2dx += 1
+        if (Math.abs(gpLX) > 0.15) p2dx += gpLX
+        if (Math.abs(gpLY) > 0.15) p2dz += gpLY
+        if (p2dx !== 0 || p2dz !== 0) {
+          const plen = Math.sqrt(p2dx * p2dx + p2dz * p2dz)
+          p2dx /= plen; p2dz /= plen
+          let p2x = Math.max(-ARENA_HALF + PLAYER_RADIUS + 0.5, Math.min(ARENA_HALF - PLAYER_RADIUS - 0.5, p2.position.x + p2dx * PLAYER_SPEED * playerDt))
+          let p2z = Math.max(-ARENA_HALF + PLAYER_RADIUS + 0.5, Math.min(ARENA_HALF - PLAYER_RADIUS - 0.5, p2.position.y + p2dz * PLAYER_SPEED * playerDt))
+          if (level) { const r = resolveCircleVsLevel(p2x, p2z, PLAYER_RADIUS, level); p2x = r.x; p2z = r.z }
+          p2.position.x = p2x
+          p2.position.y = p2z
+          // Face movement direction
+          p2.angle = Math.atan2(p2dx, -p2dz)
+        }
+
+        // Gamepad right-stick aim override
+        if (Math.abs(gpRX) > 0.15 || Math.abs(gpRY) > 0.15) {
+          p2.angle = Math.atan2(gpRX, -gpRY)
+        } else if (!p2Moving) {
+          // Auto-aim at nearest enemy when stationary
+          let nearDist = Infinity
+          for (const enemy of es.enemies.values()) {
+            const d = Math.hypot(enemy.position.x - p2.position.x, enemy.position.y - p2.position.y)
+            if (d < nearDist) {
+              nearDist = d
+              p2.angle = Math.atan2(enemy.position.x - p2.position.x, -(enemy.position.y - p2.position.y))
+            }
+          }
+        }
+
+        const p2ToMouse = new THREE.Vector2(Math.sin(p2.angle), -Math.cos(p2.angle))
+
+        // Shooting
+        p2.shootCooldown -= delta
+        const p2ShootNow = p2ShootKey || gpShoot
+        const p2ShootJust = gpShoot && !p2GpShootPrev.current
+        p2GpShootPrev.current = gpShoot
+        if ((p2ShootNow && !gpShoot) || p2ShootJust) {
+          if (p2.shootCooldown <= 0 && es.ammo2 > 0) {
+            p2.shootCooldown = weaponCfg.shootCooldown
+            for (let pp = 0; pp < weaponCfg.pellets; pp++) {
+              const ang = Math.atan2(p2ToMouse.x, p2ToMouse.y) + (Math.random() - 0.5) * 2 * weaponCfg.spread
+              const bDir = new THREE.Vector2(Math.sin(ang), Math.cos(ang))
+              const bid = `bullet-${++es.bulletIdCounter}`
+              es.bullets.set(bid, {
+                id: bid,
+                position: new THREE.Vector2(
+                  p2.position.x + bDir.x * (PLAYER_RADIUS + 0.2),
+                  p2.position.y + bDir.y * (PLAYER_RADIUS + 0.2),
+                ),
+                velocity: new THREE.Vector2(bDir.x * weaponCfg.bulletSpeed, bDir.y * weaponCfg.bulletSpeed),
+                lifetime: BULLET_LIFETIME,
+                damage: finalDamage,
+                bounces: 0,
+                maxBounces: bulletMaxBounces,
+                isEnergy,
+                isFlak: isFlakWep,
+              })
+            }
+            es.ammo2 = Math.max(0, es.ammo2 - 1)
+            WEAPON_SOUNDS[loadout.selectedWeapon]?.()
+            setBulletIds(Array.from(es.bullets.keys()))
+          }
+        }
+
+        // Grenade
+        const p2GrenNow = p2GrenKey
+        const p2GrenGpNow = gpGren && !p2GpGrenPrev.current
+        p2GpGrenPrev.current = gpGren
+        const p2GrenJust = (p2GrenNow && !p2GrenPrev.current) || p2GrenGpNow
+        p2GrenPrev.current = p2GrenNow
+        if (p2GrenJust && es.grenadeCount2 > 0) {
+          es.grenadeCount2--
+          es.grenades.push({
+            id:      `grenade-${++es.grenadeIdCounter}`,
+            x:       p2.position.x + p2ToMouse.x * (PLAYER_RADIUS + 0.3),
+            z:       p2.position.y + p2ToMouse.y * (PLAYER_RADIUS + 0.3),
+            vx:      p2ToMouse.x * GRENADE_SPEED,
+            vz:      p2ToMouse.y * GRENADE_SPEED,
+            timer:   GRENADE_FUSE,
+            bounces: 0,
+          })
+        }
+
+        // P2 mesh position
+        if (player2GroupRef.current) {
+          player2GroupRef.current.position.set(p2.position.x, 0, p2.position.y)
+          player2GroupRef.current.rotation.y = p2.angle
+          player2GroupRef.current.visible = true
+        }
+      } else if (player2GroupRef.current) {
+        player2GroupRef.current.visible = !es.player2Active
+      }
+    }
+
     // ── Shooting ──────────────────────────────────────────────────────────────
     es.player.shootCooldown -= delta
-    const loadout     = useLoadoutStore.getState()
-    const weaponCfg   = WEAPON_CONFIGS[loadout.selectedWeapon]
-    const finalDamage = weaponCfg.baseDamage + AMMO_CONFIGS[loadout.selectedAmmo].damageBonus
-    const isShooting  = input.current.mouseButtons.has(0)
-    const isEnergy    = loadout.selectedWeapon === 'blaster' || loadout.selectedWeapon === 'plasma'
-    const isFlakWep   = loadout.selectedWeapon === 'flak'
-    const bulletMaxBounces = weaponCfg.maxBounces ?? MAX_BOUNCES
+    const isShooting = input.current.mouseButtons.has(0)
 
     // Helper: spawn one regular bullet
     const spawnBullet = (angle: number, lateralOff = 0) => {
@@ -787,7 +932,16 @@ export function GameScene() {
     for (const [eid, enemy] of es.enemies) {
       if (enemiesToRemove.includes(eid)) continue
       const cfg = ENEMY_CONFIGS[enemy.type]
-      _toPlayer.set(es.player.position.x - enemy.position.x, es.player.position.y - enemy.position.y)
+
+      // Target nearest active player
+      const p2Live = es.player2Active && es.player2.health > 0
+      let targetX = es.player.position.x, targetY = es.player.position.y
+      if (p2Live) {
+        const d1 = Math.hypot(es.player.position.x - enemy.position.x, es.player.position.y - enemy.position.y)
+        const d2 = Math.hypot(es.player2.position.x - enemy.position.x, es.player2.position.y - enemy.position.y)
+        if (d2 < d1) { targetX = es.player2.position.x; targetY = es.player2.position.y }
+      }
+      _toPlayer.set(targetX - enemy.position.x, targetY - enemy.position.y)
       const dist = _toPlayer.length()
 
       if (dist > 0.05) {
@@ -863,10 +1017,21 @@ export function GameScene() {
         }
       }
 
-      if (dist < cfg.size + PLAYER_RADIUS && now > es.player.invincibleUntil) {
+      // Damage P1
+      const distP1 = Math.hypot(es.player.position.x - enemy.position.x, es.player.position.y - enemy.position.y)
+      if (distP1 < cfg.size + PLAYER_RADIUS && now > es.player.invincibleUntil) {
         es.player.health -= cfg.damage
         es.player.invincibleUntil = now + INVINCIBLE_DURATION
         if (es.player.health < 0) es.player.health = 0
+      }
+      // Damage P2
+      if (es.player2Active && es.player2.health > 0) {
+        const distP2 = Math.hypot(es.player2.position.x - enemy.position.x, es.player2.position.y - enemy.position.y)
+        if (distP2 < cfg.size + PLAYER_RADIUS && now > es.player2.invincibleUntil) {
+          es.player2.health -= cfg.damage
+          es.player2.invincibleUntil = now + INVINCIBLE_DURATION
+          if (es.player2.health < 0) es.player2.health = 0
+        }
       }
     }
 
@@ -895,7 +1060,9 @@ export function GameScene() {
     }
 
     // ── Game over ─────────────────────────────────────────────────────────────
-    if (es.player.health <= 0) {
+    const p1Dead = es.player.health <= 0
+    const p2Dead = !es.player2Active || es.player2.health <= 0
+    if (p1Dead && p2Dead) {
       if (fpsModeRef.current) { document.exitPointerLock(); fpsModeRef.current = false; setFpsMode(false) }
       useLoadoutStore.getState().addCredits(es.creditsEarned)
       setPhase('gameover')
@@ -910,6 +1077,11 @@ export function GameScene() {
       hudTimer.current = 0
       updateHUD(Math.max(0, Math.ceil(es.player.health)), es.score, es.wave, es.ammo, es.maxAmmo, es.creditsEarned)
     }
+    hudP2Timer.current += delta
+    if (hudP2Timer.current >= 0.1) {
+      hudP2Timer.current = 0
+      updateP2HUD(es.player2Active, Math.max(0, Math.ceil(es.player2.health)), es.ammo2, es.maxAmmo2)
+    }
     btTimer.current += delta
     if (btTimer.current >= 0.03) {
       btTimer.current = 0
@@ -923,6 +1095,9 @@ export function GameScene() {
       {activeLevelRef.current && <GameLevelObjects level={activeLevelRef.current} />}
       <group ref={playerGroupRef}>
         <PlayerMesh />
+      </group>
+      <group ref={player2GroupRef} visible={false}>
+        <PlayerMesh player2 />
       </group>
       {enemyIds.map((id) => <EnemyMesh key={id} id={id} />)}
       {bulletIds.map((id) => <BulletMesh key={id} id={id} />)}

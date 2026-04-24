@@ -18,11 +18,17 @@ interface GameStore {
   isPlaytesting: boolean
   gameMode: 'arena' | 'skydive'
   bigExplosion: boolean
+  // Co-op Player 2
+  p2Active: boolean
+  p2Health: number
+  p2Ammo: number
+  p2MaxAmmo: number
 
   setPhase: (phase: GamePhase) => void
   setGameMode: (m: 'arena' | 'skydive') => void
   setBigExplosion: (v: boolean) => void
   updateHUD: (health: number, score: number, wave: number, ammo: number, maxAmmo: number, credits: number) => void
+  updateP2HUD: (active: boolean, health: number, ammo: number, maxAmmo: number) => void
   setBulletTime: (focus: number, active: boolean) => void
   setEnemyIds: (ids: string[]) => void
   setBulletIds: (ids: string[]) => void
@@ -49,12 +55,18 @@ export const useGameStore = create<GameStore>((set) => ({
   isPlaytesting: false,
   gameMode: 'arena',
   bigExplosion: false,
+  p2Active: false,
+  p2Health: 100,
+  p2Ammo: 48,
+  p2MaxAmmo: 48,
 
   setPhase: (phase) => set({ phase }),
   setGameMode: (gameMode) => set({ gameMode }),
   setBigExplosion: (bigExplosion) => set({ bigExplosion }),
   updateHUD: (health, score, wave, ammo, maxAmmo, creditsEarned) =>
     set({ health, score, wave, ammo, maxAmmo, creditsEarned }),
+  updateP2HUD: (p2Active, p2Health, p2Ammo, p2MaxAmmo) =>
+    set({ p2Active, p2Health, p2Ammo, p2MaxAmmo }),
   setBulletTime: (focus, isBulletTime) => set({ focus, isBulletTime }),
   setEnemyIds: (ids) => set({ enemyIds: ids }),
   setBulletIds: (ids) => set({ bulletIds: ids }),
@@ -68,5 +80,6 @@ export const useGameStore = create<GameStore>((set) => ({
       focus: 100, isBulletTime: false,
       ammo: 48, maxAmmo: 48, creditsEarned: 0, fpsMode: false,
       gameMode: 'arena',
+      p2Active: false, p2Health: 100, p2Ammo: 48, p2MaxAmmo: 48,
     }),
 }))

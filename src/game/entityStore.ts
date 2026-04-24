@@ -152,6 +152,18 @@ function makeEntityStore() {
     // Burst fire state
     burstRemaining: 0,
     burstTimer: 0,
+    // ── Player 2 (local co-op) ───────────────────────────────────────────────
+    player2: {
+      position: new THREE.Vector2(2, 0),
+      angle: 0,
+      health: 100,
+      shootCooldown: 0,
+      invincibleUntil: 0,
+    } as PlayerData,
+    player2Active: false,
+    ammo2: 48,
+    maxAmmo2: 48,
+    grenadeCount2: 3,
     // Particles & decals
     particles: makeParticlePool(),
     decals: makeDecalPool(),
@@ -196,6 +208,15 @@ export function resetEntityStore() {
   s.bananas = []
   s.burstRemaining = 0
   s.burstTimer = 0
+  s.player2.position.set(2, 0)
+  s.player2.angle = 0
+  s.player2.health = 100
+  s.player2.shootCooldown = 0
+  s.player2.invincibleUntil = 0
+  s.player2Active = false
+  s.ammo2 = 48
+  s.maxAmmo2 = 48
+  s.grenadeCount2 = 3
   for (const p of s.particles) p.active = false
   for (const d of s.decals) d.active = false
 }
