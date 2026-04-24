@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useMemo } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { OrbitControls, PointerLockControls } from '@react-three/drei'
 import * as THREE from 'three'
@@ -8,21 +8,42 @@ import { ENTITY_CFG } from './scriptTypes'
 import { Arena } from '../game/Arena'
 import { ARENA_HALF } from '../game/types'
 import { useInput } from '../game/useInput'
+import { getTextures, cloneForObject } from '../game/textures'
 
-// ── Shared geometry / material cache ────────────────────────────────────────
-const _boxGeo         = new THREE.BoxGeometry(1, 1, 1)
-const _cylGeo         = new THREE.CylinderGeometry(0.5, 0.5, 1, 16)
-const _ringGeo        = new THREE.RingGeometry(0.35, 0.5, 24)
-const _planeGeo       = new THREE.PlaneGeometry(1, 1)
+// ── Shared geometry ───────────────────────────────────────────────────────────
+const _boxGeo             = new THREE.BoxGeometry(1, 1, 1)
+const _cylGeo             = new THREE.CylinderGeometry(0.5, 0.5, 1, 16)
+const _ringGeo            = new THREE.RingGeometry(0.35, 0.5, 24)
+const _planeGeo           = new THREE.PlaneGeometry(1, 1)
 const _selectedOutlineMat = new THREE.MeshBasicMaterial({ color: '#00ffff', wireframe: true })
+
+const TILE_WORLD: Record<string, number> = { wall: 2, cover: 1.5, crate: 1, pillar: 1, spawn: 1 }
 
 // ── Single level object ──────────────────────────────────────────────────────
 function EditorLevelObject({ obj }: { obj: LevelObject }) {
-  const meshRef = useRef<THREE.Mesh>(null)
   const matRef  = useRef<THREE.MeshStandardMaterial>(null)
   const { selectedObjectId, selectObject, toolMode, deleteObject } = useEditorStore()
   const isSelected = selectedObjectId === obj.id
   const cfg = OBJECT_TYPE_CFGS[obj.type]
+
+  const material = useMemo(() => {
+    if (cfg.isSpawn) return null
+    const texs = getTextures()
+    const tileWorld = TILE_WORLD[obj.type] ?? 2
+    const baseTex = obj.type === 'crate' ? texs.wood
+                  : obj.type === 'pillar' ? texs.metal
+                  : texs.concrete
+    const map = cloneForObject(baseTex, obj.sx, obj.sz, tileWorld)
+    return new THREE.MeshStandardMaterial({
+      map,
+      color:            new THREE.Color(cfg.color),
+      emissive:         new THREE.Color(cfg.emissive),
+      emissiveIntensity: 0.35,
+      roughness:        obj.type === 'pillar' ? 0.35 : 0.7,
+      metalness:        obj.type === 'pillar' ? 0.55 : 0.15,
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [obj.type, obj.sx, obj.sz])
 
   const handleClick = (e: { stopPropagation: () => void }) => {
     e.stopPropagation()
@@ -32,21 +53,22 @@ function EditorLevelObject({ obj }: { obj: LevelObject }) {
 
   useFrame(() => {
     if (!matRef.current) return
-    matRef.current.color.set(isSelected ? '#44aaff' : cfg.color)
+    matRef.current.color.set(isSelected ? '#88ccff' : cfg.color)
     matRef.current.emissive.set(isSelected ? '#0044aa' : cfg.emissive)
+    matRef.current.emissiveIntensity = isSelected ? 0.6 : 0.35
   })
 
   const py = cfg.height / 2
   return (
     <group position={[obj.x, 0, obj.z]} rotation-y={obj.rotY} onPointerDown={handleClick}>
       <mesh
-        ref={meshRef}
+        ref={(m) => { if (m && material) { m.material = material; (matRef as React.MutableRefObject<THREE.MeshStandardMaterial | null>).current = material } }}
         scale={[obj.sx, cfg.height, obj.sz]}
         position={[0, py, 0]}
         geometry={cfg.isCylinder ? _cylGeo : _boxGeo}
         castShadow
       >
-        <meshStandardMaterial ref={matRef} color={cfg.color} emissive={cfg.emissive} emissiveIntensity={0.4} roughness={0.6} metalness={0.3} />
+        {!material && <meshStandardMaterial color={cfg.color} emissive={cfg.emissive} emissiveIntensity={0.4} roughness={0.6} metalness={0.3} />}
       </mesh>
 
       {cfg.isSpawn && (
