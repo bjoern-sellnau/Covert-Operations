@@ -7,7 +7,7 @@ import {
   WEAPON_SOUNDS,
   playExplosionSmall, playExplosionLarge,
   playFlakBounce, playBananaBounce, playRicochet,
-  playHit,
+  playHit, playDeath,
 } from './sounds'
 import { useGameStore } from '../store/gameStore'
 import { useNetStore } from '../net/netStore'
@@ -660,6 +660,7 @@ export function GameScene() {
             enemiesToRemove.push(eid)
             scoreGained   += ENEMY_CONFIGS[enemy.type].scoreValue
             creditsGained += ENEMY_CONFIGS[enemy.type].creditValue
+            playDeath(0.45)
           }
         }
       }
@@ -828,6 +829,7 @@ export function GameScene() {
               enemiesToRemove.push(eid)
               scoreGained   += ENEMY_CONFIGS[enemy.type].scoreValue
               creditsGained += ENEMY_CONFIGS[enemy.type].creditValue
+              playDeath(0.4)
             }
             explodedEnemies.add(eid)
           }
@@ -968,6 +970,7 @@ export function GameScene() {
               enemiesToRemove.push(eid)
               scoreGained   += ENEMY_CONFIGS[enemy.type].scoreValue * 3
               creditsGained += ENEMY_CONFIGS[enemy.type].creditValue
+              playDeath(0.5)
             }
           }
         }
@@ -1152,6 +1155,7 @@ export function GameScene() {
             creditsGained += cfg.creditValue
             spawnParticles(enemy.position.x, enemy.position.y, 'blood', BLOOD_COUNTS[bloodIntensity])
             spawnDecal(enemy.position.x, enemy.position.y, 0.6 + Math.random() * 0.6)
+            playDeath(0.5)
           }
           break
         }
@@ -1163,6 +1167,7 @@ export function GameScene() {
         es.player.health -= cfg.damage
         es.player.invincibleUntil = now + INVINCIBLE_DURATION
         if (es.player.health < 0) es.player.health = 0
+        playHit(0.9)
       }
       // Damage P2
       if (es.player2Active && es.player2.health > 0) {

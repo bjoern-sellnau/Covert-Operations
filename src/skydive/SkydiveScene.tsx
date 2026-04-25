@@ -18,6 +18,7 @@ const CHUTE_DECEL  = 2.6   // terminal speed with chute open
 const P_RADIUS     = 0.38
 const BPOOL        = 22
 const EPOOL        = 5
+const PPOOL        = 30   // blood particle pool
 const ENEMY_SPD    = 5.5
 const ENEMY_FIRE   = 1.9
 const P_BSPD       = 22
@@ -70,11 +71,11 @@ function genObstacles(): ObsData[] {
 interface CloudData { x: number; y: number; z: number; r: number }
 function genClouds(): CloudData[] {
   const rng = makeRng(99991)
-  return Array.from({ length: 18 }, (_, i) => ({
-    x: (rng() - 0.5) * 65,
-    y: 5 + rng() * 12,
-    z: (i / 18) * (TOTAL_FALL * 0.9) + 4,
-    r: 2.5 + rng() * 5,
+  return Array.from({ length: 40 }, (_, i) => ({
+    x: (rng() - 0.5) * 80,
+    y: 3 + rng() * 16,
+    z: (i / 40) * (TOTAL_FALL * 1.1) + 2,
+    r: 2 + rng() * 7,
   }))
 }
 
@@ -117,10 +118,16 @@ export function SkydiveScene() {
   const clouds    = useMemo(() => genClouds(), [])
 
   // Mesh ref pools
-  const playerRef  = useRef<THREE.Mesh>(null)
-  const chuteRef   = useRef<THREE.Mesh>(null)
-  const bulletRefs = useRef<Array<THREE.Mesh | null>>(new Array(BPOOL).fill(null))
-  const enemyRefs  = useRef<Array<THREE.Mesh | null>>(new Array(EPOOL).fill(null))
+  const playerRef   = useRef<THREE.Mesh>(null)
+  const chuteRef    = useRef<THREE.Mesh>(null)
+  const bulletRefs  = useRef<Array<THREE.Mesh | null>>(new Array(BPOOL).fill(null))
+  const enemyRefs   = useRef<Array<THREE.Mesh | null>>(new Array(EPOOL).fill(null))
+  const particleRefs = useRef<Array<THREE.Mesh | null>>(new Array(PPOOL).fill(null))
+
+  // Blood particle pool
+  const particles = useRef(Array.from({ length: PPOOL }, () => ({
+    active: false, x: 0, y: 0.3, z: 0, vx: 0, vy: 0, vz: 0, life: 0,
+  })))
 
   // Bullet pool state
   const bullets = useRef(Array.from({ length: BPOOL }, () => ({
@@ -144,6 +151,22 @@ export function SkydiveScene() {
   function spawnBullet(x: number, z: number, vx: number, vz: number, isEnemy: boolean) {
     for (const b of bullets.current) {
       if (!b.active) { Object.assign(b, { active: true, x, z, vx, vz, life: BLIFE, isEnemy }); return }
+    }
+  }
+
+  function spawnBlood(x: number, z: number, count = 6) {
+    let spawned = 0
+    for (const p of particles.current) {
+      if (p.active) continue
+      const angle = Math.random() * Math.PI * 2
+      const speed = 1.5 + Math.random() * 3
+      p.active = true
+      p.x = x; p.y = 0.4; p.z = z
+      p.vx = Math.cos(angle) * speed
+      p.vy = 1 + Math.random() * 2
+      p.vz = Math.sin(angle) * speed
+      p.life = 0.3 + Math.random() * 0.3
+      if (++spawned >= count) break
     }
   }
 
@@ -237,9 +260,11 @@ export function SkydiveScene() {
             b.active = false
             e.hp -= 1
             e.hitFlash = 0.14
+            spawnBlood(e.x, e.z, 5)
             if (e.hp <= 0) {
               e.active = false
               e.deathFlash = 0.22
+              spawnBlood(e.x, e.z, 12)
               playDeath(0.45)
             } else {
               playHit(0.7)
@@ -311,6 +336,19 @@ export function SkydiveScene() {
       if (!m) continue
       m.visible = b.active
       if (b.active) m.position.set(b.x, 0.3, b.z)
+    }
+    // ── Blood particles ─────────────────────────────────────────────────────
+    for (let i = 0; i < PPOOL; i++) {
+      const m = particleRefs.current[i]; const p = particles.current[i]
+      if (!m) continue
+      if (p.active) {
+        p.x  += p.vx * dt; p.y  += p.vy * dt; p.z  += p.vz * dt
+        p.vy -= 9 * dt   // gravity
+        p.life -= dt
+        if (p.life <= 0) { p.active = false }
+      }
+      m.visible = p.active
+      if (p.active) m.position.set(p.x, p.y, p.z)
     }
     for (let i = 0; i < EPOOL; i++) {
       const m = enemyRefs.current[i]; const e = enemies.current[i]
@@ -454,6 +492,14 @@ export function SkydiveScene() {
         <mesh key={i} ref={(r) => { bulletRefs.current[i] = r }} visible={false}>
           <sphereGeometry args={[0.1, 5, 4]} />
           <meshStandardMaterial color="#ffee00" emissive="#ffaa00" emissiveIntensity={3} />
+        </mesh>
+      ))}
+
+      {/* Blood particle pool */}
+      {Array.from({ length: PPOOL }).map((_, i) => (
+        <mesh key={i} ref={(r) => { particleRefs.current[i] = r }} visible={false}>
+          <sphereGeometry args={[0.07, 4, 3]} />
+          <meshStandardMaterial color="#cc1100" emissive="#ff2200" emissiveIntensity={1.5} />
         </mesh>
       ))}
     </>

@@ -72,16 +72,16 @@ export function App() {
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}>
-      {/* Arena game canvas — kept in DOM for iOS WebGL init, hidden via opacity when not active */}
-      <div style={{
-        position: 'absolute', inset: 0, zIndex: 0,
-        filter: isBulletTime ? 'saturate(0.25) brightness(0.85)' : 'none',
-        transition: 'filter 0.15s ease-out',
-        opacity: (phase === 'playing' || phase === 'gameover') ? 1 : 0,
-        pointerEvents: (phase === 'playing' || phase === 'gameover') ? 'auto' : 'none',
-      }}>
-        <Game />
-      </div>
+      {/* Arena game canvas — conditionally mounted like Skydive */}
+      {(phase === 'playing' || phase === 'gameover') && (
+        <div style={{
+          position: 'absolute', inset: 0,
+          filter: isBulletTime ? 'saturate(0.25) brightness(0.85)' : 'none',
+          transition: 'filter 0.15s ease-out',
+        }}>
+          <Game />
+        </div>
+      )}
 
       {/* Bullet-time vignette */}
       {phase === 'playing' && (
