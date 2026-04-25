@@ -1,4 +1,7 @@
+import { useEffect } from 'react'
 import { useGameStore } from './store/gameStore'
+import { useNetStore } from './net/netStore'
+import { socket } from './net/socket'
 import { Game } from './game/Game'
 import { HUD } from './components/HUD'
 import { MainMenu } from './components/MainMenu'
@@ -7,12 +10,43 @@ import { Shop } from './components/Shop'
 import { Editor } from './editor/Editor'
 import { Skydive } from './skydive/Skydive'
 import { SkydiveWin } from './components/SkydiveWin'
+import { Lobby } from './components/Lobby'
+import { ChatOverlay } from './components/ChatOverlay'
 
 export function App() {
   const phase        = useGameStore((s) => s.phase)
   const isBulletTime = useGameStore((s) => s.isBulletTime)
   const fpsMode      = useGameStore((s) => s.fpsMode)
   const bigExplosion = useGameStore((s) => s.bigExplosion)
+  const netRole      = useNetStore((s) => s.role)
+
+  // ── Persistent socket event listeners (survive phase transitions) ────────
+  useEffect(() => {
+    const { setConnected, setRole, setRoom, setPing, addChat } = useNetStore.getState()
+    const { setPhase } = useGameStore.getState()
+
+    socket.on('connect',      () => setConnected(true))
+    socket.on('disconnect',   () => { setConnected(false); setRole('offline'); setRoom(null) })
+    socket.on('room_updated', (room) => setRoom(room))
+    socket.on('player_left',  () => { /* room_updated follows */ })
+    socket.on('game_started', () => setPhase('playing'))
+    socket.on('chat_message', (msg) => addChat(msg))
+    socket.on('ping',         (ts)  => { socket.emit('pong', ts); setPing(Date.now() - ts) })
+    socket.on('error_msg',    (msg) => console.warn('[net]', msg))
+
+    return () => {
+      socket.off('connect')
+      socket.off('disconnect')
+      socket.off('room_updated')
+      socket.off('player_left')
+      socket.off('game_started')
+      socket.off('chat_message')
+      socket.off('ping')
+      socket.off('error_msg')
+    }
+  }, [])
+
+  const isNetGame = netRole !== 'offline' && phase === 'playing'
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}>
@@ -84,7 +118,9 @@ export function App() {
       )}
 
       {phase === 'playing'     && <HUD />}
+      {phase === 'playing' && isNetGame && <ChatOverlay />}
       {phase === 'menu'        && <MainMenu />}
+      {phase === 'lobby'       && <Lobby />}
       {phase === 'shop'        && <Shop />}
       {phase === 'gameover'    && <GameOver />}
       {phase === 'skydive_win' && <SkydiveWin />}

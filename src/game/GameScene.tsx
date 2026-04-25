@@ -10,6 +10,9 @@ import {
   playHit,
 } from './sounds'
 import { useGameStore } from '../store/gameStore'
+import { useNetStore } from '../net/netStore'
+import { socket } from '../net/socket'
+import type { NetGameState, NetPlayerInput } from '../net/netTypes'
 import { useLoadoutStore } from './loadoutStore'
 import { useEditorStore } from '../editor/editorStore'
 import { useSettingsStore, BLOOD_COUNTS, EXPL_COUNTS, SPARK_COUNTS } from '../store/settingsStore'
@@ -29,6 +32,7 @@ import {
   MAX_BOUNCES,
   VERNICHTER_SPEED, VERNICHTER_RADIUS, VERNICHTER_DAMAGE,
 } from './types'
+import type { EnemyType } from './types'
 import { Arena } from './Arena'
 import { PlayerMesh } from './PlayerMesh'
 import { EnemyMesh } from './EnemyMesh'
@@ -88,6 +92,12 @@ export function GameScene() {
   const phaseRef   = useRef(phase)
   const fpsModeRef = useRef(false)
   const activeLevelRef = useRef<Level | null>(null)
+
+  // ── Net refs ──────────────────────────────────────────────────────────────
+  const netStateRef      = useRef<NetGameState | null>(null)   // guest: last received host state
+  const netGuestInputRef = useRef<NetPlayerInput | null>(null) // host: last received guest input
+  const netBroadcastTimer = useRef(0)
+  const netSeqRef         = useRef(0)
 
   // Edge-detection refs — P1
   const spacePrev = useRef(false)
@@ -164,6 +174,42 @@ export function GameScene() {
     return () => window.removeEventListener('mousemove', handler)
   }, [])
 
+  // ── Net mode: socket listeners active during gameplay ─────────────────────
+  useEffect(() => {
+    if (phase !== 'playing') return
+    const role = useNetStore.getState().role
+    if (role === 'offline') return
+
+    if (role === 'host') {
+      // Receive guest player state
+      const onInput = (inp: NetPlayerInput & { playerId: string }) => {
+        netGuestInputRef.current = inp
+      }
+      socket.on('player_input', onInput)
+      return () => { socket.off('player_input', onInput) }
+    }
+
+    if (role === 'guest') {
+      // Receive authoritative game state from host
+      const onState = (ns: NetGameState) => { netStateRef.current = ns }
+      const onOver  = (_score: number, _wave: number) => {
+        useGameStore.getState().setPhase('gameover')
+      }
+      const onLeft = () => {
+        // Host disconnected — end game
+        useGameStore.getState().setPhase('gameover')
+      }
+      socket.on('game_state',  onState)
+      socket.on('game_over',   onOver)
+      socket.on('player_left', onLeft)
+      return () => {
+        socket.off('game_state',  onState)
+        socket.off('game_over',   onOver)
+        socket.off('player_left', onLeft)
+      }
+    }
+  }, [phase])
+
   // ── Main game loop ────────────────────────────────────────────────────────
   useFrame((state, delta) => {
     if (phaseRef.current !== 'playing') return
@@ -178,6 +224,68 @@ export function GameScene() {
     const bounceDamp  = grav === 'moon' ? 0.9 : 0.7
     const extraBounce = grav === 'moon' ? 2 : 0
     const bloodIntensity = useSettingsStore.getState().bloodIntensity
+    const netRole        = useNetStore.getState().role
+
+    // ── Net: apply host→guest game state ──────────────────────────────────────
+    if (netRole === 'guest' && netStateRef.current) {
+      const ns = netStateRef.current
+      netStateRef.current = null
+      // Host player → P2 slot so both players are visible on guest's screen
+      const hostSnap = ns.players.find((p) => p.id === 'host')
+      if (hostSnap) {
+        es.player2Active      = true
+        es.player2.position.x = hostSnap.x
+        es.player2.position.y = hostSnap.z
+        es.player2.angle      = hostSnap.a
+        es.player2.health     = hostSnap.h
+        es.ammo2              = hostSnap.ammo
+      }
+      // Sync enemies from host (authoritative)
+      const incomingIds = new Set(ns.enemies.map((e) => e.id))
+      for (const eid of es.enemies.keys()) {
+        if (!incomingIds.has(eid)) es.enemies.delete(eid)
+      }
+      for (const snap of ns.enemies) {
+        const existing = es.enemies.get(snap.id)
+        if (existing) {
+          existing.position.x = snap.x
+          existing.position.y = snap.z
+          existing.health     = snap.h
+        } else {
+          const cfg = ENEMY_CONFIGS[snap.type as EnemyType]
+          if (cfg) {
+            es.enemies.set(snap.id, {
+              id: snap.id, type: snap.type as EnemyType,
+              position: new THREE.Vector2(snap.x, snap.z),
+              health: snap.h, hitTime: -10, lastDamageTime: -10,
+              aiTimer: 0, aiState: 0,
+            })
+          }
+        }
+      }
+      setEnemyIds(Array.from(es.enemies.keys()))
+      es.score = ns.score
+      es.wave  = ns.wave
+    }
+
+    // ── Net: apply guest→host player input ────────────────────────────────────
+    if (netRole === 'host' && netGuestInputRef.current) {
+      const inp = netGuestInputRef.current
+      netGuestInputRef.current = null
+      if (!es.player2Active) {
+        es.player2Active = true
+        es.player2.position.set(inp.x, inp.z)
+        es.player2.health = 100
+        es.ammo2          = es.maxAmmo2
+        es.grenadeCount2  = 3
+      }
+      if (es.player2.health > 0) {
+        es.player2.position.x = inp.x
+        es.player2.position.y = inp.z
+        es.player2.angle      = inp.a
+        // Health remains authoritative on host (enemy contact damage applied locally)
+      }
+    }
 
     // ── Edge detection ────────────────────────────────────────────────────────
     const spaceDown = keys.has('Space')
@@ -340,9 +448,16 @@ export function GameScene() {
     const isFlakWep        = loadout.selectedWeapon === 'flak'
     const bulletMaxBounces = weaponCfg.maxBounces ?? MAX_BOUNCES
 
-    // ── Player 2 — keyboard (Arrows + RCtrl shoot + RShift grenade) ──────────
-    // Also: gamepad index 1 (or index 0 if P1 is on keyboard)
-    {
+    // ── Player 2 — local co-op (skipped in net mode; P2 driven by network) ───
+    if (netRole !== 'offline') {
+      // Show P2 mesh at position set by net receive block above
+      if (es.player2Active && player2GroupRef.current) {
+        player2GroupRef.current.position.set(es.player2.position.x, 0, es.player2.position.y)
+        player2GroupRef.current.rotation.y = es.player2.angle
+        player2GroupRef.current.visible    = true
+      }
+    }
+    if (netRole === 'offline') {
       // Read gamepad for P2 (any connected gamepad)
       const gamepads = navigator.getGamepads()
       const gp = gamepads[0] ?? gamepads[1] ?? null
@@ -1069,6 +1184,49 @@ export function GameScene() {
       useGameStore.getState().updateHUD(0, es.score, es.wave, es.ammo, es.maxAmmo, es.creditsEarned)
       if (isPlaytesting) setTimeout(() => { setPlaytesting(false); setPhase('editor') }, 3000)
       return
+    }
+
+    // ── Net: broadcast at 20 Hz ──────────────────────────────────────────────
+    netBroadcastTimer.current -= rawDt
+    if (netBroadcastTimer.current <= 0) {
+      netBroadcastTimer.current = 0.05
+      if (netRole === 'host') {
+        const snap: NetGameState = {
+          seq:     ++netSeqRef.current,
+          players: [
+            { id: 'host', x: es.player.position.x, z: es.player.position.y, a: es.player.angle,
+              h: Math.ceil(Math.max(0, es.player.health)), ammo: es.ammo },
+            ...(es.player2Active && es.player2.health > 0
+              ? [{ id: 'guest', x: es.player2.position.x, z: es.player2.position.y,
+                   a: es.player2.angle, h: Math.ceil(Math.max(0, es.player2.health)), ammo: es.ammo2 }]
+              : []),
+          ],
+          enemies: Array.from(es.enemies.values()).map((e) => ({
+            id: e.id, x: e.position.x, z: e.position.y, h: e.health, type: e.type,
+          })),
+          wave:        es.wave,
+          score:       es.score,
+          inBreak:     es.inWaveBreak,
+          waveMsg:     '',
+          p1GrenCount: es.grenadeCount,
+        }
+        socket.emit('host_state', snap)
+        // Emit game_over when host's game ends
+        if (es.player.health <= 0 && (!es.player2Active || es.player2.health <= 0)) {
+          socket.emit('game_over', es.score, es.wave)
+        }
+      } else if (netRole === 'guest') {
+        const inp: NetPlayerInput = {
+          seq:      ++netSeqRef.current,
+          x:        es.player.position.x,
+          z:        es.player.position.y,
+          a:        es.player.angle,
+          h:        Math.ceil(Math.max(0, es.player.health)),
+          ammo:     es.ammo,
+          grenCount: es.grenadeCount,
+        }
+        socket.emit('player_input', inp)
+      }
     }
 
     // ── Throttled HUD ─────────────────────────────────────────────────────────

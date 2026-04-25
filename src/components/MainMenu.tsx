@@ -84,6 +84,15 @@ export function MainMenu() {
         </button>
 
         <button
+          style={{ ...bigBtn('#aa44ff'), fontSize: 13, padding: '11px 36px' }}
+          onClick={() => setPhase('lobby')}
+          onMouseEnter={(e) => { e.currentTarget.style.background = '#aa44ff44'; e.currentTarget.style.color = '#fff' }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = '#aa44ff22'; e.currentTarget.style.color = '#aa44ff' }}
+        >
+          ⬡ Online Multiplayer
+        </button>
+
+        <button
           style={{
             background: 'transparent', border: '1px solid #334455', color: '#445566',
             fontSize: 12, letterSpacing: 4, padding: '9px 36px', cursor: 'pointer',
