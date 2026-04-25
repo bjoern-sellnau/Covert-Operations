@@ -1,5 +1,4 @@
-import { useRef, useState } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useEffect, useState } from 'react'
 import { useGameStore } from '../store/gameStore'
 import { useLoadoutStore } from '../game/loadoutStore'
 import { entityStore } from '../game/entityStore'
@@ -106,20 +105,17 @@ export function HUD() {
   const [grenades,    setGrenades]    = useState(3)
   const [vernAmmo,    setVernAmmo]    = useState(1)
   const [vernActive,  setVernActive]  = useState(false)
-  const cdTimer = useRef(0)
-
-  useFrame((_, delta) => {
-    cdTimer.current += delta
-    if (cdTimer.current >= 0.05) {
-      cdTimer.current = 0
+  useEffect(() => {
+    const id = setInterval(() => {
       setDiveCd(Math.max(0, entityStore.diveCooldown))
       setSpinCd(Math.max(0, entityStore.spinCooldown))
       setManeuver(entityStore.maneuver)
       setGrenades(entityStore.grenadeCount)
       setVernAmmo(entityStore.vernichterAmmo)
       setVernActive(entityStore.vernichterProjectile !== null)
-    }
-  })
+    }, 50)
+    return () => clearInterval(id)
+  }, [])
 
   const hpPct     = Math.max(0, health / PLAYER_MAX_HEALTH) * 100
   const hpColor   = hpPct > 50 ? '#00ff88' : hpPct > 25 ? '#ffaa00' : '#ff3300'
