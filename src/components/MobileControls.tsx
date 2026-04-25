@@ -88,7 +88,7 @@ export function MobileControls() {
 
   return (
     <div style={{
-      position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 50,
+      position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, pointerEvents: 'none', zIndex: 50,
       fontFamily: "'Courier New', monospace",
     }}>
       {/* ── Left virtual joystick ── */}
@@ -110,7 +110,7 @@ export function MobileControls() {
         onPointerCancel={onJoyUp}
       >
         {/* directional hint lines */}
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+        <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
           <div style={{ position: 'absolute', top: 8, fontSize: 14, color: 'rgba(0,170,255,0.5)', lineHeight: 1 }}>▲</div>
           <div style={{ position: 'absolute', bottom: 8, fontSize: 14, color: 'rgba(0,170,255,0.5)', lineHeight: 1 }}>▼</div>
           <div style={{ position: 'absolute', left: 8, fontSize: 14, color: 'rgba(0,170,255,0.5)', lineHeight: 1 }}>◀</div>

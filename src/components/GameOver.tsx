@@ -14,7 +14,7 @@ export function GameOver() {
 
   return (
     <div style={{
-      position: 'absolute', inset: 0,
+      position: 'absolute', top: 0, right: 0, bottom: 0, left: 0,
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       background: 'radial-gradient(ellipse at center, #1a0000 0%, #000000 70%)',
       fontFamily: "'Courier New', monospace", userSelect: 'none',

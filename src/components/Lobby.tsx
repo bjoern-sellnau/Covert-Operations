@@ -88,7 +88,7 @@ export function Lobby() {
 
   return (
     <div style={{
-      position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
+      position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',
       background: 'radial-gradient(ellipse at center, #07071e 0%, #000006 70%)',
       fontFamily: "'Courier New', monospace", userSelect: 'none',

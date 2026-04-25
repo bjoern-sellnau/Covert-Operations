@@ -33,7 +33,7 @@ export function MissionsMenu() {
 
   return (
     <div style={{
-      position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
+      position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',
       background: 'radial-gradient(ellipse at center, #111840 0%, #060614 70%)',
       fontFamily: "'Courier New', monospace", userSelect: 'none',

@@ -75,7 +75,7 @@ export function App() {
       {/* Arena game canvas — conditionally mounted like Skydive */}
       {(phase === 'playing' || phase === 'gameover') && (
         <div style={{
-          position: 'absolute', inset: 0,
+          position: 'absolute', top: 0, right: 0, bottom: 0, left: 0,
           filter: isBulletTime ? 'saturate(0.25) brightness(0.85)' : 'none',
           transition: 'filter 0.15s ease-out',
         }}>
@@ -86,7 +86,7 @@ export function App() {
       {/* Bullet-time vignette */}
       {phase === 'playing' && (
         <div style={{
-          position: 'absolute', inset: 0, pointerEvents: 'none',
+          position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, pointerEvents: 'none',
           background: isBulletTime
             ? 'radial-gradient(ellipse at center, transparent 38%, rgba(0,60,160,0.45) 100%)'
             : 'radial-gradient(ellipse at center, transparent 60%, rgba(0,0,20,0.5) 100%)',
@@ -97,7 +97,7 @@ export function App() {
       {/* Bullet-time scanlines */}
       {isBulletTime && (
         <div style={{
-          position: 'absolute', inset: 0, pointerEvents: 'none',
+          position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, pointerEvents: 'none',
           backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,100,220,0.04) 3px, rgba(0,100,220,0.04) 4px)',
           animation: 'btScanlines 8s linear infinite',
         }} />
@@ -119,7 +119,7 @@ export function App() {
       {/* Vernichter explosion flash */}
       {bigExplosion && (
         <div style={{
-          position: 'absolute', inset: 0, pointerEvents: 'none',
+          position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, pointerEvents: 'none',
           background: 'radial-gradient(ellipse at center, rgba(255,120,0,0.7) 0%, rgba(255,30,0,0.4) 50%, transparent 100%)',
           animation: 'btPulse 0.4s ease-out forwards',
           mixBlendMode: 'screen',
