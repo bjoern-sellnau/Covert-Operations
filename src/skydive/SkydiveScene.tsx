@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import { useGameStore } from '../store/gameStore'
 import { useInput } from '../game/useInput'
 import { useSkydiveHUD } from './skydiveHudStore'
+import { useSettingsStore } from '../store/settingsStore'
 import { mobileInput } from '../store/mobileStore'
 import { playPistol, playHit, playDeath } from '../game/sounds'
 
@@ -100,6 +101,7 @@ export function SkydiveScene() {
   const setPhase = useGameStore((s) => s.setPhase)
   const setHUD   = useSkydiveHUD((s) => s.setHUD)
   const input    = useInput()
+  const skyFPV   = useSettingsStore((s) => s.skyFPV)
 
   // Mutable game state (no React re-renders)
   const gs = useRef({
@@ -378,9 +380,18 @@ export function SkydiveScene() {
       }
     }
 
-    // ── Camera: slightly forward-angled top-down ─────────────────────────
-    camera.position.set(g.px * 0.6, 26, g.pz - 20)
-    camera.lookAt(g.px * 0.2, 0, g.pz + 14)
+    // ── Camera ───────────────────────────────────────────────────────────
+    if (skyFPV) {
+      // First-person: camera at player's head, looking forward-down
+      camera.position.set(g.px, 1.2, g.pz)
+      const lookX = mWorld.current.x !== 0 ? mWorld.current.x : g.px
+      const lookZ = mWorld.current.z !== 0 ? mWorld.current.z : g.pz + 10
+      camera.lookAt(lookX, 0, lookZ)
+    } else {
+      // Top-down with slight forward tilt
+      camera.position.set(g.px * 0.6, 26, g.pz - 20)
+      camera.lookAt(g.px * 0.2, 0, g.pz + 14)
+    }
 
     // ── HUD update (throttled ~80 ms) ───────────────────────────────────
     const now = performance.now()

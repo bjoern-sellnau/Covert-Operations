@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useGameStore } from '../store/gameStore'
+import { useSettingsStore } from '../store/settingsStore'
 
 type Card = { title: string; body: string[] }
 
@@ -67,6 +68,7 @@ const SKYDIVE_CARDS: Card[] = [
       'Öffne zu früh = du driftest ab · zu spät = Aufprall',
     ],
   },
+  { title: 'FPV-KAMERA', body: [] }, // special card — rendered as toggle
 ]
 
 const RANGE_CARDS: Card[] = [
@@ -92,6 +94,7 @@ const RANGE_CARDS: Card[] = [
 export function MissionBriefing() {
   const setPhase    = useGameStore((s) => s.setPhase)
   const gameMode    = useGameStore((s) => s.gameMode)
+  const { skyFPV, setSkyFPV } = useSettingsStore()
   const [page, setPage] = useState(0)
 
   const cards = gameMode === 'skydive' ? SKYDIVE_CARDS
@@ -138,14 +141,55 @@ export function MissionBriefing() {
         <div style={{ color: accentColor, fontSize: 16, fontWeight: 'bold', letterSpacing: 4, textShadow: `0 0 10px ${accentColor}66` }}>
           {card.title}
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {card.body.map((line, i) => (
-            <div key={i} style={{ color: '#7799aa', fontSize: 12, letterSpacing: 1, lineHeight: 1.5, display: 'flex', gap: 8 }}>
-              <span style={{ color: accentColor, opacity: 0.6 }}>›</span>
-              {line}
+
+        {/* FPV special card */}
+        {card.title === 'FPV-KAMERA' ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ color: '#7799aa', fontSize: 12, letterSpacing: 1, lineHeight: 1.6 }}>
+              Erlebe den freien Fall aus der Ego-Perspektive.<br />
+              Die Kamera sitzt direkt am Helm — vollständiges Eintauchen.
             </div>
-          ))}
-        </div>
+            <div
+              onClick={() => setSkyFPV(!skyFPV)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer',
+                padding: '14px 18px',
+                background: skyFPV ? `${accentColor}22` : '#0a0a1a',
+                border: `1px solid ${skyFPV ? accentColor : '#223344'}`,
+                borderRadius: 6, transition: 'all 0.15s',
+              }}
+            >
+              <div style={{
+                width: 42, height: 24, borderRadius: 12,
+                background: skyFPV ? accentColor : '#223344',
+                position: 'relative', transition: 'background 0.2s', flexShrink: 0,
+              }}>
+                <div style={{
+                  position: 'absolute', top: 3, left: skyFPV ? 21 : 3,
+                  width: 18, height: 18, borderRadius: '50%',
+                  background: '#fff', transition: 'left 0.2s',
+                }} />
+              </div>
+              <div>
+                <div style={{ color: skyFPV ? accentColor : '#556677', fontSize: 13, fontWeight: 'bold', letterSpacing: 2 }}>
+                  FPV-MODUS {skyFPV ? 'EIN' : 'AUS'}
+                </div>
+                <div style={{ color: '#445566', fontSize: 10, marginTop: 2 }}>
+                  {skyFPV ? 'Ego-Perspektive aktiviert' : 'Top-Down Perspektive'}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {card.body.map((line, i) => (
+              <div key={i} style={{ color: '#7799aa', fontSize: 12, letterSpacing: 1, lineHeight: 1.5, display: 'flex', gap: 8 }}>
+                <span style={{ color: accentColor, opacity: 0.6 }}>›</span>
+                {line}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Navigation dots */}
