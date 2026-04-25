@@ -3,14 +3,18 @@ import { persist } from 'zustand/middleware'
 
 interface SettingsStore {
   bloodIntensity: 0 | 1 | 2 | 3
+  mobileControls: boolean
   setBloodIntensity: (v: 0 | 1 | 2 | 3) => void
+  setMobileControls: (v: boolean) => void
 }
 
 export const useSettingsStore = create<SettingsStore>()(
   persist(
     (set) => ({
       bloodIntensity: 2,
+      mobileControls: false,
       setBloodIntensity: (bloodIntensity) => set({ bloodIntensity }),
+      setMobileControls: (mobileControls) => set({ mobileControls }),
     }),
     { name: 'covert-ops-settings-v1' },
   ),

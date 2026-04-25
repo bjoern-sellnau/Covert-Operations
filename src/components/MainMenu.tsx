@@ -1,14 +1,10 @@
 import { useGameStore } from '../store/gameStore'
 import { useLoadoutStore } from '../game/loadoutStore'
-import { useSettingsStore } from '../store/settingsStore'
 
 export function MainMenu() {
-  const setPhase         = useGameStore((s) => s.setPhase)
-  const setGameMode      = useGameStore((s) => s.setGameMode)
-  const { credits }      = useLoadoutStore()
-  const { bloodIntensity, setBloodIntensity } = useSettingsStore()
-
-  const bloodLabels = ['AUS', 'DEZENT', 'NORMAL', 'ÜBERTRIEBEN'] as const
+  const setPhase    = useGameStore((s) => s.setPhase)
+  const setGameMode = useGameStore((s) => s.setGameMode)
+  const { credits } = useLoadoutStore()
 
   const bigBtn = (color: string): React.CSSProperties => ({
     background: `${color}22`, border: `2px solid ${color}`, color,
@@ -92,44 +88,35 @@ export function MainMenu() {
           ⬡ Online Multiplayer
         </button>
 
-        <button
-          style={{
-            background: 'transparent', border: '1px solid #334455', color: '#445566',
-            fontSize: 12, letterSpacing: 4, padding: '9px 36px', cursor: 'pointer',
-            fontFamily: 'inherit', textTransform: 'uppercase', transition: 'all 0.15s',
-          }}
-          onClick={() => { setGameMode('arena'); setPhase('playing') }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = '#aabbcc'; e.currentTarget.style.borderColor = '#667788' }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = '#445566'; e.currentTarget.style.borderColor = '#334455' }}
-        >
-          Direkt spielen
-        </button>
-      </div>
-
-      {/* Blood intensity setting */}
-      <div style={{ marginTop: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-        <div style={{ color: '#334455', fontSize: 10, letterSpacing: 3 }}>BLUTEFFEKT</div>
-        <div style={{ display: 'flex', gap: 6 }}>
-          {([0, 1, 2, 3] as const).map((v) => (
-            <button
-              key={v}
-              onClick={() => setBloodIntensity(v)}
-              style={{
-                background: bloodIntensity === v ? '#44000022' : 'transparent',
-                border: `1px solid ${bloodIntensity === v ? '#cc2200' : '#221111'}`,
-                color: bloodIntensity === v ? '#ff4422' : '#443333',
-                fontSize: 10, letterSpacing: 2, padding: '5px 12px', cursor: 'pointer',
-                fontFamily: 'inherit', textTransform: 'uppercase', transition: 'all 0.12s',
-                boxShadow: bloodIntensity === v ? '0 0 8px #cc220055' : 'none',
-              }}
-            >
-              {bloodLabels[v]}
-            </button>
-          ))}
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+          <button
+            style={{
+              background: 'transparent', border: '1px solid #334455', color: '#445566',
+              fontSize: 11, letterSpacing: 3, padding: '9px 24px', cursor: 'pointer',
+              fontFamily: 'inherit', textTransform: 'uppercase', transition: 'all 0.15s',
+            }}
+            onClick={() => { setGameMode('arena'); setPhase('playing') }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = '#aabbcc'; e.currentTarget.style.borderColor = '#667788' }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = '#445566'; e.currentTarget.style.borderColor = '#334455' }}
+          >
+            Direkt spielen
+          </button>
+          <button
+            style={{
+              background: 'transparent', border: '1px solid #334455', color: '#445566',
+              fontSize: 11, letterSpacing: 3, padding: '9px 24px', cursor: 'pointer',
+              fontFamily: 'inherit', textTransform: 'uppercase', transition: 'all 0.15s',
+            }}
+            onClick={() => setPhase('options')}
+            onMouseEnter={(e) => { e.currentTarget.style.color = '#aabbcc'; e.currentTarget.style.borderColor = '#667788' }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = '#445566'; e.currentTarget.style.borderColor = '#334455' }}
+          >
+            ⚙ Optionen
+          </button>
         </div>
       </div>
 
-      <div style={{ color: '#334455', fontSize: 10, marginTop: 24, letterSpacing: 2 }}>
+      <div style={{ color: '#334455', fontSize: 10, marginTop: 28, letterSpacing: 2 }}>
         WASD · MAUS · LMT · SHIFT = BULLET TIME · F = EGOPERSPEKTIVE
       </div>
     </div>

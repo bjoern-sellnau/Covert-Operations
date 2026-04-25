@@ -13,6 +13,7 @@ import { useGameStore } from '../store/gameStore'
 import { useNetStore } from '../net/netStore'
 import { socket } from '../net/socket'
 import type { NetGameState, NetPlayerInput } from '../net/netTypes'
+import { mobileInput } from '../store/mobileStore'
 import { useLoadoutStore } from './loadoutStore'
 import { useEditorStore } from '../editor/editorStore'
 import { useSettingsStore, BLOOD_COUNTS, EXPL_COUNTS, SPARK_COUNTS } from '../store/settingsStore'
@@ -225,6 +226,11 @@ export function GameScene() {
     const extraBounce = grav === 'moon' ? 2 : 0
     const bloodIntensity = useSettingsStore.getState().bloodIntensity
     const netRole        = useNetStore.getState().role
+    const mobileControls = useSettingsStore.getState().mobileControls
+
+    // Consume one-shot mobile flags at the top of the frame
+    const mobileGrenJust = mobileInput.grenadeJust; mobileInput.grenadeJust = false
+    const mobileDiveJust = mobileInput.diveJust;    mobileInput.diveJust    = false
 
     // ── Net: apply host→guest game state ──────────────────────────────────────
     if (netRole === 'guest' && netStateRef.current) {
@@ -293,10 +299,10 @@ export function GameScene() {
     const eDown     = keys.has('KeyE')
     const gDown     = keys.has('KeyG')
     const rDown     = keys.has('KeyR')
-    const spaceJust = spaceDown && !spacePrev.current
+    const spaceJust = (spaceDown && !spacePrev.current) || mobileDiveJust
     const qJust     = qDown     && !qPrev.current
     const eJust     = eDown     && !ePrev.current
-    const gJust     = gDown     && !gPrev.current
+    const gJust     = (gDown && !gPrev.current) || mobileGrenJust
     const rJust     = rDown     && !rPrev.current
     spacePrev.current = spaceDown
     qPrev.current     = qDown
@@ -305,7 +311,7 @@ export function GameScene() {
     rPrev.current     = rDown
 
     // ── Bullet time ───────────────────────────────────────────────────────────
-    const wantBT     = keys.has('ShiftLeft') || keys.has('ShiftRight')
+    const wantBT     = keys.has('ShiftLeft') || keys.has('ShiftRight') || mobileInput.btDown
     const maneuverBT = es.maneuver !== 'none'
 
     if (maneuverBT) {
@@ -336,11 +342,26 @@ export function GameScene() {
 
     // ── Aim direction ─────────────────────────────────────────────────────────
     if (!fpsModeRef.current && es.maneuver !== 'spin') {
-      _raycaster.setFromCamera(state.pointer, camera)
-      _raycaster.ray.intersectPlane(_groundPlane, _mouseTarget)
-      es.mouseWorld.copy(_mouseTarget)
-      _toMouse.set(es.mouseWorld.x - es.player.position.x, es.mouseWorld.z - es.player.position.y)
-      if (_toMouse.lengthSq() > 0.01) es.player.angle = Math.atan2(_toMouse.x, -_toMouse.y)
+      if (mobileControls) {
+        // Auto-aim at nearest enemy
+        let nearDist = Infinity
+        for (const enemy of es.enemies.values()) {
+          const d = Math.hypot(enemy.position.x - es.player.position.x, enemy.position.y - es.player.position.y)
+          if (d < nearDist) {
+            nearDist = d
+            es.player.angle = Math.atan2(
+              enemy.position.x - es.player.position.x,
+              -(enemy.position.y - es.player.position.y),
+            )
+          }
+        }
+      } else {
+        _raycaster.setFromCamera(state.pointer, camera)
+        _raycaster.ray.intersectPlane(_groundPlane, _mouseTarget)
+        es.mouseWorld.copy(_mouseTarget)
+        _toMouse.set(es.mouseWorld.x - es.player.position.x, es.mouseWorld.z - es.player.position.y)
+        if (_toMouse.lengthSq() > 0.01) es.player.angle = Math.atan2(_toMouse.x, -_toMouse.y)
+      }
     }
     _toMouse.set(Math.sin(es.player.angle), -Math.cos(es.player.angle))
 
@@ -397,6 +418,7 @@ export function GameScene() {
       if (keys.has('KeyS') || keys.has('ArrowDown'))  dz += 1
       if (keys.has('KeyA') || keys.has('ArrowLeft'))  dx -= 1
       if (keys.has('KeyD') || keys.has('ArrowRight')) dx += 1
+      if (mobileControls) { dx += mobileInput.dx; dz += mobileInput.dz }
 
       if (fpsModeRef.current && (dx !== 0 || dz !== 0)) {
         const fwdX = Math.sin(es.player.angle), fwdZ = -Math.cos(es.player.angle)
@@ -590,7 +612,7 @@ export function GameScene() {
 
     // ── Shooting ──────────────────────────────────────────────────────────────
     es.player.shootCooldown -= delta
-    const isShooting = input.current.mouseButtons.has(0)
+    const isShooting = input.current.mouseButtons.has(0) || (mobileControls && mobileInput.fire)
 
     // Helper: spawn one regular bullet
     const spawnBullet = (angle: number, lateralOff = 0) => {

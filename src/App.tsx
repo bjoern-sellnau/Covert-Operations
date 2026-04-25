@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useGameStore } from './store/gameStore'
 import { useNetStore } from './net/netStore'
+import { useSettingsStore } from './store/settingsStore'
 import { socket } from './net/socket'
 import { Game } from './game/Game'
 import { HUD } from './components/HUD'
@@ -12,13 +13,16 @@ import { Skydive } from './skydive/Skydive'
 import { SkydiveWin } from './components/SkydiveWin'
 import { Lobby } from './components/Lobby'
 import { ChatOverlay } from './components/ChatOverlay'
+import { MobileControls } from './components/MobileControls'
+import { OptionsScreen } from './components/OptionsScreen'
 
 export function App() {
-  const phase        = useGameStore((s) => s.phase)
-  const isBulletTime = useGameStore((s) => s.isBulletTime)
-  const fpsMode      = useGameStore((s) => s.fpsMode)
-  const bigExplosion = useGameStore((s) => s.bigExplosion)
-  const netRole      = useNetStore((s) => s.role)
+  const phase          = useGameStore((s) => s.phase)
+  const isBulletTime   = useGameStore((s) => s.isBulletTime)
+  const fpsMode        = useGameStore((s) => s.fpsMode)
+  const bigExplosion   = useGameStore((s) => s.bigExplosion)
+  const netRole        = useNetStore((s) => s.role)
+  const mobileControls = useSettingsStore((s) => s.mobileControls)
 
   // ── Persistent socket event listeners (survive phase transitions) ────────
   useEffect(() => {
@@ -117,13 +121,15 @@ export function App() {
         }} />
       )}
 
-      {phase === 'playing'     && <HUD />}
-      {phase === 'playing' && isNetGame && <ChatOverlay />}
-      {phase === 'menu'        && <MainMenu />}
-      {phase === 'lobby'       && <Lobby />}
-      {phase === 'shop'        && <Shop />}
-      {phase === 'gameover'    && <GameOver />}
-      {phase === 'skydive_win' && <SkydiveWin />}
+      {phase === 'playing'                    && <HUD />}
+      {phase === 'playing' && mobileControls  && <MobileControls />}
+      {phase === 'playing' && isNetGame        && <ChatOverlay />}
+      {phase === 'menu'                        && <MainMenu />}
+      {phase === 'options'                     && <OptionsScreen />}
+      {phase === 'lobby'                       && <Lobby />}
+      {phase === 'shop'                        && <Shop />}
+      {phase === 'gameover'                    && <GameOver />}
+      {phase === 'skydive_win'                 && <SkydiveWin />}
     </div>
   )
 }
