@@ -4,6 +4,8 @@ import * as THREE from 'three'
 import { useGameStore } from '../store/gameStore'
 import { useInput } from '../game/useInput'
 import { useSkydiveHUD } from './skydiveHudStore'
+import { mobileInput } from '../store/mobileStore'
+import { playPistol, playHit, playDeath } from '../game/sounds'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const TOTAL_FALL   = 260   // z-units from spawn to ground
@@ -131,6 +133,7 @@ export function SkydiveScene() {
     spawnX: sp.x, spawnZ: sp.z,
     x: sp.x, z: sp.z,
     hp: 2, shootTimer: 1.5,
+    hitFlash: 0, deathFlash: 0,
   })))
 
   // Raycaster for mouse-aim on ground plane
@@ -199,11 +202,15 @@ export function SkydiveScene() {
 
     // ── Shooting ────────────────────────────────────────────────────────
     g.shootCooldown = Math.max(0, g.shootCooldown - dt)
-    if (mb.has(0) && g.shootCooldown <= 0) {
+    const isShooting = mb.has(0) || mobileInput.fire
+    if (isShooting && g.shootCooldown <= 0) {
       const dx  = mWorld.current.x - g.px
       const dz2 = mWorld.current.z - g.pz
       const len = Math.sqrt(dx * dx + dz2 * dz2)
-      if (len > 0.1) spawnBullet(g.px, g.pz, (dx / len) * P_BSPD, (dz2 / len) * P_BSPD, false)
+      if (len > 0.1) {
+        spawnBullet(g.px, g.pz, (dx / len) * P_BSPD, (dz2 / len) * P_BSPD, false)
+        playPistol(0.55)
+      }
       g.shootCooldown = 0.18
     }
 
@@ -227,8 +234,16 @@ export function SkydiveScene() {
         for (const e of enemies.current) {
           if (!e.active) continue
           if ((b.x - e.x) ** 2 + (b.z - e.z) ** 2 < 0.6 ** 2) {
-            b.active = false; e.hp -= 1
-            if (e.hp <= 0) e.active = false
+            b.active = false
+            e.hp -= 1
+            e.hitFlash = 0.14
+            if (e.hp <= 0) {
+              e.active = false
+              e.deathFlash = 0.22
+              playDeath(0.45)
+            } else {
+              playHit(0.7)
+            }
             break
           }
         }
@@ -300,8 +315,29 @@ export function SkydiveScene() {
     for (let i = 0; i < EPOOL; i++) {
       const m = enemyRefs.current[i]; const e = enemies.current[i]
       if (!m) continue
-      m.visible = e.active
-      if (e.active) m.position.set(e.x, 0.4, e.z)
+      // Decay flash timers
+      if (e.hitFlash > 0) e.hitFlash = Math.max(0, e.hitFlash - dt)
+      if (e.deathFlash > 0) e.deathFlash = Math.max(0, e.deathFlash - dt)
+      // Show death flash briefly even after active=false
+      const showDeathFlash = !e.active && e.deathFlash > 0
+      m.visible = e.active || showDeathFlash
+      if (m.visible) {
+        m.position.set(e.x, 0.4, e.z)
+        const mat = m.material as THREE.MeshStandardMaterial
+        if (showDeathFlash) {
+          mat.emissive.set('#ffffff')
+          mat.emissiveIntensity = e.deathFlash * 18
+          m.scale.setScalar(1 + (0.22 - e.deathFlash) * 6)
+        } else if (e.hitFlash > 0) {
+          mat.emissive.set('#ffffff')
+          mat.emissiveIntensity = 4
+          m.scale.setScalar(1)
+        } else {
+          mat.emissive.set('#ee1100')
+          mat.emissiveIntensity = 0.7
+          m.scale.setScalar(1)
+        }
+      }
     }
 
     // ── Camera: slightly forward-angled top-down ─────────────────────────
