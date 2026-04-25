@@ -6,7 +6,7 @@ import {
   type WeaponId, type EquipmentId, type AmmoId,
 } from '../game/types'
 
-type Category = 'waffen' | 'ausruestung' | 'munition'
+type Category = 'waffen' | 'ausruestung' | 'munition' | 'ladung'
 
 // ── Stat bars ───────────────────────────────────────────────────────────────
 
@@ -461,18 +461,22 @@ export function Shop() {
   const setGameMode = useGameStore((s) => s.setGameMode)
   const { credits } = useLoadoutStore()
 
+  const mob = typeof window !== 'undefined' && window.innerWidth < 640
+
   const tabStyle = (active: boolean): React.CSSProperties => ({
-    padding: '10px 20px',
+    padding: mob ? '10px 14px' : '10px 20px',
     background: active ? '#00aaff22' : 'transparent',
     border: `1px solid ${active ? '#00aaff' : '#1a1a2e'}`,
     color: active ? '#00ccff' : '#445566',
     cursor: 'pointer',
     fontFamily: 'inherit',
-    fontSize: 12,
-    letterSpacing: 3,
+    fontSize: 11,
+    letterSpacing: mob ? 1 : 3,
     textTransform: 'uppercase',
     transition: 'all 0.15s',
     borderRadius: 2,
+    whiteSpace: 'nowrap',
+    flexShrink: 0,
   })
 
   return (
@@ -486,58 +490,75 @@ export function Shop() {
     }}>
       {/* Header */}
       <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '16px 28px', borderBottom: '1px solid #111122',
+        display: 'flex',
+        alignItems: mob ? 'flex-start' : 'center',
+        flexDirection: mob ? 'column' : 'row',
+        justifyContent: 'space-between',
+        padding: mob ? '10px 14px 8px' : '16px 28px',
+        borderBottom: '1px solid #111122',
+        gap: mob ? 4 : 0,
       }}>
         <div>
-          <div style={{ color: '#00aaff', fontSize: 20, fontWeight: 'bold', letterSpacing: 6, textShadow: '0 0 12px #00aaff' }}>
+          <div style={{ color: '#00aaff', fontSize: mob ? 15 : 20, fontWeight: 'bold', letterSpacing: mob ? 3 : 6, textShadow: '0 0 12px #00aaff' }}>
             COVERT OPERATIONS
           </div>
-          <div style={{ color: '#334455', fontSize: 11, letterSpacing: 3, marginTop: 2 }}>AUSRÜSTUNG & WAFFEN</div>
+          <div style={{ color: '#334455', fontSize: 10, letterSpacing: 3, marginTop: 2 }}>AUSRÜSTUNG & WAFFEN</div>
         </div>
-
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ color: '#445566', fontSize: 11, letterSpacing: 2 }}>CREDITS</div>
-          <div style={{
-            color: '#ffee00', fontSize: 26, fontWeight: 'bold', letterSpacing: 2,
-            textShadow: '0 0 10px #ffcc00',
-          }}>
+          <div style={{ color: '#ffee00', fontSize: mob ? 20 : 26, fontWeight: 'bold', letterSpacing: 2, textShadow: '0 0 10px #ffcc00' }}>
             {credits.toString().padStart(5, '0')}
           </div>
         </div>
       </div>
 
+      {/* Mobile: horizontal tab bar */}
+      {mob && (
+        <div style={{
+          display: 'flex', gap: 6, padding: '8px 12px',
+          borderBottom: '1px solid #111122', overflowX: 'auto',
+        }}>
+          <button style={tabStyle(category === 'waffen')}      onClick={() => setCategory('waffen')}>Waffen</button>
+          <button style={tabStyle(category === 'ausruestung')} onClick={() => setCategory('ausruestung')}>Ausrüstung</button>
+          <button style={tabStyle(category === 'munition')}    onClick={() => setCategory('munition')}>Munition</button>
+          <button style={tabStyle(category === 'ladung')}      onClick={() => setCategory('ladung')}>Ladung</button>
+        </div>
+      )}
+
       {/* Body */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-        {/* Left: category tabs */}
-        <div style={{
-          width: 180, borderRight: '1px solid #111122', padding: '20px 16px',
-          display: 'flex', flexDirection: 'column', gap: 8,
-        }}>
-          <div style={{ color: '#334455', fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>KATEGORIE</div>
-          <button style={tabStyle(category === 'waffen')} onClick={() => setCategory('waffen')}>Waffen</button>
-          <button style={tabStyle(category === 'ausruestung')} onClick={() => setCategory('ausruestung')}>Ausrüstung</button>
-          <button style={tabStyle(category === 'munition')} onClick={() => setCategory('munition')}>Munition</button>
-
-          {category === 'ausruestung' && (
-            <div style={{ marginTop: 16, padding: '10px', background: '#080812', border: '1px solid #1a1a2e', borderRadius: 3, color: '#334455', fontSize: 10, lineHeight: 1.6 }}>
-              Ausrüstung erhöht die Munitionskapazität dauerhaft. Einmal gekauft, immer aktiv.
-            </div>
-          )}
-          {category === 'waffen' && (
-            <div style={{ marginTop: 16, padding: '10px', background: '#080812', border: '1px solid #1a1a2e', borderRadius: 3, color: '#334455', fontSize: 10, lineHeight: 1.6 }}>
-              Einmal freigeschaltet permanent verfügbar. Klick zum Wechseln.
-            </div>
-          )}
-          {category === 'munition' && (
-            <div style={{ marginTop: 16, padding: '10px', background: '#080812', border: '1px solid #1a1a2e', borderRadius: 3, color: '#334455', fontSize: 10, lineHeight: 1.6 }}>
-              Einmaliger Kauf schaltet dauerhaft frei. Typ jederzeit wechselbar.
-            </div>
-          )}
-        </div>
+        {/* Desktop: Left sidebar */}
+        {!mob && (
+          <div style={{
+            width: 180, borderRight: '1px solid #111122', padding: '20px 16px',
+            display: 'flex', flexDirection: 'column', gap: 8,
+          }}>
+            <div style={{ color: '#334455', fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>KATEGORIE</div>
+            <button style={tabStyle(category === 'waffen')}      onClick={() => setCategory('waffen')}>Waffen</button>
+            <button style={tabStyle(category === 'ausruestung')} onClick={() => setCategory('ausruestung')}>Ausrüstung</button>
+            <button style={tabStyle(category === 'munition')}    onClick={() => setCategory('munition')}>Munition</button>
+            {category === 'ausruestung' && (
+              <div style={{ marginTop: 16, padding: '10px', background: '#080812', border: '1px solid #1a1a2e', borderRadius: 3, color: '#334455', fontSize: 10, lineHeight: 1.6 }}>
+                Ausrüstung erhöht die Munitionskapazität dauerhaft. Einmal gekauft, immer aktiv.
+              </div>
+            )}
+            {category === 'waffen' && (
+              <div style={{ marginTop: 16, padding: '10px', background: '#080812', border: '1px solid #1a1a2e', borderRadius: 3, color: '#334455', fontSize: 10, lineHeight: 1.6 }}>
+                Einmal freigeschaltet permanent verfügbar. Klick zum Wechseln.
+              </div>
+            )}
+            {category === 'munition' && (
+              <div style={{ marginTop: 16, padding: '10px', background: '#080812', border: '1px solid #1a1a2e', borderRadius: 3, color: '#334455', fontSize: 10, lineHeight: 1.6 }}>
+                Einmaliger Kauf schaltet dauerhaft frei. Typ jederzeit wechselbar.
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Center: item grid */}
-        <div style={{ flex: 1, padding: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ flex: 1, padding: mob ? '12px' : '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {mob && category === 'ladung' && <CharacterPanel />}
+
           {category === 'waffen' && (
             <>
               <div style={{ color: '#334455', fontSize: 10, letterSpacing: 3, marginBottom: 4 }}>STANDARD</div>
@@ -582,25 +603,30 @@ export function Shop() {
           )}
         </div>
 
-        {/* Right: character panel */}
-        <div style={{
-          width: 220, borderLeft: '1px solid #111122', padding: '20px 16px', overflowY: 'auto',
-        }}>
-          <CharacterPanel />
-        </div>
+        {/* Desktop: Right character panel */}
+        {!mob && (
+          <div style={{ width: 220, borderLeft: '1px solid #111122', padding: '20px 16px', overflowY: 'auto' }}>
+            <CharacterPanel />
+          </div>
+        )}
       </div>
 
-      {/* Footer: start button */}
+      {/* Footer */}
       <div style={{
-        padding: '16px 28px', borderTop: '1px solid #111122',
-        display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 16,
+        padding: mob ? '10px 12px' : '16px 28px',
+        borderTop: '1px solid #111122',
+        display: 'flex',
+        flexDirection: mob ? 'column' : 'row',
+        alignItems: mob ? 'stretch' : 'center',
+        justifyContent: mob ? 'center' : 'flex-end',
+        gap: mob ? 8 : 16,
       }}>
         <button
           onClick={() => setPhase('menu')}
           style={{
             background: 'transparent', border: '1px solid #223344', color: '#445566',
-            fontSize: 12, letterSpacing: 3, padding: '10px 24px', cursor: 'pointer',
-            fontFamily: 'inherit', textTransform: 'uppercase', transition: 'all 0.15s',
+            fontSize: mob ? 14 : 12, letterSpacing: 3, padding: mob ? '14px' : '10px 24px',
+            cursor: 'pointer', fontFamily: 'inherit', textTransform: 'uppercase', transition: 'all 0.15s',
           }}
           onMouseEnter={(e) => { e.currentTarget.style.color = '#aabbcc'; e.currentTarget.style.borderColor = '#445566' }}
           onMouseLeave={(e) => { e.currentTarget.style.color = '#445566'; e.currentTarget.style.borderColor = '#223344' }}
@@ -612,10 +638,9 @@ export function Shop() {
           onClick={() => { setGameMode('arena'); setPhase('playing') }}
           style={{
             background: '#00aaff22', border: '2px solid #00aaff', color: '#00ccff',
-            fontSize: 14, letterSpacing: 4, padding: '12px 36px', cursor: 'pointer',
-            fontFamily: 'inherit', textTransform: 'uppercase', fontWeight: 'bold',
-            boxShadow: '0 0 20px #00aaff44',
-            transition: 'all 0.15s',
+            fontSize: mob ? 16 : 14, letterSpacing: 4, padding: mob ? '16px' : '12px 36px',
+            cursor: 'pointer', fontFamily: 'inherit', textTransform: 'uppercase', fontWeight: 'bold',
+            boxShadow: '0 0 20px #00aaff44', transition: 'all 0.15s',
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.background = '#00aaff44'
