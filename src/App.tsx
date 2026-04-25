@@ -129,16 +129,16 @@ export function App() {
       {phase === 'playing'                    && <HUD />}
       {phase === 'playing' && mobileControls  && <MobileControls />}
       {phase === 'playing' && isNetGame        && <ChatOverlay />}
-      {phase === 'menu'                        && <div style={{ position: 'absolute', inset: 0, zIndex: 10 }}><MainMenu /></div>}
-      {phase === 'missions'                    && <div style={{ position: 'absolute', inset: 0, zIndex: 10 }}><MissionsMenu /></div>}
-      {phase === 'briefing'                    && <div style={{ position: 'absolute', inset: 0, zIndex: 10 }}><MissionBriefing /></div>}
-      {phase === 'options'                     && <div style={{ position: 'absolute', inset: 0, zIndex: 10 }}><OptionsScreen /></div>}
-      {phase === 'lobby'                       && <div style={{ position: 'absolute', inset: 0, zIndex: 10 }}><Lobby /></div>}
-      {phase === 'shop'                        && <div style={{ position: 'absolute', inset: 0, zIndex: 10 }}><Shop /></div>}
-      {phase === 'gameover'                    && <div style={{ position: 'absolute', inset: 0, zIndex: 10 }}><GameOver /></div>}
-      {phase === 'skydive_win'                 && <div style={{ position: 'absolute', inset: 0, zIndex: 10 }}><SkydiveWin /></div>}
-      {phase === 'skydive'                     && <div style={{ position: 'absolute', inset: 0, zIndex: 10 }}><Skydive /></div>}
-      {phase === 'editor'                      && <div style={{ position: 'absolute', inset: 0, zIndex: 10 }}><Editor /></div>}
+      {phase === 'menu'                        && <MainMenu />}
+      {phase === 'missions'                    && <MissionsMenu />}
+      {phase === 'briefing'                    && <MissionBriefing />}
+      {phase === 'options'                     && <OptionsScreen />}
+      {phase === 'lobby'                       && <Lobby />}
+      {phase === 'shop'                        && <Shop />}
+      {phase === 'gameover'                    && <GameOver />}
+      {phase === 'skydive_win'                 && <SkydiveWin />}
+      {phase === 'skydive'                     && <Skydive />}
+      {phase === 'editor'                      && <Editor />}
     </div>
   )
 }
