@@ -3,7 +3,7 @@ import { useGameStore } from './store/gameStore'
 import { useNetStore } from './net/netStore'
 import { useSettingsStore } from './store/settingsStore'
 import { socket } from './net/socket'
-import { startMenuMusic, startGameMusic, stopMusic } from './game/music'
+import { startMenuMusic, startGameMusic, startSkydiveMusic, stopMusic } from './game/music'
 import { Game } from './game/Game'
 import { HUD } from './components/HUD'
 import { MainMenu } from './components/MainMenu'
@@ -16,6 +16,8 @@ import { Lobby } from './components/Lobby'
 import { ChatOverlay } from './components/ChatOverlay'
 import { MobileControls } from './components/MobileControls'
 import { OptionsScreen } from './components/OptionsScreen'
+import { MissionsMenu } from './components/MissionsMenu'
+import { MissionBriefing } from './components/MissionBriefing'
 
 export function App() {
   const phase          = useGameStore((s) => s.phase)
@@ -29,10 +31,12 @@ export function App() {
   // ── Music ─────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!musicEnabled) { stopMusic(); return }
-    if (phase === 'menu' || phase === 'options' || phase === 'lobby' || phase === 'shop') {
+    if (phase === 'menu' || phase === 'missions' || phase === 'briefing' || phase === 'options' || phase === 'lobby' || phase === 'shop') {
       startMenuMusic()
     } else if (phase === 'playing') {
       startGameMusic()
+    } else if (phase === 'skydive') {
+      startSkydiveMusic()
     } else {
       stopMusic()
     }
@@ -68,29 +72,14 @@ export function App() {
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}>
-      {/* Arena game canvas (always mounted, gated by phase in GameScene) */}
+      {/* Arena game canvas — always visible so WebGL initialises on iOS */}
       <div style={{
-        position: 'absolute', inset: 0,
+        position: 'absolute', inset: 0, zIndex: 0,
         filter: isBulletTime ? 'saturate(0.25) brightness(0.85)' : 'none',
         transition: 'filter 0.15s ease-out',
-        visibility: (phase === 'playing' || phase === 'gameover') ? 'visible' : 'hidden',
       }}>
         <Game />
       </div>
-
-      {/* Editor canvas */}
-      {phase === 'editor' && (
-        <div style={{ position: 'absolute', inset: 0 }}>
-          <Editor />
-        </div>
-      )}
-
-      {/* Skydive canvas */}
-      {phase === 'skydive' && (
-        <div style={{ position: 'absolute', inset: 0 }}>
-          <Skydive />
-        </div>
-      )}
 
       {/* Bullet-time vignette */}
       {phase === 'playing' && (
@@ -138,12 +127,16 @@ export function App() {
       {phase === 'playing'                    && <HUD />}
       {phase === 'playing' && mobileControls  && <MobileControls />}
       {phase === 'playing' && isNetGame        && <ChatOverlay />}
-      {phase === 'menu'                        && <MainMenu />}
-      {phase === 'options'                     && <OptionsScreen />}
-      {phase === 'lobby'                       && <Lobby />}
-      {phase === 'shop'                        && <Shop />}
-      {phase === 'gameover'                    && <GameOver />}
-      {phase === 'skydive_win'                 && <SkydiveWin />}
+      {phase === 'menu'                        && <div style={{ position: 'absolute', inset: 0, zIndex: 10 }}><MainMenu /></div>}
+      {phase === 'missions'                    && <div style={{ position: 'absolute', inset: 0, zIndex: 10 }}><MissionsMenu /></div>}
+      {phase === 'briefing'                    && <div style={{ position: 'absolute', inset: 0, zIndex: 10 }}><MissionBriefing /></div>}
+      {phase === 'options'                     && <div style={{ position: 'absolute', inset: 0, zIndex: 10 }}><OptionsScreen /></div>}
+      {phase === 'lobby'                       && <div style={{ position: 'absolute', inset: 0, zIndex: 10 }}><Lobby /></div>}
+      {phase === 'shop'                        && <div style={{ position: 'absolute', inset: 0, zIndex: 10 }}><Shop /></div>}
+      {phase === 'gameover'                    && <div style={{ position: 'absolute', inset: 0, zIndex: 10 }}><GameOver /></div>}
+      {phase === 'skydive_win'                 && <div style={{ position: 'absolute', inset: 0, zIndex: 10 }}><SkydiveWin /></div>}
+      {phase === 'skydive'                     && <div style={{ position: 'absolute', inset: 0, zIndex: 10 }}><Skydive /></div>}
+      {phase === 'editor'                      && <div style={{ position: 'absolute', inset: 0, zIndex: 10 }}><Editor /></div>}
     </div>
   )
 }

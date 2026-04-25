@@ -16,7 +16,7 @@ interface GameStore {
   creditsEarned: number
   fpsMode: boolean
   isPlaytesting: boolean
-  gameMode: 'arena' | 'skydive'
+  gameMode: 'arena' | 'skydive' | 'shooting_range'
   bigExplosion: boolean
   // Co-op Player 2
   p2Active: boolean
@@ -25,7 +25,7 @@ interface GameStore {
   p2MaxAmmo: number
 
   setPhase: (phase: GamePhase) => void
-  setGameMode: (m: 'arena' | 'skydive') => void
+  setGameMode: (m: 'arena' | 'skydive' | 'shooting_range') => void
   setBigExplosion: (v: boolean) => void
   updateHUD: (health: number, score: number, wave: number, ammo: number, maxAmmo: number, credits: number) => void
   updateP2HUD: (active: boolean, health: number, ammo: number, maxAmmo: number) => void

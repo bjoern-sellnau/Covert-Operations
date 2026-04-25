@@ -5,7 +5,7 @@ let _master: GainNode | null = null
 let _scheduler: ReturnType<typeof setInterval> | null = null
 let _padOscs: OscillatorNode[] = []
 let _nextBar = 0
-let _track: 'menu' | 'game' | null = null
+let _track: 'menu' | 'game' | 'skydive' | null = null
 
 function ctx(): AudioContext {
   if (!_ctx) _ctx = new AudioContext()
@@ -202,6 +202,38 @@ export function startGameMusic() {
   _gameMelBar = 0
   startPad([73.42, 110, 146.83], 'sawtooth', 420, 0.018)
   startScheduler(GAME_BAR, scheduleGameBar)
+}
+
+// ── Skydive music (E minor, 160 BPM, aggressive) ─────────────────────────────
+
+const SKY_BPM    = 160
+const SKY_BEAT   = 60 / SKY_BPM
+const SKY_EIGHTH = SKY_BEAT / 2
+const SKY_BAR    = SKY_BEAT * 4
+
+// E minor driving bass: E2 B1 D2 B1 G2 B1 D2 E2
+const SKY_BASS = [82.41, 61.74, 73.42, 61.74, 98, 61.74, 73.42, 82.41]
+// Lead riff (8 steps): E4 G4 B4 E5 D5 B4 G4 E4
+const SKY_LEAD = [329.63, 392, 493.88, 659.25, 587.33, 493.88, 392, 329.63]
+
+function scheduleSkydiveBar(t: number) {
+  // Hard kick on every beat
+  for (let b = 0; b < 4; b++) kick(t + SKY_BEAT * b, 0.65)
+  // Fast open hihats
+  for (let i = 0; i < 8; i++) hihat(t + SKY_EIGHTH * i, 0.10, 0.025)
+  // Driving bass
+  for (let i = 0; i < 8; i++)
+    note(SKY_BASS[i], t + SKY_EIGHTH * i, SKY_EIGHTH * 0.9, 0.28, 'sawtooth', 450)
+  // Aggressive lead riff
+  for (let i = 0; i < 8; i++)
+    note(SKY_LEAD[i], t + SKY_EIGHTH * i, SKY_EIGHTH * 0.7, 0.13, 'square', 2400)
+}
+
+export function startSkydiveMusic() {
+  if (_track === 'skydive') return
+  _track = 'skydive'
+  startPad([82.41, 123.47, 164.81], 'sawtooth', 600, 0.025)
+  startScheduler(SKY_BAR, scheduleSkydiveBar)
 }
 
 export function stopMusic() {

@@ -635,7 +635,7 @@ export function Shop() {
         </button>
 
         <button
-          onClick={() => { setGameMode('arena'); setPhase('playing') }}
+          onClick={() => { setGameMode('arena'); setPhase('briefing') }}
           style={{
             background: '#00aaff22', border: '2px solid #00aaff', color: '#00ccff',
             fontSize: mob ? 16 : 14, letterSpacing: 4, padding: mob ? '16px' : '12px 36px',

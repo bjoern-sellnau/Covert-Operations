@@ -72,11 +72,11 @@ export function MainMenu() {
 
         <button
           style={{ ...bigBtn('#ff8800'), fontSize: 13, padding: '11px 36px' }}
-          onClick={() => { setGameMode('skydive'); setPhase('skydive') }}
+          onClick={() => setPhase('missions')}
           onMouseEnter={(e) => { e.currentTarget.style.background = '#ff880044'; e.currentTarget.style.color = '#fff' }}
           onMouseLeave={(e) => { e.currentTarget.style.background = '#ff880022'; e.currentTarget.style.color = '#ff8800' }}
         >
-          ↓ Skydive Infiltration
+          ↓ Ausgewählte Missionen
         </button>
 
         <button
@@ -95,7 +95,7 @@ export function MainMenu() {
               fontSize: 11, letterSpacing: 3, padding: '9px 24px', cursor: 'pointer',
               fontFamily: 'inherit', textTransform: 'uppercase', transition: 'all 0.15s',
             }}
-            onClick={() => { setGameMode('arena'); setPhase('playing') }}
+            onClick={() => { setGameMode('arena'); setPhase('briefing') }}
             onMouseEnter={(e) => { e.currentTarget.style.color = '#aabbcc'; e.currentTarget.style.borderColor = '#667788' }}
             onMouseLeave={(e) => { e.currentTarget.style.color = '#445566'; e.currentTarget.style.borderColor = '#334455' }}
           >

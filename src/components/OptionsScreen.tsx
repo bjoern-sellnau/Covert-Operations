@@ -1,10 +1,12 @@
 import { useGameStore } from '../store/gameStore'
 import { useSettingsStore } from '../store/settingsStore'
+import { useLoadoutStore } from '../game/loadoutStore'
 
 export function OptionsScreen() {
   const setPhase            = useGameStore((s) => s.setPhase)
   const { bloodIntensity, setBloodIntensity, mobileControls, setMobileControls,
           musicEnabled, setMusicEnabled } = useSettingsStore()
+  const { credits, setCredits } = useLoadoutStore()
 
   const bloodLabels = ['AUS', 'DEZENT', 'NORMAL', 'ÜBERTRIEBEN'] as const
 
@@ -28,18 +30,18 @@ export function OptionsScreen() {
   return (
     <div style={{
       position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center',
+      alignItems: 'center', justifyContent: 'center', overflowY: 'auto',
       background: 'radial-gradient(ellipse at center, #07071e 0%, #000006 70%)',
       fontFamily: "'Courier New', monospace", userSelect: 'none',
     }}>
-      <div style={{ color: '#00aaff', fontSize: 28, fontWeight: 'bold', letterSpacing: 6, marginBottom: 6, textShadow: '0 0 14px #00aaff88' }}>
+      <div style={{ color: '#00aaff', fontSize: 28, fontWeight: 'bold', letterSpacing: 6, marginBottom: 6, marginTop: 20, textShadow: '0 0 14px #00aaff88' }}>
         OPTIONEN
       </div>
       <div style={{ color: '#223344', fontSize: 10, letterSpacing: 4, marginBottom: 32 }}>
         COVERT OPERATIONS
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: 'min(92vw, 400px)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: 'min(92vw, 400px)', paddingBottom: 24 }}>
 
         {/* ── Blood intensity ── */}
         <div style={section}>
@@ -66,12 +68,8 @@ export function OptionsScreen() {
         <div style={section}>
           <div style={label}>Mobile Steuerung (Touch)</div>
           <div style={{ display: 'flex', gap: 6 }}>
-            <button style={tog(mobileControls, '#00aaff')} onClick={() => setMobileControls(true)}>
-              Ein
-            </button>
-            <button style={tog(!mobileControls, '#445566')} onClick={() => setMobileControls(false)}>
-              Aus
-            </button>
+            <button style={tog(mobileControls, '#00aaff')} onClick={() => setMobileControls(true)}>Ein</button>
+            <button style={tog(!mobileControls, '#445566')} onClick={() => setMobileControls(false)}>Aus</button>
           </div>
           {mobileControls && (
             <div style={{ color: '#334455', fontSize: 10, letterSpacing: 1, lineHeight: 1.6 }}>
@@ -79,6 +77,24 @@ export function OptionsScreen() {
               Automatisches Zielen auf nächsten Gegner
             </div>
           )}
+        </div>
+
+        {/* ── Credits (dev) ── */}
+        <div style={section}>
+          <div style={label}>Credits (Test-Modus)</div>
+          <div style={{ color: '#ffee00', fontSize: 20, fontWeight: 'bold', letterSpacing: 2, marginBottom: 4 }}>
+            {credits.toString().padStart(5, '0')} CR
+          </div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {[500, 2000, 5000, 99999].map((v) => (
+              <button key={v} style={tog(false, '#ffaa00')} onClick={() => setCredits(v)}>
+                {v >= 1000 ? `${v / 1000}K` : v}
+              </button>
+            ))}
+          </div>
+          <div style={{ color: '#334455', fontSize: 10, letterSpacing: 1 }}>
+            Betrag setzen um alle Waffen zu testen
+          </div>
         </div>
 
         {/* ── Controls reference ── */}

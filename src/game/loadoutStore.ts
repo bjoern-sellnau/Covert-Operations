@@ -17,6 +17,7 @@ interface LoadoutStore {
   vernichterStock: number
 
   addCredits: (n: number) => void
+  setCredits: (n: number) => void
   buyWeapon: (id: WeaponId) => boolean
   selectWeapon: (id: WeaponId) => void
   buyEquipment: (id: EquipmentId) => boolean
@@ -42,6 +43,7 @@ export const useLoadoutStore = create<LoadoutStore>()(
       vernichterStock: 1,
 
       addCredits: (n) => set((s) => ({ credits: s.credits + n })),
+      setCredits: (n) => set({ credits: Math.max(0, n) }),
 
       buyWeapon: (id) => {
         const s = get()

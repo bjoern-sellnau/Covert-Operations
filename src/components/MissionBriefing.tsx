@@ -1,0 +1,220 @@
+import { useState } from 'react'
+import { useGameStore } from '../store/gameStore'
+
+type Card = { title: string; body: string[] }
+
+const ARENA_CARDS: Card[] = [
+  {
+    title: 'MISSION',
+    body: [
+      'Überlebe endlose Angriffswellen feindlicher Agenten.',
+      'Jede Wave wird stärker — eliminiere alle Gegner um weiterzukommen.',
+      'Credits für getötete Feinde → im Shop in bessere Ausrüstung investieren.',
+    ],
+  },
+  {
+    title: 'BEWEGEN & ZIELEN',
+    body: [
+      'WASD — Bewegen',
+      'Maus — Zielen',
+      'Linke Maustaste — Schießen',
+      'Mobile: Joystick links, FIRE-Button rechts',
+    ],
+  },
+  {
+    title: 'SPECIAL MOVES',
+    body: [
+      'SHIFT — Bullet Time (verlangsamt alles)',
+      'LEERTASTE — Dive-Roll (kurze Unverwundbarkeit)',
+      'G — Granate werfen',
+      'R — Vernichter (BFG-Plasmaschuss)',
+      'F — Ego-Perspektive umschalten',
+    ],
+  },
+  {
+    title: 'ÜBERLEBENSSTRATEGIE',
+    body: [
+      'Rote Gegner = Standard · Orange = Schnell · Lila = Tank',
+      'Granaten für Gruppen — Bullet Time für harte 1v1',
+      'Dive-Roll aus Ecken befreien',
+      'Munition geht zur Neige → verwalte dein Feuer',
+    ],
+  },
+]
+
+const SKYDIVE_CARDS: Card[] = [
+  {
+    title: 'MISSION',
+    body: [
+      'Springe aus 8.000 Metern Höhe über dem Zielobjekt.',
+      'Steuere deinen freien Fall in die Zielzone.',
+      'Deploye den Fallschirm rechtzeitig — zu spät = Aufprall.',
+    ],
+  },
+  {
+    title: 'STEUERUNG',
+    body: [
+      'WASD / Joystick — Körper im freien Fall neigen',
+      'LEERTASTE / DIVE-Button — Fallschirm öffnen',
+      'Mobile: Joystick zum Steuern, DIVE zum Öffnen',
+    ],
+  },
+  {
+    title: 'TIPPS',
+    body: [
+      'Je mehr Geschwindigkeit beim Öffnen, desto weiter driftest du',
+      'Zielzone ist markiert — treffe die Mitte für maximale Punkte',
+      'Öffne zu früh = du driftest ab · zu spät = Aufprall',
+    ],
+  },
+]
+
+const RANGE_CARDS: Card[] = [
+  {
+    title: 'SCHIEßSTAND',
+    body: [
+      'Trainiere deine Waffen ohne Risiko.',
+      'Unbegrenzte Munition — keine Lebenspunkte-Strafe.',
+      'Ziele tauchen in Wellen auf — teste Feuerkraft und Präzision.',
+    ],
+  },
+  {
+    title: 'STEUERUNG',
+    body: [
+      'WASD — Bewegen',
+      'Maus / Joystick — Zielen',
+      'Linke Maustaste / FIRE — Schießen',
+      'ESC / zurück zum Menü jederzeit möglich',
+    ],
+  },
+]
+
+export function MissionBriefing() {
+  const setPhase    = useGameStore((s) => s.setPhase)
+  const gameMode    = useGameStore((s) => s.gameMode)
+  const [page, setPage] = useState(0)
+
+  const cards = gameMode === 'skydive' ? SKYDIVE_CARDS
+    : gameMode === 'shooting_range'    ? RANGE_CARDS
+    : ARENA_CARDS
+
+  const card = cards[page]
+  const isLast = page === cards.length - 1
+
+  function launch() {
+    if (gameMode === 'skydive') setPhase('skydive')
+    else setPhase('playing')
+  }
+
+  const accentColor = gameMode === 'skydive' ? '#ff8800'
+    : gameMode === 'shooting_range'           ? '#00ff88'
+    : '#00aaff'
+
+  return (
+    <div style={{
+      position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      background: 'radial-gradient(ellipse at center, #07071e 0%, #000008 80%)',
+      fontFamily: "'Courier New', monospace", userSelect: 'none',
+    }}>
+      {/* Header */}
+      <div style={{ color: accentColor, fontSize: 11, letterSpacing: 5, marginBottom: 6, opacity: 0.7 }}>
+        MISSION BRIEFING
+      </div>
+      <div style={{ color: '#445566', fontSize: 10, letterSpacing: 3, marginBottom: 36 }}>
+        {page + 1} / {cards.length}
+      </div>
+
+      {/* Card */}
+      <div style={{
+        width: 'min(92vw, 420px)',
+        background: `${accentColor}08`,
+        border: `1px solid ${accentColor}44`,
+        borderRadius: 8,
+        padding: '28px 26px',
+        minHeight: 220,
+        display: 'flex', flexDirection: 'column', gap: 14,
+      }}>
+        <div style={{ color: accentColor, fontSize: 16, fontWeight: 'bold', letterSpacing: 4, textShadow: `0 0 10px ${accentColor}66` }}>
+          {card.title}
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {card.body.map((line, i) => (
+            <div key={i} style={{ color: '#7799aa', fontSize: 12, letterSpacing: 1, lineHeight: 1.5, display: 'flex', gap: 8 }}>
+              <span style={{ color: accentColor, opacity: 0.6 }}>›</span>
+              {line}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Navigation dots */}
+      <div style={{ display: 'flex', gap: 8, margin: '24px 0 20px' }}>
+        {cards.map((_, i) => (
+          <div
+            key={i}
+            onClick={() => setPage(i)}
+            style={{
+              width: i === page ? 20 : 8, height: 8, borderRadius: 4,
+              background: i === page ? accentColor : '#223344',
+              transition: 'all 0.2s', cursor: 'pointer',
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Buttons */}
+      <div style={{ display: 'flex', gap: 10, width: 'min(92vw, 420px)' }}>
+        {page > 0 && (
+          <button
+            onClick={() => setPage(page - 1)}
+            style={{
+              flex: 1, background: 'transparent', border: '1px solid #1a2a35', color: '#445566',
+              fontSize: 12, letterSpacing: 3, padding: '12px', cursor: 'pointer',
+              fontFamily: 'inherit', textTransform: 'uppercase', transition: 'all 0.12s',
+            }}
+          >
+            ← Zurück
+          </button>
+        )}
+
+        {!isLast ? (
+          <button
+            onClick={() => setPage(page + 1)}
+            style={{
+              flex: 1, background: `${accentColor}22`, border: `1px solid ${accentColor}`,
+              color: accentColor, fontSize: 12, letterSpacing: 3, padding: '12px', cursor: 'pointer',
+              fontFamily: 'inherit', textTransform: 'uppercase', fontWeight: 'bold',
+              boxShadow: `0 0 12px ${accentColor}33`, transition: 'all 0.12s',
+            }}
+          >
+            Weiter →
+          </button>
+        ) : (
+          <button
+            onClick={launch}
+            style={{
+              flex: 1, background: `${accentColor}33`, border: `2px solid ${accentColor}`,
+              color: accentColor, fontSize: 14, letterSpacing: 4, padding: '14px', cursor: 'pointer',
+              fontFamily: 'inherit', textTransform: 'uppercase', fontWeight: 'bold',
+              boxShadow: `0 0 20px ${accentColor}55`, transition: 'all 0.12s',
+            }}
+          >
+            ⚡ MISSION STARTEN
+          </button>
+        )}
+      </div>
+
+      <button
+        onClick={() => setPhase('menu')}
+        style={{
+          background: 'transparent', border: 'none', color: '#334455',
+          fontSize: 10, letterSpacing: 2, padding: '12px', cursor: 'pointer',
+          fontFamily: 'inherit', textTransform: 'uppercase', marginTop: 8,
+        }}
+      >
+        Abbrechen
+      </button>
+    </div>
+  )
+}

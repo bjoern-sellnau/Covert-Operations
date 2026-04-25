@@ -121,24 +121,27 @@ export function GameScene() {
     resetScriptRuntime()
     useGameStore.getState().reset()
 
-    const loadout = useLoadoutStore.getState()
-    entityStore.ammo           = loadout.getMaxAmmo()
+    const loadout  = useLoadoutStore.getState()
+    const gameMode = useGameStore.getState().gameMode
+    const isRange  = gameMode === 'shooting_range'
+
+    entityStore.ammo           = isRange ? 9999 : loadout.getMaxAmmo()
     entityStore.maxAmmo        = entityStore.ammo
     entityStore.creditsEarned  = 0
     entityStore.isAkimbo       = loadout.isAkimbo &&
       (loadout.selectedWeapon === 'pistol' || loadout.selectedWeapon === 'smg')
-    entityStore.grenadeCount   = 3
+    entityStore.grenadeCount   = isRange ? 99 : 3
     entityStore.vernichterAmmo = loadout.vernichterStock
-    entityStore.ammo2          = loadout.getMaxAmmo()
+    entityStore.ammo2          = isRange ? 9999 : loadout.getMaxAmmo()
     entityStore.maxAmmo2       = entityStore.ammo2
-    entityStore.grenadeCount2  = 3
+    entityStore.grenadeCount2  = isRange ? 99 : 3
 
     activeLevelRef.current = useEditorStore.getState().activePlayLevel
 
     const ids = spawnWave(1)
     setEnemyIds(ids)
-    setWaveMessage('Wave 1')
-    setTimeout(() => setWaveMessage(''), 2000)
+    setWaveMessage(isRange ? 'SCHIESSTAND — Unbegrenzte Munition' : 'Wave 1')
+    setTimeout(() => setWaveMessage(''), 2500)
   }, [phase, setEnemyIds, setWaveMessage])
 
   // ── Camera default ────────────────────────────────────────────────────────
@@ -1199,13 +1202,18 @@ export function GameScene() {
     // ── Game over ─────────────────────────────────────────────────────────────
     const p1Dead = es.player.health <= 0
     const p2Dead = !es.player2Active || es.player2.health <= 0
-    if (p1Dead && p2Dead) {
+    const isRange = useGameStore.getState().gameMode === 'shooting_range'
+    if (p1Dead && p2Dead && !isRange) {
       if (fpsModeRef.current) { document.exitPointerLock(); fpsModeRef.current = false; setFpsMode(false) }
       useLoadoutStore.getState().addCredits(es.creditsEarned)
       setPhase('gameover')
       useGameStore.getState().updateHUD(0, es.score, es.wave, es.ammo, es.maxAmmo, es.creditsEarned)
       if (isPlaytesting) setTimeout(() => { setPlaytesting(false); setPhase('editor') }, 3000)
       return
+    }
+    if (p1Dead && isRange) {
+      // Respawn in shooting range
+      es.player.health = 100
     }
 
     // ── Net: broadcast at 20 Hz ──────────────────────────────────────────────
