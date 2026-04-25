@@ -72,11 +72,13 @@ export function App() {
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}>
-      {/* Arena game canvas — always visible so WebGL initialises on iOS */}
+      {/* Arena game canvas — kept in DOM for iOS WebGL init, hidden via opacity when not active */}
       <div style={{
         position: 'absolute', inset: 0, zIndex: 0,
         filter: isBulletTime ? 'saturate(0.25) brightness(0.85)' : 'none',
         transition: 'filter 0.15s ease-out',
+        opacity: (phase === 'playing' || phase === 'gameover') ? 1 : 0,
+        pointerEvents: (phase === 'playing' || phase === 'gameover') ? 'auto' : 'none',
       }}>
         <Game />
       </div>
