@@ -4,8 +4,10 @@ import { persist } from 'zustand/middleware'
 interface SettingsStore {
   bloodIntensity: 0 | 1 | 2 | 3
   mobileControls: boolean
+  musicEnabled: boolean
   setBloodIntensity: (v: 0 | 1 | 2 | 3) => void
   setMobileControls: (v: boolean) => void
+  setMusicEnabled: (v: boolean) => void
 }
 
 export const useSettingsStore = create<SettingsStore>()(
@@ -13,8 +15,10 @@ export const useSettingsStore = create<SettingsStore>()(
     (set) => ({
       bloodIntensity: 2,
       mobileControls: false,
+      musicEnabled: true,
       setBloodIntensity: (bloodIntensity) => set({ bloodIntensity }),
       setMobileControls: (mobileControls) => set({ mobileControls }),
+      setMusicEnabled: (musicEnabled) => set({ musicEnabled }),
     }),
     { name: 'covert-ops-settings-v1' },
   ),

@@ -3,6 +3,7 @@ import { useGameStore } from './store/gameStore'
 import { useNetStore } from './net/netStore'
 import { useSettingsStore } from './store/settingsStore'
 import { socket } from './net/socket'
+import { startMenuMusic, startGameMusic, stopMusic } from './game/music'
 import { Game } from './game/Game'
 import { HUD } from './components/HUD'
 import { MainMenu } from './components/MainMenu'
@@ -23,6 +24,19 @@ export function App() {
   const bigExplosion   = useGameStore((s) => s.bigExplosion)
   const netRole        = useNetStore((s) => s.role)
   const mobileControls = useSettingsStore((s) => s.mobileControls)
+  const musicEnabled   = useSettingsStore((s) => s.musicEnabled)
+
+  // ── Music ─────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!musicEnabled) { stopMusic(); return }
+    if (phase === 'menu' || phase === 'options' || phase === 'lobby' || phase === 'shop') {
+      startMenuMusic()
+    } else if (phase === 'playing') {
+      startGameMusic()
+    } else {
+      stopMusic()
+    }
+  }, [phase, musicEnabled])
 
   // ── Persistent socket event listeners (survive phase transitions) ────────
   useEffect(() => {
@@ -59,7 +73,7 @@ export function App() {
         position: 'absolute', inset: 0,
         filter: isBulletTime ? 'saturate(0.25) brightness(0.85)' : 'none',
         transition: 'filter 0.15s ease-out',
-        display: (phase === 'playing' || phase === 'gameover') ? 'block' : 'none',
+        visibility: (phase === 'playing' || phase === 'gameover') ? 'visible' : 'hidden',
       }}>
         <Game />
       </div>

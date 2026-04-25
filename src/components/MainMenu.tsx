@@ -17,7 +17,7 @@ export function MainMenu() {
     <div style={{
       position: 'absolute', inset: 0,
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      background: 'radial-gradient(ellipse at center, #0a0a2a 0%, #000008 70%)',
+      background: 'radial-gradient(ellipse at center, #111840 0%, #060614 70%)',
       fontFamily: "'Courier New', monospace", userSelect: 'none',
     }}>
       <div style={{ color: '#00aaff', fontSize: 64, fontWeight: 'bold', letterSpacing: 8, textShadow: '0 0 20px #00aaff, 0 0 60px #0055ff', marginBottom: 8 }}>

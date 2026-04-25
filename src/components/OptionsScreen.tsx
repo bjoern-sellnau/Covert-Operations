@@ -3,7 +3,8 @@ import { useSettingsStore } from '../store/settingsStore'
 
 export function OptionsScreen() {
   const setPhase            = useGameStore((s) => s.setPhase)
-  const { bloodIntensity, setBloodIntensity, mobileControls, setMobileControls } = useSettingsStore()
+  const { bloodIntensity, setBloodIntensity, mobileControls, setMobileControls,
+          musicEnabled, setMusicEnabled } = useSettingsStore()
 
   const bloodLabels = ['AUS', 'DEZENT', 'NORMAL', 'ÜBERTRIEBEN'] as const
 
@@ -49,6 +50,15 @@ export function OptionsScreen() {
                 {bloodLabels[v]}
               </button>
             ))}
+          </div>
+        </div>
+
+        {/* ── Music ── */}
+        <div style={section}>
+          <div style={label}>Musik</div>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button style={tog(musicEnabled, '#ffaa00')} onClick={() => setMusicEnabled(true)}>Ein</button>
+            <button style={tog(!musicEnabled, '#445566')} onClick={() => setMusicEnabled(false)}>Aus</button>
           </div>
         </div>
 

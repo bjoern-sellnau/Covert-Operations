@@ -6,7 +6,8 @@ export function Game() {
     <Canvas
       shadows
       gl={{ antialias: true }}
-      style={{ width: '100%', height: '100%', display: 'block' }}
+      dpr={[1, 2]}
+      style={{ width: '100%', height: '100%', display: 'block', touchAction: 'none' }}
       onContextMenu={(e) => e.preventDefault()}
     >
       <GameScene />
