@@ -189,9 +189,10 @@ export function SkydiveScene() {
     rc.current.setFromCamera(pointer, camera)
     rc.current.ray.intersectPlane(gPlane.current, mWorld.current)
 
-    // F key edge detection (parachute trigger)
+    // F key edge detection (parachute trigger) — also fires from mobile CHUTE button
     const fNow  = keys.has('KeyF')
-    const fJust = fNow && !g.fPrev
+    const fJust = (fNow && !g.fPrev) || mobileInput.diveJust
+    if (mobileInput.diveJust) mobileInput.diveJust = false
     g.fPrev = fNow
 
     // ── Fall physics ────────────────────────────────────────────────────
@@ -209,6 +210,9 @@ export function SkydiveScene() {
     // W/S: small fore-aft body adjustment (freefall body position)
     if (keys.has('KeyW') && !(keys.has('ShiftLeft') || keys.has('ShiftRight'))) g.pz -= 2.5 * dt
     if (keys.has('KeyS')) g.pz += 2 * dt
+    // Mobile joystick
+    g.px += mobileInput.dx * LATERAL_SPD * dt
+    g.pz += mobileInput.dz * 2 * dt
     g.px = Math.max(-BOUNDS_X, Math.min(BOUNDS_X, g.px))
 
     // ── Parachute ───────────────────────────────────────────────────────

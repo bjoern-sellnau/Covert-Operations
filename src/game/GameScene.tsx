@@ -49,6 +49,8 @@ const _toMouse     = new THREE.Vector2()
 const _toPlayer    = new THREE.Vector2()
 const _diff        = new THREE.Vector2()
 
+const DEBUG_VIEW = new URLSearchParams(window.location.search).has('debugview')
+
 const _btAmbientColor     = new THREE.Color(0xaaccff)
 const _normalAmbientColor = new THREE.Color(0x4488ff)
 const _btDirColor         = new THREE.Color(0x6688cc)
@@ -58,6 +60,65 @@ const FPS_SENS   = 0.0025
 const MAX_GRENADES = 6
 
 const RANGE_TARGET_X = [-10, -5, 0, 5, 10]
+
+// ── DebugView — shown when ?debugview=true ────────────────────────────────────
+const MAX_DBG_ENEMIES = 50
+const MAX_DBG_BULLETS = 40
+
+function DebugView() {
+  const playerRef  = useRef<THREE.Mesh>(null)
+  const enemyRefs  = useRef<(THREE.Mesh | null)[]>(new Array(MAX_DBG_ENEMIES).fill(null))
+  const bulletRefs = useRef<(THREE.Mesh | null)[]>(new Array(MAX_DBG_BULLETS).fill(null))
+
+  useFrame(() => {
+    const es = entityStore
+    if (playerRef.current) {
+      playerRef.current.position.set(es.player.position.x, 0.06, es.player.position.y)
+    }
+    const enemyArr = Array.from(es.enemies.values())
+    for (let i = 0; i < MAX_DBG_ENEMIES; i++) {
+      const ring = enemyRefs.current[i]
+      if (!ring) continue
+      const e = enemyArr[i]
+      ring.visible = !!e
+      if (e) {
+        ring.position.set(e.position.x, 0.06, e.position.y)
+        ring.scale.setScalar(ENEMY_CONFIGS[e.type].size / 0.45)
+      }
+    }
+    const bulletArr = Array.from(es.bullets.values())
+    for (let i = 0; i < MAX_DBG_BULLETS; i++) {
+      const ring = bulletRefs.current[i]
+      if (!ring) continue
+      const b = bulletArr[i]
+      ring.visible = !!b
+      if (b) ring.position.set(b.position.x, 0.06, b.position.y)
+    }
+  })
+
+  return (
+    <>
+      <mesh ref={playerRef} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[PLAYER_RADIUS - 0.05, PLAYER_RADIUS, 32]} />
+        <meshBasicMaterial color="#00ff44" transparent opacity={0.9} depthTest={false} />
+      </mesh>
+      {Array.from({ length: MAX_DBG_ENEMIES }, (_, i) => (
+        <mesh key={i} ref={(m) => { enemyRefs.current[i] = m }}
+              rotation={[-Math.PI / 2, 0, 0]} visible={false}>
+          <ringGeometry args={[0.40, 0.45, 24]} />
+          <meshBasicMaterial color="#ff4444" transparent opacity={0.9} depthTest={false} />
+        </mesh>
+      ))}
+      {Array.from({ length: MAX_DBG_BULLETS }, (_, i) => (
+        <mesh key={i} ref={(m) => { bulletRefs.current[i] = m }}
+              rotation={[-Math.PI / 2, 0, 0]} visible={false}>
+          <ringGeometry args={[BULLET_RADIUS - 0.03, BULLET_RADIUS, 12]} />
+          <meshBasicMaterial color="#ffff00" transparent opacity={0.9} depthTest={false} />
+        </mesh>
+      ))}
+    </>
+  )
+}
 
 function ShootingRangeLayout() {
   return (
@@ -1484,6 +1545,7 @@ export function GameScene() {
       />
 
       <ParticleSystem />
+      {DEBUG_VIEW && <DebugView />}
 
       {/* Script system */}
       {activePlayLevel && <ScriptEngine level={activePlayLevel} />}
