@@ -152,6 +152,9 @@ function makeEntityStore() {
     // Burst fire state
     burstRemaining: 0,
     burstTimer: 0,
+    // Reload & per-weapon ammo
+    reloadTimer: 0,
+    weaponAmmo: new Map<string, number>(),
     // ── Player 2 (local co-op) ───────────────────────────────────────────────
     player2: {
       position: new THREE.Vector2(2, 0),
@@ -208,6 +211,8 @@ export function resetEntityStore() {
   s.bananas = []
   s.burstRemaining = 0
   s.burstTimer = 0
+  s.reloadTimer = 0
+  s.weaponAmmo.clear()
   s.player2.position.set(2, 0)
   s.player2.angle = 0
   s.player2.health = 100

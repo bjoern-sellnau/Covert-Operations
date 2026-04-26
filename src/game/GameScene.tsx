@@ -57,6 +57,84 @@ const _normalDirColor     = new THREE.Color(0xffffff)
 const FPS_SENS   = 0.0025
 const MAX_GRENADES = 6
 
+const RANGE_TARGET_X = [-10, -5, 0, 5, 10]
+
+function ShootingRangeLayout() {
+  return (
+    <>
+      {/* Backdrop wall */}
+      <mesh position={[0, 0.6, -16.5]}>
+        <boxGeometry args={[38, 2.5, 0.4]} />
+        <meshStandardMaterial color="#1a2530" roughness={0.9} />
+      </mesh>
+
+      {/* Overhead strip lights */}
+      {[-8, 0, 8].map((x) => (
+        <group key={x}>
+          <mesh position={[x, 1.8, -8]}>
+            <boxGeometry args={[0.15, 0.12, 20]} />
+            <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.6} />
+          </mesh>
+          <pointLight position={[x, 1.6, -8]} color="#ffe8c0" intensity={2.5} distance={18} decay={2} />
+        </group>
+      ))}
+
+      {/* Lane dividers (low barriers) */}
+      {[-7.5, -2.5, 2.5, 7.5].map((x) => (
+        <mesh key={x} position={[x, 0.18, -8]}>
+          <boxGeometry args={[0.12, 0.36, 19]} />
+          <meshStandardMaterial color="#2a3a45" roughness={0.8} />
+        </mesh>
+      ))}
+
+      {/* Shooting bench */}
+      <mesh position={[0, -0.08, 9]}>
+        <boxGeometry args={[38, 0.18, 4]} />
+        <meshStandardMaterial color="#3a2a1a" roughness={0.9} />
+      </mesh>
+
+      {/* Distance markers on floor */}
+      {[5, 9, 13].map((z) => (
+        <mesh key={z} position={[0, -0.49, -z]} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[38, 0.08]} />
+          <meshBasicMaterial color="#ffffff" opacity={0.15} transparent />
+        </mesh>
+      ))}
+
+      {/* Targets */}
+      {RANGE_TARGET_X.map((x) => (
+        <group key={x} position={[x, 0, -14]}>
+          {/* Stand pole */}
+          <mesh position={[0, 0.55, 0]} castShadow>
+            <cylinderGeometry args={[0.05, 0.05, 1.3, 6]} />
+            <meshStandardMaterial color="#555" metalness={0.8} roughness={0.3} />
+          </mesh>
+          {/* Base */}
+          <mesh position={[0, -0.06, 0]} castShadow>
+            <boxGeometry args={[0.7, 0.1, 0.45]} />
+            <meshStandardMaterial color="#444" roughness={0.7} />
+          </mesh>
+          {/* Target ring 3 (outer red) */}
+          <mesh position={[0, 0.95, 0.01]}>
+            <circleGeometry args={[0.42, 14]} />
+            <meshStandardMaterial color="#aa1111" emissive="#440000" emissiveIntensity={0.3} side={2} />
+          </mesh>
+          {/* Target ring 2 (white) */}
+          <mesh position={[0, 0.95, 0.02]}>
+            <circleGeometry args={[0.28, 14]} />
+            <meshStandardMaterial color="#eeeeee" side={2} />
+          </mesh>
+          {/* Target ring 1 (inner red bull) */}
+          <mesh position={[0, 0.95, 0.03]}>
+            <circleGeometry args={[0.13, 14]} />
+            <meshStandardMaterial color="#dd1111" emissive="#880000" emissiveIntensity={0.6} side={2} />
+          </mesh>
+        </group>
+      ))}
+    </>
+  )
+}
+
 export function GameScene() {
   const { camera, gl } = useThree()
   const input          = useInput()
@@ -72,6 +150,7 @@ export function GameScene() {
   const setPlaytesting  = useGameStore((s) => s.setPlaytesting)
   const setBigExplosion = useGameStore((s) => s.setBigExplosion)
   const phase           = useGameStore((s) => s.phase)
+  const gameModeLive    = useGameStore((s) => s.gameMode)
   const enemyIds        = useGameStore((s) => s.enemyIds)
   const bulletIds       = useGameStore((s) => s.bulletIds)
   const activePlayLevel = useEditorStore((s) => s.activePlayLevel)
@@ -106,6 +185,7 @@ export function GameScene() {
   const ePrev     = useRef(false)
   const gPrev     = useRef(false)
   const rPrev     = useRef(false)
+  const vPrev     = useRef(false)
   // Edge-detection refs — P2
   const p2GrenPrev   = useRef(false)
   const p2GpShootPrev = useRef(false)
@@ -125,6 +205,10 @@ export function GameScene() {
     const gameMode = useGameStore.getState().gameMode
     const isRange  = gameMode === 'shooting_range'
 
+    // Per-weapon ammo pools
+    for (const w of loadout.ownedWeapons) {
+      entityStore.weaponAmmo.set(w, isRange ? 9999 : loadout.getMaxAmmoFor(w))
+    }
     entityStore.ammo           = isRange ? 9999 : loadout.getMaxAmmo()
     entityStore.maxAmmo        = entityStore.ammo
     entityStore.creditsEarned  = 0
@@ -302,16 +386,50 @@ export function GameScene() {
     const eDown     = keys.has('KeyE')
     const gDown     = keys.has('KeyG')
     const rDown     = keys.has('KeyR')
+    const vDown     = keys.has('KeyV')
     const spaceJust = (spaceDown && !spacePrev.current) || mobileDiveJust
     const qJust     = qDown     && !qPrev.current
     const eJust     = eDown     && !ePrev.current
     const gJust     = (gDown && !gPrev.current) || mobileGrenJust
-    const rJust     = rDown     && !rPrev.current
+    const rJust     = rDown     && !rPrev.current   // reload
+    const vJust     = vDown     && !vPrev.current   // vernichter
     spacePrev.current = spaceDown
     qPrev.current     = qDown
     ePrev.current     = eDown
     gPrev.current     = gDown
     rPrev.current     = rDown
+    vPrev.current     = vDown
+
+    // ── Number keys 1-5: weapon switching ────────────────────────────────────
+    {
+      const loadoutNow = useLoadoutStore.getState()
+      for (let slot = 1; slot <= 5; slot++) {
+        const target = loadoutNow.ownedWeapons[slot - 1]
+        if (target && keys.has(`Digit${slot}`) && target !== loadoutNow.selectedWeapon) {
+          es.weaponAmmo.set(loadoutNow.selectedWeapon, es.ammo)
+          const newMax = loadoutNow.getMaxAmmoFor(target)
+          es.ammo      = es.weaponAmmo.get(target) ?? newMax
+          es.maxAmmo   = newMax
+          es.reloadTimer = 0
+          loadoutNow.selectWeapon(target)
+          break
+        }
+      }
+    }
+
+    // ── R: reload ─────────────────────────────────────────────────────────────
+    const gameMode2 = useGameStore.getState().gameMode
+    if (rJust && es.reloadTimer <= 0 && es.ammo < es.maxAmmo && gameMode2 !== 'shooting_range') {
+      es.reloadTimer = WEAPON_CONFIGS[useLoadoutStore.getState().selectedWeapon].reloadTime
+    }
+    if (es.reloadTimer > 0) {
+      es.reloadTimer -= rawDt
+      if (es.reloadTimer <= 0) {
+        es.reloadTimer = 0
+        es.ammo = es.maxAmmo
+        es.weaponAmmo.set(useLoadoutStore.getState().selectedWeapon, es.ammo)
+      }
+    }
 
     // ── Bullet time ───────────────────────────────────────────────────────────
     const wantBT     = keys.has('ShiftLeft') || keys.has('ShiftRight') || mobileInput.btDown
@@ -615,7 +733,7 @@ export function GameScene() {
 
     // ── Shooting ──────────────────────────────────────────────────────────────
     es.player.shootCooldown -= delta
-    const isShooting = input.current.mouseButtons.has(0) || (mobileControls && mobileInput.fire)
+    const isShooting = (input.current.mouseButtons.has(0) || (mobileControls && mobileInput.fire)) && es.reloadTimer <= 0
 
     // Helper: spawn one regular bullet
     const spawnBullet = (angle: number, lateralOff = 0) => {
@@ -902,8 +1020,8 @@ export function GameScene() {
       const mesh = bananaMeshRefs.current[mi]; if (mesh) mesh.visible = false
     }
 
-    // ── Vernichter fire (R) ───────────────────────────────────────────────────
-    if (rJust && es.vernichterAmmo > 0 && !es.vernichterProjectile) {
+    // ── Vernichter fire (V) ───────────────────────────────────────────────────
+    if (vJust && es.vernichterAmmo > 0 && !es.vernichterProjectile) {
       es.vernichterAmmo--
       es.vernichterProjectile = {
         x:  es.player.position.x + _toMouse.x * (PLAYER_RADIUS + 0.6),
@@ -1285,6 +1403,7 @@ export function GameScene() {
   return (
     <>
       <Arena />
+      {gameModeLive === 'shooting_range' && <ShootingRangeLayout />}
       {activeLevelRef.current && <GameLevelObjects level={activeLevelRef.current} />}
       <group ref={playerGroupRef}>
         <PlayerMesh />

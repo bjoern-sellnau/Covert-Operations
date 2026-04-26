@@ -4,29 +4,29 @@ import * as THREE from 'three'
 import { entityStore } from './entityStore'
 import { PLAYER_MAX_HEALTH } from './types'
 
-interface Props {
-  player2?: boolean
-}
+interface Props { player2?: boolean }
 
 export function PlayerMesh({ player2 = false }: Props) {
-  const bodyRef      = useRef<THREE.Mesh>(null)
-  const barrel1Ref   = useRef<THREE.Mesh>(null)
-  const barrel2Ref   = useRef<THREE.Mesh>(null)
+  const innerRef     = useRef<THREE.Group>(null)
   const healthBarRef = useRef<THREE.Mesh>(null)
 
-  const bodyMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color:             player2 ? '#ff6600' : '#00aaff',
-    emissive:          player2 ? '#aa2200' : '#0044aa',
-    emissiveIntensity: 0.6,
-    roughness: 0.3, metalness: 0.7,
+  const skinMat    = useMemo(() => new THREE.MeshStandardMaterial({ color: '#d4956a', roughness: 0.7, metalness: 0.0 }), [])
+  const uniformMat = useMemo(() => new THREE.MeshStandardMaterial({
+    color: player2 ? '#cc3300' : '#1a3a6e',
+    emissive: player2 ? '#aa2200' : '#001144',
+    emissiveIntensity: 0.3, roughness: 0.55, metalness: 0.2,
   }), [player2])
-
-  const barrelMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color:             player2 ? '#ffbb88' : '#88ccff',
-    emissive:          player2 ? '#cc6600' : '#2266cc',
-    emissiveIntensity: 0.8,
-    roughness: 0.2, metalness: 0.9,
+  const helmetMat  = useMemo(() => new THREE.MeshStandardMaterial({
+    color: player2 ? '#ff6600' : '#00aaff',
+    emissive: player2 ? '#ff6600' : '#00aaff',
+    emissiveIntensity: 0.55, roughness: 0.3, metalness: 0.7,
   }), [player2])
+  const pantsMat   = useMemo(() => new THREE.MeshStandardMaterial({
+    color: player2 ? '#7a1a00' : '#0d1f3c', roughness: 0.8, metalness: 0.1,
+  }), [player2])
+  const weaponMat  = useMemo(() => new THREE.MeshStandardMaterial({
+    color: '#1a1a1a', emissive: '#111111', emissiveIntensity: 0.2, roughness: 0.2, metalness: 0.9,
+  }), [])
 
   useFrame((state) => {
     const es  = entityStore
@@ -34,20 +34,16 @@ export function PlayerMesh({ player2 = false }: Props) {
     const p   = player2 ? es.player2 : es.player
 
     if (player2 && !es.player2Active) {
-      if (bodyRef.current) bodyRef.current.visible = false
-      if (barrel1Ref.current) barrel1Ref.current.visible = false
-      if (barrel2Ref.current) barrel2Ref.current.visible = false
-      if (healthBarRef.current) healthBarRef.current.parent!.visible = false
+      if (innerRef.current?.parent) innerRef.current.parent.visible = false
       return
     }
-    if (healthBarRef.current?.parent) healthBarRef.current.parent.visible = true
+    if (innerRef.current?.parent) innerRef.current.parent.visible = true
 
     const invincible = now < p.invincibleUntil
     const visible    = !invincible || Math.floor(now * 12) % 2 === 0
-    if (bodyRef.current)    bodyRef.current.visible    = visible
-    if (barrel1Ref.current) barrel1Ref.current.visible = visible
-    if (barrel2Ref.current) barrel2Ref.current.visible = visible && !player2 && es.isAkimbo
+    if (innerRef.current) innerRef.current.visible = visible
 
+    // Health bar
     if (healthBarRef.current) {
       const pct = Math.max(0, p.health / PLAYER_MAX_HEALTH)
       healthBarRef.current.scale.x    = pct
@@ -58,35 +54,72 @@ export function PlayerMesh({ player2 = false }: Props) {
       else mat.color.setHex(0xff2200)
     }
 
-    if (p.health < 30) {
-      const pulse = (Math.sin(now * 8) + 1) * 0.5
-      bodyMat.emissiveIntensity = 0.4 + pulse * 0.8
-    } else {
-      bodyMat.emissiveIntensity = 0.6
+    // Dive roll spin
+    if (!player2 && innerRef.current) {
+      if (es.maneuver === 'dive') {
+        innerRef.current.rotation.z = now * Math.PI * 10
+      } else {
+        innerRef.current.rotation.z = THREE.MathUtils.lerp(innerRef.current.rotation.z, 0, 0.25)
+      }
     }
 
-    if (p.shootCooldown > 0) {
-      barrelMat.emissiveIntensity = 0.8 + Math.max(0, p.shootCooldown / 0.05) * 2
+    // Low-health pulse
+    if (p.health < 30) {
+      uniformMat.emissiveIntensity = 0.3 + ((Math.sin(now * 8) + 1) * 0.5) * 0.7
+    } else {
+      uniformMat.emissiveIntensity = 0.3
     }
+
+    // Muzzle flash
+    weaponMat.emissiveIntensity = p.shootCooldown > 0
+      ? Math.min(1.5, (p.shootCooldown / 0.06) * 1.5)
+      : 0.2
   })
 
   return (
     <group>
-      <mesh ref={bodyRef} material={bodyMat} castShadow>
-        <cylinderGeometry args={[0.45, 0.45, 0.35, 6]} />
-      </mesh>
-
-      <mesh ref={barrel1Ref} material={barrelMat} position={[-0.12, 0.05, -0.55]} castShadow>
-        <boxGeometry args={[0.14, 0.14, 0.5]} />
-      </mesh>
-
-      {!player2 && (
-        <mesh ref={barrel2Ref} material={barrelMat} position={[0.12, 0.05, -0.55]} castShadow>
-          <boxGeometry args={[0.14, 0.14, 0.5]} />
+      <group ref={innerRef}>
+        {/* Head (skin) */}
+        <mesh material={skinMat} position={[0, 0.43, 0.0]} castShadow>
+          <sphereGeometry args={[0.19, 8, 6]} />
         </mesh>
-      )}
+        {/* Helmet */}
+        <mesh material={helmetMat} position={[0, 0.47, -0.01]} castShadow>
+          <sphereGeometry args={[0.205, 8, 6]} />
+        </mesh>
+        {/* Torso */}
+        <mesh material={uniformMat} position={[0, 0.09, 0]} castShadow>
+          <boxGeometry args={[0.34, 0.30, 0.23]} />
+        </mesh>
+        {/* Left arm */}
+        <mesh material={uniformMat} position={[-0.26, 0.13, -0.09]} rotation={[0.35, 0, 0.18]} castShadow>
+          <boxGeometry args={[0.11, 0.11, 0.28]} />
+        </mesh>
+        {/* Right arm (weapon arm) */}
+        <mesh material={uniformMat} position={[0.14, 0.13, -0.26]} rotation={[0.55, 0, -0.12]} castShadow>
+          <boxGeometry args={[0.11, 0.11, 0.30]} />
+        </mesh>
+        {/* Primary weapon */}
+        <mesh material={weaponMat} position={[0, 0.09, -0.54]} castShadow>
+          <boxGeometry args={[0.13, 0.09, 0.52]} />
+        </mesh>
+        {/* Akimbo second weapon (P1 only) */}
+        {!player2 && (
+          <mesh material={weaponMat} position={[-0.22, 0.09, -0.42]} rotation={[0.2, -0.3, 0]} castShadow>
+            <boxGeometry args={[0.10, 0.08, 0.38]} />
+          </mesh>
+        )}
+        {/* Left leg */}
+        <mesh material={pantsMat} position={[-0.09, -0.20, 0.02]} castShadow>
+          <boxGeometry args={[0.12, 0.24, 0.14]} />
+        </mesh>
+        {/* Right leg */}
+        <mesh material={pantsMat} position={[0.09, -0.20, 0.02]} castShadow>
+          <boxGeometry args={[0.12, 0.24, 0.14]} />
+        </mesh>
+      </group>
 
-      {/* Health bar */}
+      {/* Health bar — outside innerRef so it never spins */}
       <group position={[0, 0.9, 0]}>
         <mesh>
           <planeGeometry args={[1, 0.12]} />

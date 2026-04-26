@@ -25,10 +25,9 @@ const ARENA_CARDS: Card[] = [
   {
     title: 'SPECIAL MOVES',
     body: [
-      'SHIFT — Bullet Time (verlangsamt alles)',
-      'LEERTASTE — Dive-Roll (kurze Unverwundbarkeit)',
-      'G — Granate werfen',
-      'R — Vernichter (BFG-Plasmaschuss)',
+      '1-5 — Waffe wechseln · R — Nachladen',
+      'SHIFT — Bullet Time · LEERTASTE — Dive-Roll',
+      'G — Granate · V — Vernichter (BFG)',
       'F — Ego-Perspektive umschalten',
     ],
   },

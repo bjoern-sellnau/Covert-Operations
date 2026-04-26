@@ -5,7 +5,7 @@ import { useLoadoutStore } from '../game/loadoutStore'
 export function OptionsScreen() {
   const setPhase            = useGameStore((s) => s.setPhase)
   const { bloodIntensity, setBloodIntensity, mobileControls, setMobileControls,
-          musicEnabled, setMusicEnabled } = useSettingsStore()
+          musicEnabled, setMusicEnabled, musicTrack, setMusicTrack } = useSettingsStore()
   const { credits, setCredits } = useLoadoutStore()
 
   const bloodLabels = ['AUS', 'DEZENT', 'NORMAL', 'ÜBERTRIEBEN'] as const
@@ -58,10 +58,31 @@ export function OptionsScreen() {
         {/* ── Music ── */}
         <div style={section}>
           <div style={label}>Musik</div>
-          <div style={{ display: 'flex', gap: 6 }}>
+          <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
             <button style={tog(musicEnabled, '#ffaa00')} onClick={() => setMusicEnabled(true)}>Ein</button>
             <button style={tog(!musicEnabled, '#445566')} onClick={() => setMusicEnabled(false)}>Aus</button>
           </div>
+          {musicEnabled && (
+            <>
+              <div style={{ ...label, marginBottom: 6 }}>Kampf-Musik</div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {([
+                  ['auto',  'AUTO',       '#ffaa00'],
+                  ['game1', 'TRACK 1',    '#00aaff'],
+                  ['game2', 'TRACK 2',    '#ff4444'],
+                  ['game3', 'TRACK 3',    '#44ff88'],
+                  ['game4', 'TRACK 4',    '#cc44ff'],
+                ] as const).map(([val, lbl, col]) => (
+                  <button key={val} style={tog(musicTrack === val, col)} onClick={() => setMusicTrack(val)}>
+                    {lbl}
+                  </button>
+                ))}
+              </div>
+              <div style={{ color: '#334455', fontSize: 9, letterSpacing: 1, marginTop: 4 }}>
+                Auto = jeder Level hat seinen eigenen Track
+              </div>
+            </>
+          )}
         </div>
 
         {/* ── Mobile controls ── */}
@@ -103,7 +124,8 @@ export function OptionsScreen() {
           <div style={{ color: '#334455', fontSize: 10, letterSpacing: 1, lineHeight: 1.8 }}>
             WASD — Bewegen &nbsp;·&nbsp; Maus — Zielen &nbsp;·&nbsp; LMT — Schießen<br />
             G — Granate &nbsp;·&nbsp; Space — Dive &nbsp;·&nbsp; Shift — Bullet Time<br />
-            R — Vernichter &nbsp;·&nbsp; F — Ego-Perspektive<br />
+            1-5 — Waffe wechseln &nbsp;·&nbsp; R — Nachladen &nbsp;·&nbsp; V — Vernichter<br />
+            F — Ego-Perspektive<br />
             Q / E — Ballett-Spin (Akimbo) &nbsp;·&nbsp; T — Chat (Online)
           </div>
         </div>

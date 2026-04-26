@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useGameStore } from '../store/gameStore'
 import { useLoadoutStore } from '../game/loadoutStore'
 import { entityStore } from '../game/entityStore'
-import { PLAYER_MAX_HEALTH, FOCUS_MAX, WEAPON_CONFIGS, AMMO_CONFIGS, DIVE_COOLDOWN, SPIN_COOLDOWN } from '../game/types'
+import { PLAYER_MAX_HEALTH, FOCUS_MAX, WEAPON_CONFIGS, AMMO_CONFIGS, DIVE_COOLDOWN, SPIN_COOLDOWN, type WeaponId } from '../game/types'
 
 function P2Panel() {
   const p2Active  = useGameStore((s) => s.p2Active)
@@ -95,7 +95,7 @@ export function HUD() {
   const maxAmmo       = useGameStore((s) => s.maxAmmo)
   const creditsEarned = useGameStore((s) => s.creditsEarned)
 
-  const { selectedWeapon, selectedAmmo, isAkimbo } = useLoadoutStore()
+  const { selectedWeapon, selectedAmmo, isAkimbo, ownedWeapons } = useLoadoutStore()
   const weaponCfg = WEAPON_CONFIGS[selectedWeapon]
   const ammoCfg   = AMMO_CONFIGS[selectedAmmo]
 
@@ -105,6 +105,8 @@ export function HUD() {
   const [grenades,    setGrenades]    = useState(3)
   const [vernAmmo,    setVernAmmo]    = useState(1)
   const [vernActive,  setVernActive]  = useState(false)
+  const [reloadTimer, setReloadTimer] = useState(0)
+  const [weaponAmmo,  setWeaponAmmo]  = useState<Map<string, number>>(new Map())
   useEffect(() => {
     const id = setInterval(() => {
       setDiveCd(Math.max(0, entityStore.diveCooldown))
@@ -113,6 +115,8 @@ export function HUD() {
       setGrenades(entityStore.grenadeCount)
       setVernAmmo(entityStore.vernichterAmmo)
       setVernActive(entityStore.vernichterProjectile !== null)
+      setReloadTimer(entityStore.reloadTimer)
+      setWeaponAmmo(new Map(entityStore.weaponAmmo))
     }, 50)
     return () => clearInterval(id)
   }, [])
@@ -255,12 +259,54 @@ export function HUD() {
         </div>
       )}
 
+      {/* Weapon slots bar */}
       <div style={{
-        position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)',
-        color: '#334455', fontSize: 10, letterSpacing: 1, textAlign: 'center', whiteSpace: 'nowrap',
+        position: 'absolute', bottom: 14, left: '50%', transform: 'translateX(-50%)',
+        display: 'flex', gap: 6, alignItems: 'flex-end',
       }}>
-        WASD — Bewegen &nbsp;|&nbsp; LMT — Schießen &nbsp;|&nbsp; Space — Dive &nbsp;|&nbsp; G — Granate &nbsp;|&nbsp; Shift — Bullet Time
-        {canAkimbo ? ' | Q/E — Ballett-Spin' : ''}
+        {Array.from({ length: 5 }, (_, i) => {
+          const w = ownedWeapons[i] as WeaponId | undefined
+          const active = w === selectedWeapon
+          const slotAmmo = w ? (w === selectedWeapon ? ammo : (weaponAmmo.get(w) ?? 0)) : 0
+          const slotMax  = w ? WEAPON_CONFIGS[w].baseAmmo : 1
+          const ammoPct  = w ? slotAmmo / slotMax : 0
+          const reloading = active && reloadTimer > 0
+          const reloadPct = reloading ? 1 - reloadTimer / WEAPON_CONFIGS[selectedWeapon].reloadTime : 1
+          return (
+            <div key={i} style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+              padding: '4px 7px',
+              background: active ? '#00aaff18' : w ? '#ffffff08' : 'transparent',
+              border: `1px solid ${active ? '#00aaff88' : w ? '#223344' : '#111'}`,
+              borderRadius: 3, minWidth: 52,
+              opacity: w ? 1 : 0.3,
+            }}>
+              <div style={{ color: '#445566', fontSize: 8, letterSpacing: 1 }}>{i + 1}</div>
+              {w ? (
+                <>
+                  <div style={{ color: active ? '#00aaff' : '#556677', fontSize: 10, fontWeight: active ? 'bold' : 'normal', letterSpacing: 1 }}>
+                    {WEAPON_CONFIGS[w].shortName}
+                  </div>
+                  {/* Ammo bar */}
+                  <div style={{ width: '100%', height: 3, background: '#111', borderRadius: 1, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${ammoPct * 100}%`, background: ammoPct > 0.3 ? '#00ccff' : '#ff4400', transition: 'width 0.05s' }} />
+                  </div>
+                  {/* Reload progress */}
+                  {reloading && (
+                    <div style={{ width: '100%', height: 2, background: '#111', borderRadius: 1, overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${reloadPct * 100}%`, background: '#ffcc00', transition: 'width 0.05s' }} />
+                    </div>
+                  )}
+                  <div style={{ color: reloading ? '#ffcc00' : ammoPct > 0 ? '#445566' : '#ff3300', fontSize: 9 }}>
+                    {reloading ? 'LADEN' : `${slotAmmo}`}
+                  </div>
+                </>
+              ) : (
+                <div style={{ color: '#223344', fontSize: 9 }}>—</div>
+              )}
+            </div>
+          )
+        })}
       </div>
 
       <P2Panel />

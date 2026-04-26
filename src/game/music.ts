@@ -5,7 +5,7 @@ let _master: GainNode | null = null
 let _scheduler: ReturnType<typeof setInterval> | null = null
 let _padOscs: OscillatorNode[] = []
 let _nextBar = 0
-let _track: 'menu' | 'game' | 'skydive' | null = null
+let _track: 'menu' | 'game' | 'game2' | 'game3' | 'game4' | 'skydive' | null = null
 
 function ctx(): AudioContext {
   if (!_ctx) _ctx = new AudioContext()
@@ -234,6 +234,92 @@ export function startSkydiveMusic() {
   _track = 'skydive'
   startPad([82.41, 123.47, 164.81], 'sawtooth', 600, 0.025)
   startScheduler(SKY_BAR, scheduleSkydiveBar)
+}
+
+// ── Game track 2 — Industrial metal (F# minor, 150 BPM) ──────────────────────
+
+const G2_BPM    = 150
+const G2_BEAT   = 60 / G2_BPM
+const G2_EIGHTH = G2_BEAT / 2
+const G2_BAR    = G2_BEAT * 4
+
+const G2_BASS = [92.5, 92.5, 138.59, 92.5, 110, 92.5, 123.47, 92.5]
+const G2_RIFF = [185, 185, 277.18, 185, 220, 185, 246.94, 369.99]
+
+function scheduleGame2Bar(t: number) {
+  // Hard double kick
+  kick(t, 0.6); kick(t + G2_BEAT * 0.5, 0.35)
+  kick(t + G2_BEAT * 2, 0.6); kick(t + G2_BEAT * 2.5, 0.35)
+  // Industrial snare (noise burst on 2 and 4)
+  hihat(t + G2_BEAT, 0.25, 0.08); hihat(t + G2_BEAT * 3, 0.25, 0.08)
+  // Tight hi-hats
+  for (let i = 0; i < 8; i++) hihat(t + G2_EIGHTH * i, 0.06, 0.02)
+  // Chunky bass
+  for (let i = 0; i < 8; i++)
+    note(G2_BASS[i], t + G2_EIGHTH * i, G2_EIGHTH * 0.7, 0.30, 'sawtooth', 320)
+  // Aggressive riff
+  for (let i = 0; i < 8; i++)
+    note(G2_RIFF[i], t + G2_EIGHTH * i, G2_EIGHTH * 0.55, 0.12, 'square', 2200)
+}
+
+export function startGameMusic2() {
+  if (_track === 'game2') return
+  _track = 'game2'
+  startPad([92.5, 138.59, 185], 'sawtooth', 380, 0.020)
+  startScheduler(G2_BAR, scheduleGame2Bar)
+}
+
+// ── Game track 3 — Dark suspense (C minor, 105 BPM) ──────────────────────────
+
+const G3_BPM    = 105
+const G3_BEAT   = 60 / G3_BPM
+const G3_EIGHTH = G3_BEAT / 2
+const G3_BAR    = G3_BEAT * 4
+
+const G3_BASS = [65.41, 65.41, 77.78, 65.41, 87.31, 65.41, 77.78, 58.27]
+const G3_MEL  = [261.63, 0, 311.13, 261.63, 0, 349.23, 311.13, 0]
+
+function scheduleGame3Bar(t: number) {
+  kick(t, 0.45); kick(t + G3_BEAT * 2, 0.30)
+  hihat(t + G3_BEAT, 0.10, 0.06); hihat(t + G3_BEAT * 3, 0.08, 0.06)
+  for (let i = 0; i < 8; i++) {
+    note(G3_BASS[i], t + G3_EIGHTH * i, G3_EIGHTH * 0.9, 0.20, 'sine', 280)
+    if (G3_MEL[i] > 0)
+      note(G3_MEL[i], t + G3_EIGHTH * i, G3_EIGHTH * 1.1, 0.07, 'triangle', 1200)
+  }
+}
+
+export function startGameMusic3() {
+  if (_track === 'game3') return
+  _track = 'game3'
+  startPad([65.41, 97.99, 130.81], 'triangle', 350, 0.025)
+  startScheduler(G3_BAR, scheduleGame3Bar)
+}
+
+// ── Game track 4 — Intense techno (B minor, 175 BPM) ─────────────────────────
+
+const G4_BPM    = 175
+const G4_BEAT   = 60 / G4_BPM
+const G4_EIGHTH = G4_BEAT / 2
+const G4_BAR    = G4_BEAT * 4
+
+const G4_BASS = [61.74, 61.74, 92.5, 61.74, 73.42, 92.5, 61.74, 82.41]
+const G4_LEAD = [246.94, 369.99, 246.94, 493.88, 369.99, 246.94, 369.99, 493.88]
+
+function scheduleGame4Bar(t: number) {
+  for (let b = 0; b < 4; b++) kick(t + G4_BEAT * b, 0.55 + (b === 0 ? 0.1 : 0))
+  for (let i = 0; i < 8; i++) {
+    hihat(t + G4_EIGHTH * i, i % 2 === 0 ? 0.09 : 0.05, 0.018)
+    note(G4_BASS[i], t + G4_EIGHTH * i, G4_EIGHTH * 0.8, 0.26, 'sawtooth', 400)
+    note(G4_LEAD[i], t + G4_EIGHTH * i, G4_EIGHTH * 0.6, 0.11, 'square', 2600)
+  }
+}
+
+export function startGameMusic4() {
+  if (_track === 'game4') return
+  _track = 'game4'
+  startPad([61.74, 92.5, 123.47], 'sawtooth', 500, 0.022)
+  startScheduler(G4_BAR, scheduleGame4Bar)
 }
 
 export function stopMusic() {

@@ -3,7 +3,7 @@ import { useGameStore } from './store/gameStore'
 import { useNetStore } from './net/netStore'
 import { useSettingsStore } from './store/settingsStore'
 import { socket } from './net/socket'
-import { startMenuMusic, startGameMusic, startSkydiveMusic, stopMusic } from './game/music'
+import { startMenuMusic, startGameMusic, startGameMusic2, startGameMusic3, startGameMusic4, startSkydiveMusic, stopMusic } from './game/music'
 import { Game } from './game/Game'
 import { HUD } from './components/HUD'
 import { MainMenu } from './components/MainMenu'
@@ -27,6 +27,7 @@ export function App() {
   const netRole        = useNetStore((s) => s.role)
   const mobileControls = useSettingsStore((s) => s.mobileControls)
   const musicEnabled   = useSettingsStore((s) => s.musicEnabled)
+  const musicTrack     = useSettingsStore((s) => s.musicTrack)
 
   // ── Music ─────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -34,13 +35,16 @@ export function App() {
     if (phase === 'menu' || phase === 'missions' || phase === 'briefing' || phase === 'options' || phase === 'lobby' || phase === 'shop') {
       startMenuMusic()
     } else if (phase === 'playing') {
-      startGameMusic()
+      if (musicTrack === 'game2') startGameMusic2()
+      else if (musicTrack === 'game3') startGameMusic3()
+      else if (musicTrack === 'game4') startGameMusic4()
+      else startGameMusic()
     } else if (phase === 'skydive') {
       startSkydiveMusic()
     } else {
       stopMusic()
     }
-  }, [phase, musicEnabled])
+  }, [phase, musicEnabled, musicTrack])
 
   // ── Persistent socket event listeners (survive phase transitions) ────────
   useEffect(() => {

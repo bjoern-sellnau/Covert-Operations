@@ -27,6 +27,7 @@ interface LoadoutStore {
   toggleAkimbo: () => void
   buyVernichterAmmo: () => boolean
   getMaxAmmo: () => number
+  getMaxAmmoFor: (id: WeaponId) => number
   getDamageBonus: () => number
 }
 
@@ -129,9 +130,15 @@ export const useLoadoutStore = create<LoadoutStore>()(
         const s = get()
         const base = WEAPON_CONFIGS[s.selectedWeapon].baseAmmo
         let mult = 1.0
-        for (const eq of s.ownedEquipment) {
-          mult += EQUIPMENT_CONFIGS[eq].ammoMultBonus
-        }
+        for (const eq of s.ownedEquipment) mult += EQUIPMENT_CONFIGS[eq].ammoMultBonus
+        return Math.round(base * mult)
+      },
+
+      getMaxAmmoFor: (id) => {
+        const s = get()
+        const base = WEAPON_CONFIGS[id].baseAmmo
+        let mult = 1.0
+        for (const eq of s.ownedEquipment) mult += EQUIPMENT_CONFIGS[eq].ammoMultBonus
         return Math.round(base * mult)
       },
 
