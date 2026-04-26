@@ -15,6 +15,7 @@ interface LoadoutStore {
   ownedAmmo: AmmoId[]
   isAkimbo: boolean
   vernichterStock: number
+  meleeStacks: Partial<Record<WeaponId, number>>
 
   addCredits: (n: number) => void
   setCredits: (n: number) => void
@@ -42,22 +43,35 @@ export const useLoadoutStore = create<LoadoutStore>()(
       ownedAmmo: ['standard'],
       isAkimbo: false,
       vernichterStock: 1,
+      meleeStacks: {},
 
       addCredits: (n) => set((s) => ({ credits: s.credits + n })),
       setCredits: (n) => set({ credits: Math.max(0, n) }),
 
       buyWeapon: (id) => {
-        const s = get()
+        const s   = get()
+        const cfg = WEAPON_CONFIGS[id]
         if (s.ownedWeapons.includes(id)) {
+          if (cfg.stackable) {
+            // Buy another copy: deduct credits, add a stack (increases max durability)
+            if (s.credits < cfg.price) return false
+            set((st) => ({
+              credits:     st.credits - cfg.price,
+              selectedWeapon: id,
+              meleeStacks: { ...st.meleeStacks, [id]: (st.meleeStacks[id] ?? 1) + 1 },
+            }))
+            return true
+          }
           set({ selectedWeapon: id })
           return true
         }
-        const price = WEAPON_CONFIGS[id].price
+        const price = cfg.price
         if (s.credits < price) return false
         set((s) => ({
-          credits: s.credits - price,
+          credits:     s.credits - price,
           ownedWeapons: [...s.ownedWeapons, id],
           selectedWeapon: id,
+          meleeStacks: cfg.stackable ? { ...s.meleeStacks, [id]: 1 } : s.meleeStacks,
         }))
         return true
       },
@@ -135,8 +149,13 @@ export const useLoadoutStore = create<LoadoutStore>()(
       },
 
       getMaxAmmoFor: (id) => {
-        const s = get()
-        const base = WEAPON_CONFIGS[id].baseAmmo
+        const s   = get()
+        const cfg = WEAPON_CONFIGS[id]
+        if (cfg.stackable) {
+          // Melee durability scales with number of copies bought; no equipment bonus
+          return cfg.baseAmmo * (s.meleeStacks[id] ?? 1)
+        }
+        const base = cfg.baseAmmo
         let mult = 1.0
         for (const eq of s.ownedEquipment) mult += EQUIPMENT_CONFIGS[eq].ammoMultBonus
         return Math.round(base * mult)

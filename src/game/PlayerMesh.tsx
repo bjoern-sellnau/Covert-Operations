@@ -94,13 +94,16 @@ export function PlayerMesh({ player2 = false }: Props) {
         if (isMoving) walkPhase.current += dt * 9
         const swing = Math.sin(walkPhase.current)
 
+        // Melee swing: right arm lunges forward, left arm swings back
+        const meleeT = es.meleeSwing > 0 ? Math.sin((es.meleeSwing / 0.28) * Math.PI) : 0
+
         if (leftArmRef.current) {
-          leftArmRef.current.rotation.x = THREE.MathUtils.lerp(leftArmRef.current.rotation.x,  0.35 - swing * 0.38, 0.3)
+          leftArmRef.current.rotation.x = THREE.MathUtils.lerp(leftArmRef.current.rotation.x,  0.35 - swing * 0.38 + meleeT * 0.6, 0.3)
           leftArmRef.current.rotation.z = THREE.MathUtils.lerp(leftArmRef.current.rotation.z,  0.18, 0.3)
         }
         if (rightArmRef.current) {
-          rightArmRef.current.rotation.x = THREE.MathUtils.lerp(rightArmRef.current.rotation.x, 0.55 + swing * 0.38, 0.3)
-          rightArmRef.current.rotation.z = THREE.MathUtils.lerp(rightArmRef.current.rotation.z, -0.12, 0.3)
+          rightArmRef.current.rotation.x = THREE.MathUtils.lerp(rightArmRef.current.rotation.x, 0.55 + swing * 0.38 - meleeT * 1.8, 0.3)
+          rightArmRef.current.rotation.z = THREE.MathUtils.lerp(rightArmRef.current.rotation.z, -0.12 - meleeT * 0.3, 0.3)
         }
         if (leftLegRef.current) {
           leftLegRef.current.rotation.x = THREE.MathUtils.lerp(leftLegRef.current.rotation.x,  swing * 0.52, 0.3)

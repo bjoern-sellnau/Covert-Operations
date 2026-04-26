@@ -168,6 +168,8 @@ function makeEntityStore() {
     // Banana grenades
     bananas: [] as BananaData[],
     bananaIdCounter: 0,
+    // Melee
+    meleeSwing: 0,
     // Burst fire state
     burstRemaining: 0,
     burstTimer: 0,
@@ -243,6 +245,7 @@ export function resetEntityStore() {
   s.vernichterProjectile = null
   s.weaponProjectile = null
   s.bananas = []
+  s.meleeSwing = 0
   s.burstRemaining = 0
   s.burstTimer = 0
   s.reloadTimer = 0

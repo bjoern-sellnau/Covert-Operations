@@ -395,6 +395,27 @@ export function playExplosionLarge(volume = 1) {
   sharp.start(t); sharp.stop(t + 0.16)
 }
 
+// ── Melee swing / impact ──────────────────────────────────────────────────────
+export function playMelee(volume = 1) {
+  const ac = ctx()
+  const out = masterGain(volume * 0.45)
+  const t = ac.currentTime
+  // Low thwack
+  const n = noise(0.07)
+  const filt = ac.createBiquadFilter(); filt.type = 'bandpass'; filt.frequency.value = 280; filt.Q.value = 1.5
+  n.connect(filt)
+  const g = ac.createGain(); filt.connect(g); g.connect(out)
+  g.gain.setValueAtTime(0.9, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.09)
+  n.start(t); n.stop(t + 0.1)
+  // Sharp transient crack
+  const crack = noise(0.02)
+  const cf = ac.createBiquadFilter(); cf.type = 'highpass'; cf.frequency.value = 1800
+  crack.connect(cf)
+  const cg = ac.createGain(); cf.connect(cg); cg.connect(out)
+  cg.gain.setValueAtTime(0.5, t); cg.gain.exponentialRampToValueAtTime(0.001, t + 0.03)
+  crack.start(t); crack.stop(t + 0.04)
+}
+
 // ── Hit (flesh impact) ────────────────────────────────────────────────────────
 export function playHit(volume = 1) {
   const ac = ctx()
@@ -469,4 +490,7 @@ export const WEAPON_SOUNDS: Record<string, FireFn> = {
   bazooka: playBazooka,
   flak:    playFlak,
   banana:  playBazooka,
+  knife:   playMelee,
+  bat:     playMelee,
+  stick:   playMelee,
 }
