@@ -332,3 +332,18 @@ export function stopMusic() {
     _master.gain.setTargetAtTime(0, c.currentTime, 0.4)
   }
 }
+
+let _previewTimer: ReturnType<typeof setTimeout> | null = null
+
+export function previewTrack(track: 'game1' | 'game2' | 'game3' | 'game4', durationMs = 7000) {
+  if (_previewTimer) { clearTimeout(_previewTimer); _previewTimer = null }
+  _track = null  // force restart
+  if (track === 'game1') startGameMusic()
+  else if (track === 'game2') startGameMusic2()
+  else if (track === 'game3') startGameMusic3()
+  else startGameMusic4()
+  _previewTimer = setTimeout(() => {
+    _previewTimer = null
+    stopMusic()
+  }, durationMs)
+}
