@@ -18,11 +18,12 @@ import { MobileControls } from './components/MobileControls'
 import { OptionsScreen } from './components/OptionsScreen'
 import { MissionsMenu } from './components/MissionsMenu'
 import { MissionBriefing } from './components/MissionBriefing'
+import { MutatorsScreen } from './components/MutatorsScreen'
 
 export function App() {
   const phase          = useGameStore((s) => s.phase)
   const isBulletTime   = useGameStore((s) => s.isBulletTime)
-  const fpsMode        = useGameStore((s) => s.fpsMode)
+  const cameraMode     = useGameStore((s) => s.cameraMode)
   const bigExplosion   = useGameStore((s) => s.bigExplosion)
   const netRole        = useNetStore((s) => s.role)
   const mobileControls = useSettingsStore((s) => s.mobileControls)
@@ -32,7 +33,7 @@ export function App() {
   // ── Music ─────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!musicEnabled) { stopMusic(); return }
-    if (phase === 'menu' || phase === 'missions' || phase === 'briefing' || phase === 'options' || phase === 'lobby' || phase === 'shop') {
+    if (phase === 'menu' || phase === 'missions' || phase === 'briefing' || phase === 'mutators' || phase === 'options' || phase === 'lobby' || phase === 'shop') {
       startMenuMusic()
     } else if (phase === 'playing') {
       if (musicTrack === 'game2') startGameMusic2()
@@ -108,7 +109,7 @@ export function App() {
       )}
 
       {/* FPS crosshair */}
-      {phase === 'playing' && fpsMode && (
+      {phase === 'playing' && cameraMode === 'fps' && (
         <div style={{
           position: 'absolute', top: '50%', left: '50%',
           transform: 'translate(-50%, -50%)',
@@ -136,6 +137,7 @@ export function App() {
       {phase === 'menu'                        && <MainMenu />}
       {phase === 'missions'                    && <MissionsMenu />}
       {phase === 'briefing'                    && <MissionBriefing />}
+      {phase === 'mutators'                    && <MutatorsScreen />}
       {phase === 'options'                     && <OptionsScreen />}
       {phase === 'lobby'                       && <Lobby />}
       {phase === 'shop'                        && <Shop />}

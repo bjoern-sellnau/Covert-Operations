@@ -1,0 +1,269 @@
+import { useGameStore } from '../store/gameStore'
+import { useMutatorsStore } from '../store/mutatorsStore'
+import type { PickupMode, EnemyDrop } from '../store/mutatorsStore'
+
+export function MutatorsScreen() {
+  const setPhase = useGameStore((s) => s.setPhase)
+  const gameMode = useGameStore((s) => s.gameMode)
+  const {
+    gameType, roundTimeSec, weaponPickups, enemyDrops,
+    suddenDeath, suddenDeathSec, lives, chaosMode,
+    setGameType, setRoundTimeSec, setWeaponPickups, toggleEnemyDrop,
+    setSuddenDeath, setSuddenDeathSec, setLives, setChaosMode,
+  } = useMutatorsStore()
+
+  function startGame() {
+    setPhase(gameMode === 'skydive' ? 'skydive' : 'playing')
+  }
+
+  const card: React.CSSProperties = {
+    background: 'rgba(5,2,8,0.92)',
+    border: '1px solid rgba(160,15,0,0.4)',
+    borderRadius: 3,
+    padding: '16px 18px',
+    display: 'flex', flexDirection: 'column', gap: 10,
+  }
+
+  const secLabel: React.CSSProperties = {
+    color: '#bb2200', fontSize: 9, letterSpacing: 5,
+    textTransform: 'uppercase', marginBottom: 2,
+    textShadow: '0 0 10px #aa110066',
+  }
+
+  function tog(active: boolean, color = '#cc2200'): React.CSSProperties {
+    return {
+      background:  active ? `${color}28` : 'transparent',
+      border:      `1px solid ${active ? color : '#2a1215'}`,
+      color:       active ? color : '#445566',
+      fontSize:    10, letterSpacing: 3, padding: '6px 13px',
+      cursor:      'pointer', fontFamily: "'Courier New', monospace",
+      textTransform: 'uppercase', transition: 'all 0.12s',
+      boxShadow:   active ? `0 0 8px ${color}44` : 'none',
+    }
+  }
+
+  function Toggle({ on, color, label, sub, onClick }: {
+    on: boolean; color: string; label: string; sub?: string; onClick: () => void
+  }) {
+    return (
+      <div onClick={onClick} style={{
+        display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer',
+        padding: '11px 14px',
+        background: on ? `${color}18` : 'rgba(8,4,12,0.7)',
+        border: `1px solid ${on ? color : '#2a1215'}`,
+        borderRadius: 3, transition: 'all 0.15s',
+      }}>
+        <div style={{
+          width: 40, height: 22, borderRadius: 11,
+          background: on ? color : '#2a1215',
+          position: 'relative', transition: 'background 0.2s', flexShrink: 0,
+        }}>
+          <div style={{
+            position: 'absolute', top: 3, left: on ? 19 : 3,
+            width: 16, height: 16, borderRadius: '50%',
+            background: '#fff', transition: 'left 0.2s',
+          }} />
+        </div>
+        <div>
+          <div style={{ color: on ? color : '#445566', fontSize: 11, fontWeight: 'bold', letterSpacing: 2 }}>
+            {label} {on ? 'EIN' : 'AUS'}
+          </div>
+          {sub && <div style={{ color: '#3a2030', fontSize: 9, marginTop: 2, letterSpacing: 1 }}>{sub}</div>}
+        </div>
+      </div>
+    )
+  }
+
+  const timeOptions    = [60, 90, 120, 180, 300, 600]
+  const sdTimeOptions  = [30, 45, 60, 90, 120, 180]
+  const fmtTime = (s: number) => s < 60 ? `${s}S` : `${s / 60}:00`
+
+  return (
+    <div style={{
+      position: 'absolute', top: 0, right: 0, bottom: 0, left: 0,
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      background: 'radial-gradient(ellipse at 50% 20%, #110006 0%, #020206 55%, #000003 100%)',
+      fontFamily: "'Courier New', monospace", userSelect: 'none', overflowY: 'auto',
+    }}>
+      {/* Header */}
+      <div style={{ textAlign: 'center', padding: '28px 0 20px' }}>
+        <div style={{
+          color: '#bb1a00', fontSize: 24, fontWeight: 'bold', letterSpacing: 10,
+          textShadow: '0 0 18px #aa000088, 0 0 50px #660000',
+        }}>
+          MUTATOREN
+        </div>
+        <div style={{ color: '#2a1010', fontSize: 9, letterSpacing: 5, marginTop: 4 }}>
+          EINSTELLUNGEN VOR DEM EINSATZ
+        </div>
+      </div>
+
+      {/* Grid */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))',
+        gap: 10,
+        width: 'min(96vw, 780px)',
+      }}>
+
+        {/* Spielmodus */}
+        <div style={card}>
+          <div style={secLabel}>Spielmodus</div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button style={tog(gameType === 'waves')}     onClick={() => setGameType('waves')}>WAVES</button>
+            <button style={tog(gameType === 'roundtime')} onClick={() => setGameType('roundtime')}>RUNDENZEIT</button>
+          </div>
+          {gameType === 'roundtime' && (
+            <>
+              <div style={{ color: '#556677', fontSize: 9, letterSpacing: 2 }}>RUNDENDAUER</div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {timeOptions.map((t) => (
+                  <button key={t} style={tog(roundTimeSec === t, '#ff6600')} onClick={() => setRoundTimeSec(t)}>
+                    {fmtTime(t)}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+          <div style={{ color: '#2a1a1a', fontSize: 9, letterSpacing: 1, lineHeight: 1.7 }}>
+            {gameType === 'waves'
+              ? 'Endlose Wellen — überlebe so lange wie möglich.'
+              : 'Rundenzeit läuft ab — dann Sudden Death oder Ende.'}
+          </div>
+        </div>
+
+        {/* Waffen-Pickups */}
+        <div style={card}>
+          <div style={secLabel}>Waffen-Pickups</div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {([
+              ['none',    'NEIN',     '#334455'],
+              ['ammo',    'MUNITION', '#00aaff'],
+              ['weapons', 'WAFFEN',   '#ff6600'],
+              ['both',    'BEIDES',   '#44ff88'],
+              ['chaos',   'CHAOS',    '#cc00ff'],
+            ] as [PickupMode, string, string][]).map(([val, label, color]) => (
+              <button key={val} style={tog(weaponPickups === val, color)} onClick={() => setWeaponPickups(val)}>
+                {label}
+              </button>
+            ))}
+          </div>
+          <div style={{ color: '#2a1a2a', fontSize: 9, letterSpacing: 1, lineHeight: 1.7 }}>
+            {weaponPickups === 'none'    && 'Keine Pickups auf der Map.'}
+            {weaponPickups === 'ammo'    && 'Munitionskisten spawnen zufällig.'}
+            {weaponPickups === 'weapons' && 'Waffenkisten spawnen zufällig.'}
+            {weaponPickups === 'both'    && 'Munition und Waffen spawnen zufällig.'}
+            {weaponPickups === 'chaos'   && 'Pakete können Bomben (Blindgänger möglich) enthalten.'}
+          </div>
+        </div>
+
+        {/* Gegner Drops */}
+        <div style={card}>
+          <div style={secLabel}>Gegner hinterlassen</div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {([
+              ['credits', 'GELD',       '#ffee00'],
+              ['ammo',    'MUNITION',   '#00aaff'],
+              ['weapons', 'WAFFEN',     '#ff6600'],
+              ['health',  'GESUNDHEIT', '#00ff88'],
+            ] as [EnemyDrop, string, string][]).map(([val, label, color]) => (
+              <button key={val} style={tog(enemyDrops.includes(val), color)} onClick={() => toggleEnemyDrop(val)}>
+                {label}
+              </button>
+            ))}
+          </div>
+          <div style={{ color: '#2a1a1a', fontSize: 9, letterSpacing: 1 }}>
+            {enemyDrops.length === 0 ? 'Gegner lassen nichts fallen.' : `Aktiv: ${enemyDrops.join(', ')}`}
+          </div>
+        </div>
+
+        {/* Chaos Modus */}
+        <div style={card}>
+          <div style={secLabel}>Chaos Modus</div>
+          <Toggle
+            on={chaosMode} color="#cc00ff"
+            label="CHAOS"
+            sub="Kisten fallen vom Himmel · Nur Chaos-Waffen nutzbar"
+            onClick={() => setChaosMode(!chaosMode)}
+          />
+          {chaosMode && (
+            <div style={{ color: '#4a2055', fontSize: 9, letterSpacing: 1, lineHeight: 1.7 }}>
+              ★ Normal &nbsp;·&nbsp; ⚠ Ladehemmung (15% Chance) &nbsp;·&nbsp; 💥 Explodiert nach letztem Schuss
+            </div>
+          )}
+        </div>
+
+        {/* Leben — nur Rundenzeit */}
+        {gameType === 'roundtime' && (
+          <div style={card}>
+            <div style={secLabel}>Leben pro Spieler / Bot</div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {[1, 2, 3, 5, 0].map((v) => (
+                <button key={v} style={tog(lives === v, '#ff6600')} onClick={() => setLives(v)}>
+                  {v === 0 ? '∞' : `${v}♥`}
+                </button>
+              ))}
+            </div>
+            <div style={{ color: '#2a1a1a', fontSize: 9, letterSpacing: 1 }}>
+              {lives === 0
+                ? 'Unbegrenzte Respawns — kein Ausscheiden.'
+                : `Respawn solange Leben übrig. ${lives} Leben je Spieler.`}
+            </div>
+          </div>
+        )}
+
+        {/* Sudden Death — nur Rundenzeit */}
+        {gameType === 'roundtime' && (
+          <div style={card}>
+            <div style={secLabel}>Sudden Death (Bomberman)</div>
+            <Toggle
+              on={suddenDeath} color="#cc2200"
+              label="BOMBERMAN"
+              sub="Blöcke fallen von außen nach innen — Spielfeld schrumpft"
+              onClick={() => setSuddenDeath(!suddenDeath)}
+            />
+            {suddenDeath && (
+              <>
+                <div style={{ color: '#556677', fontSize: 9, letterSpacing: 2 }}>SD-DAUER</div>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {sdTimeOptions.map((t) => (
+                    <button key={t} style={tog(suddenDeathSec === t, '#cc2200')} onClick={() => setSuddenDeathSec(t)}>
+                      {fmtTime(t)}
+                    </button>
+                  ))}
+                </div>
+                <div style={{ color: '#3a1a1a', fontSize: 9, letterSpacing: 1, lineHeight: 1.7 }}>
+                  Gefahrenzone tötet kontinuierlich · Überlebe bis die Zeit abläuft
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Buttons */}
+      <div style={{
+        display: 'flex', gap: 10, width: 'min(96vw, 780px)', padding: '16px 0 10px',
+      }}>
+        <button
+          onClick={() => setPhase('briefing')}
+          style={{
+            background: 'transparent', border: '1px solid #2a1215', color: '#445566',
+            fontSize: 10, letterSpacing: 3, padding: '11px 18px', cursor: 'pointer',
+            fontFamily: 'inherit', textTransform: 'uppercase', transition: 'all 0.12s',
+          }}
+        >← Zurück</button>
+        <button
+          onClick={startGame}
+          style={{
+            flex: 1, background: 'rgba(170,15,0,0.25)', border: '2px solid #bb1500',
+            color: '#cc1a00', fontSize: 13, letterSpacing: 5, padding: '14px', cursor: 'pointer',
+            fontFamily: 'inherit', textTransform: 'uppercase', fontWeight: 'bold',
+            boxShadow: '0 0 22px #aa000055', transition: 'all 0.12s',
+          }}
+        >⚡ EINSATZ STARTEN</button>
+      </div>
+      <div style={{ height: 24 }} />
+    </div>
+  )
+}

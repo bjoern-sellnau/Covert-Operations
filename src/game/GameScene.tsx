@@ -3,6 +3,9 @@ import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { entityStore, resetEntityStore, spawnParticles, spawnDecal } from './entityStore'
 import type { BananaData } from './entityStore'
+import { useMutatorsStore } from '../store/mutatorsStore'
+import { PickupSystem, spawnEnemyDrop } from './PickupSystem'
+import type { CameraMode } from '../store/gameStore'
 import {
   WEAPON_SOUNDS,
   playExplosionSmall, playExplosionLarge,
@@ -60,6 +63,43 @@ const FPS_SENS   = 0.0025
 const MAX_GRENADES = 6
 
 const RANGE_TARGET_X = [-10, -5, 0, 5, 10]
+
+// ── SuddenDeathOverlay — red edge zones that shrink the arena ────────────────
+const _sdMat = new THREE.MeshStandardMaterial({
+  color: '#cc1100', emissive: '#ff0000', emissiveIntensity: 0.6,
+  transparent: true, opacity: 0.72, roughness: 0.5,
+})
+
+function SuddenDeathOverlay() {
+  const nRef = useRef<THREE.Mesh>(null)
+  const sRef = useRef<THREE.Mesh>(null)
+  const eRef = useRef<THREE.Mesh>(null)
+  const wRef = useRef<THREE.Mesh>(null)
+
+  useFrame(() => {
+    const es = entityStore
+    const show = es.inSuddenDeath && es.sdMargin > 0
+    const m    = es.sdMargin
+    if (!show) {
+      ;[nRef, sRef, eRef, wRef].forEach(r => { if (r.current) r.current.visible = false })
+      return
+    }
+    // North strip: from z = ARENA_HALF inward by m
+    if (nRef.current) { nRef.current.visible = true; nRef.current.scale.set(ARENA_HALF * 2, 0.12, m); nRef.current.position.set(0, 0.06, ARENA_HALF - m / 2) }
+    if (sRef.current) { sRef.current.visible = true; sRef.current.scale.set(ARENA_HALF * 2, 0.12, m); sRef.current.position.set(0, 0.06, -ARENA_HALF + m / 2) }
+    if (eRef.current) { eRef.current.visible = true; eRef.current.scale.set(m, 0.12, ARENA_HALF * 2 - m * 2); eRef.current.position.set(ARENA_HALF - m / 2, 0.06, 0) }
+    if (wRef.current) { wRef.current.visible = true; wRef.current.scale.set(m, 0.12, ARENA_HALF * 2 - m * 2); wRef.current.position.set(-ARENA_HALF + m / 2, 0.06, 0) }
+  })
+
+  return (
+    <>
+      <mesh ref={nRef} material={_sdMat} visible={false}><boxGeometry args={[1, 1, 1]} /></mesh>
+      <mesh ref={sRef} material={_sdMat} visible={false}><boxGeometry args={[1, 1, 1]} /></mesh>
+      <mesh ref={eRef} material={_sdMat} visible={false}><boxGeometry args={[1, 1, 1]} /></mesh>
+      <mesh ref={wRef} material={_sdMat} visible={false}><boxGeometry args={[1, 1, 1]} /></mesh>
+    </>
+  )
+}
 
 // ── DebugView — shown when ?debugview=true ────────────────────────────────────
 const MAX_DBG_ENEMIES = 50
@@ -205,9 +245,10 @@ export function GameScene() {
   const setBulletTime   = useGameStore((s) => s.setBulletTime)
   const setEnemyIds     = useGameStore((s) => s.setEnemyIds)
   const setBulletIds    = useGameStore((s) => s.setBulletIds)
-  const setWaveMessage  = useGameStore((s) => s.setWaveMessage)
-  const setFpsMode      = useGameStore((s) => s.setFpsMode)
-  const isPlaytesting   = useGameStore((s) => s.isPlaytesting)
+  const setWaveMessage     = useGameStore((s) => s.setWaveMessage)
+  const setCameraMode      = useGameStore((s) => s.setCameraMode)
+  const updateMutatorHUD   = useGameStore((s) => s.updateMutatorHUD)
+  const isPlaytesting      = useGameStore((s) => s.isPlaytesting)
   const setPlaytesting  = useGameStore((s) => s.setPlaytesting)
   const setBigExplosion = useGameStore((s) => s.setBigExplosion)
   const phase           = useGameStore((s) => s.phase)
@@ -228,10 +269,11 @@ export function GameScene() {
   const MAX_BANANAS = 6
   const bananaMeshRefs       = useRef<(THREE.Mesh | null)[]>(Array(MAX_BANANAS).fill(null))
 
-  const hudTimer   = useRef(0)
-  const btTimer    = useRef(0)
-  const phaseRef   = useRef(phase)
-  const fpsModeRef = useRef(false)
+  const hudTimer      = useRef(0)
+  const btTimer       = useRef(0)
+  const hudMutTimer   = useRef(0)
+  const phaseRef      = useRef(phase)
+  const cameraModeRef = useRef<CameraMode>('topdown')
   const activeLevelRef = useRef<Level | null>(null)
 
   // ── Net refs ──────────────────────────────────────────────────────────────
@@ -283,6 +325,15 @@ export function GameScene() {
 
     activeLevelRef.current = useEditorStore.getState().activePlayLevel
 
+    // Mutator initialization
+    const mutators = useMutatorsStore.getState()
+    if (mutators.gameType === 'roundtime' && !isRange) {
+      entityStore.roundTimer       = mutators.roundTimeSec
+      entityStore.roundTimerActive = true
+      entityStore.playerLives      = mutators.lives === 0 ? 999 : mutators.lives
+      entityStore.p2Lives          = mutators.lives === 0 ? 999 : mutators.lives
+    }
+
     const ids = spawnWave(1)
     setEnemyIds(ids)
     setWaveMessage(isRange ? 'SCHIESSTAND — Unbegrenzte Munition' : 'Wave 1')
@@ -295,28 +346,29 @@ export function GameScene() {
     camera.lookAt(0, 0, -1)
   }, [camera])
 
-  // ── FPS toggle (F key) ────────────────────────────────────────────────────
+  // ── Camera mode cycle (F key: topdown → iso → fps) ───────────────────────
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.code === 'KeyF' && phaseRef.current === 'playing') {
-        fpsModeRef.current = !fpsModeRef.current
-        setFpsMode(fpsModeRef.current)
-        if (fpsModeRef.current) gl.domElement.requestPointerLock()
+        const next: CameraMode = cameraModeRef.current === 'topdown' ? 'iso'
+          : cameraModeRef.current === 'iso' ? 'fps' : 'topdown'
+        cameraModeRef.current = next
+        setCameraMode(next)
+        if (next === 'fps') gl.domElement.requestPointerLock()
         else {
           document.exitPointerLock()
-          camera.position.set(0, 22, 9)
-          camera.lookAt(0, 0, -1)
+          if (next === 'topdown') { camera.position.set(0, 22, 9); camera.lookAt(0, 0, -1) }
         }
       }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [camera, gl.domElement, setFpsMode])
+  }, [camera, gl.domElement, setCameraMode])
 
   // ── FPS pointer lock ──────────────────────────────────────────────────────
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (!fpsModeRef.current || !document.pointerLockElement) return
+      if (cameraModeRef.current !== 'fps' || !document.pointerLockElement) return
       entityStore.player.angle += e.movementX * FPS_SENS
     }
     window.addEventListener('mousemove', handler)
@@ -379,6 +431,36 @@ export function GameScene() {
     // Consume one-shot mobile flags at the top of the frame
     const mobileGrenJust = mobileInput.grenadeJust; mobileInput.grenadeJust = false
     const mobileDiveJust = mobileInput.diveJust;    mobileInput.diveJust    = false
+
+    // ── Mutators: round timer & sudden death ──────────────────────────────────
+    const mutators = useMutatorsStore.getState()
+    if (es.roundTimerActive && es.roundTimer > 0) {
+      es.roundTimer = Math.max(0, es.roundTimer - rawDt)
+      if (es.roundTimer <= 0) {
+        if (mutators.suddenDeath) {
+          es.inSuddenDeath = true
+          es.sdTimer       = mutators.suddenDeathSec
+          setWaveMessage('⚠ SUDDEN DEATH')
+          setTimeout(() => setWaveMessage(''), 2000)
+        } else {
+          // Round over — trigger game over
+          useLoadoutStore.getState().addCredits(es.creditsEarned)
+          setPhase('gameover')
+          return
+        }
+      }
+    }
+    if (es.inSuddenDeath) {
+      es.sdMargin = Math.min(ARENA_HALF - 1,
+        es.sdMargin + (ARENA_HALF / mutators.suddenDeathSec) * rawDt)
+      es.sdTimer  = Math.max(0, es.sdTimer - rawDt)
+      // Damage players in danger zone
+      const inZone = (x: number, z: number) =>
+        Math.abs(x) > ARENA_HALF - es.sdMargin || Math.abs(z) > ARENA_HALF - es.sdMargin
+      if (inZone(es.player.position.x, es.player.position.y))
+        es.player.health -= 18 * rawDt
+      if (es.sdTimer <= 0) { setPhase('gameover'); return }
+    }
 
     // ── Net: apply host→guest game state ──────────────────────────────────────
     if (netRole === 'guest' && netStateRef.current) {
@@ -523,7 +605,7 @@ export function GameScene() {
     }
 
     // ── Aim direction ─────────────────────────────────────────────────────────
-    if (!fpsModeRef.current && es.maneuver !== 'spin') {
+    if (cameraModeRef.current !== 'fps' && es.maneuver !== 'spin') {
       if (mobileControls) {
         // Auto-aim at nearest enemy
         let nearDist = Infinity
@@ -602,7 +684,7 @@ export function GameScene() {
       if (keys.has('KeyD') || keys.has('ArrowRight')) dx += 1
       if (mobileControls) { dx += mobileInput.dx; dz += mobileInput.dz }
 
-      if (fpsModeRef.current && (dx !== 0 || dz !== 0)) {
+      if (cameraModeRef.current === 'fps' && (dx !== 0 || dz !== 0)) {
         const fwdX = Math.sin(es.player.angle), fwdZ = -Math.cos(es.player.angle)
         const rtX  = Math.cos(es.player.angle), rtZ  =  Math.sin(es.player.angle)
         const mx   = fwdX * (-dz) + rtX * dx
@@ -625,23 +707,33 @@ export function GameScene() {
     es.player.position.y = nz
 
     // ── Camera ────────────────────────────────────────────────────────────────
-    if (fpsModeRef.current) {
+    const camMode = cameraModeRef.current
+    if (camMode === 'fps') {
       camera.position.set(es.player.position.x, 0.7, es.player.position.y)
       camera.lookAt(
         es.player.position.x + Math.sin(es.player.angle) * 10,
         0.7,
         es.player.position.y - Math.cos(es.player.angle) * 10,
       )
-    } else if (Math.abs(camera.position.y - 22) > 0.5) {
-      camera.position.set(0, 22, 9)
-      camera.lookAt(0, 0, -1)
+    } else if (camMode === 'iso') {
+      // Max Payne-style isometric: player-following diagonal view
+      const tx = es.player.position.x * 0.5 + 15
+      const tz = es.player.position.y * 0.5 - 8
+      camera.position.lerp(new THREE.Vector3(tx, 20, tz), 0.08)
+      camera.lookAt(es.player.position.x, 0, es.player.position.y)
+    } else {
+      // topdown — static overhead
+      if (Math.abs(camera.position.y - 22) > 0.5) {
+        camera.position.set(0, 22, 9)
+        camera.lookAt(0, 0, -1)
+      }
     }
 
     // ── Player mesh ───────────────────────────────────────────────────────────
     if (playerGroupRef.current) {
       playerGroupRef.current.position.set(es.player.position.x, 0, es.player.position.y)
       playerGroupRef.current.rotation.y = es.player.angle
-      playerGroupRef.current.visible    = !fpsModeRef.current
+      playerGroupRef.current.visible    = cameraModeRef.current !== 'fps'
     }
 
     // ── Weapon config (used by both P1 and P2 shooting) ──────────────────────
@@ -794,7 +886,11 @@ export function GameScene() {
 
     // ── Shooting ──────────────────────────────────────────────────────────────
     es.player.shootCooldown -= delta
-    const isShooting = (input.current.mouseButtons.has(0) || (mobileControls && mobileInput.fire)) && es.reloadTimer <= 0
+    // In chaos mode: block shooting unless a chaos weapon is held
+    const chaosModeActive = mutators.chaosMode && useGameStore.getState().gameMode !== 'shooting_range'
+    const canShootChaos   = !chaosModeActive || (es.chaosWeaponId !== null && es.chaosAmmo > 0)
+    const isShooting = (input.current.mouseButtons.has(0) || (mobileControls && mobileInput.fire))
+      && es.reloadTimer <= 0 && canShootChaos
 
     // Helper: spawn one regular bullet
     const spawnBullet = (angle: number, lateralOff = 0) => {
@@ -937,6 +1033,23 @@ export function GameScene() {
           es.ammo = Math.max(0, es.ammo - ammoCost)
           for (const lateralOff of offsets) spawnBullet(baseAngle, lateralOff)
           setBulletIds(Array.from(es.bullets.keys()))
+        }
+      }
+    }
+
+    // ── Chaos weapon: decrement ammo & handle modifiers ──────────────────────
+    if (chaosModeActive && es.chaosWeaponId && isShooting && es.player.shootCooldown <= 0) {
+      if (es.chaosModifier === 'jammed' && Math.random() < 0.15) {
+        setWaveMessage('⚠ LADEHEMMUNG'); setTimeout(() => setWaveMessage(''), 900)
+      } else {
+        es.chaosAmmo = Math.max(0, es.chaosAmmo - 1)
+        if (es.chaosAmmo <= 0) {
+          if (es.chaosModifier === 'explosive') {
+            spawnParticles(es.player.position.x, es.player.position.y, 'explosion', 24)
+            es.player.health -= 30
+            setWaveMessage('💥 WAFFE EXPLODIERT'); setTimeout(() => setWaveMessage(''), 1200)
+          }
+          es.chaosWeaponId = null
         }
       }
     }
@@ -1359,12 +1472,20 @@ export function GameScene() {
       }
     }
 
-    // ── Apply removals ────────────────────────────────────────────────────────
+    // ── Apply removals + enemy drops ──────────────────────────────────────────
     let changed = false
     for (const id of bulletsToRemove) { if (es.bullets.delete(id)) changed = true }
     if (changed) setBulletIds(Array.from(es.bullets.keys()))
     changed = false
-    for (const id of enemiesToRemove) { if (es.enemies.delete(id)) changed = true }
+    for (const id of enemiesToRemove) {
+      const dying = es.enemies.get(id)
+      if (dying && mutators.enemyDrops.length > 0) {
+        // Random drop from allowed types
+        const kind = mutators.enemyDrops[Math.floor(Math.random() * mutators.enemyDrops.length)]
+        spawnEnemyDrop(dying.position.x, dying.position.y, [kind])
+      }
+      if (es.enemies.delete(id)) changed = true
+    }
     if (changed) setEnemyIds(Array.from(es.enemies.keys()))
 
     es.score         += scoreGained
@@ -1383,21 +1504,26 @@ export function GameScene() {
       }
     }
 
-    // ── Game over ─────────────────────────────────────────────────────────────
-    const p1Dead = es.player.health <= 0
-    const p2Dead = !es.player2Active || es.player2.health <= 0
+    // ── Game over / respawn ───────────────────────────────────────────────────
+    const p1Dead  = es.player.health <= 0
+    const p2Dead  = !es.player2Active || es.player2.health <= 0
     const isRange = useGameStore.getState().gameMode === 'shooting_range'
-    if (p1Dead && p2Dead && !isRange) {
-      if (fpsModeRef.current) { document.exitPointerLock(); fpsModeRef.current = false; setFpsMode(false) }
+
+    if (p1Dead && isRange) {
+      es.player.health = 100
+    } else if (p1Dead && mutators.gameType === 'roundtime' && es.playerLives > 0) {
+      // Lives-based respawn
+      es.playerLives--
+      es.player.health = 100
+      es.player.position.set(0, 0)
+      es.player.invincibleUntil = now + 2.2
+    } else if (p1Dead && p2Dead && !isRange) {
+      if (cameraModeRef.current === 'fps') { document.exitPointerLock(); cameraModeRef.current = 'topdown'; setCameraMode('topdown') }
       useLoadoutStore.getState().addCredits(es.creditsEarned)
       setPhase('gameover')
       useGameStore.getState().updateHUD(0, es.score, es.wave, es.ammo, es.maxAmmo, es.creditsEarned)
       if (isPlaytesting) setTimeout(() => { setPlaytesting(false); setPhase('editor') }, 3000)
       return
-    }
-    if (p1Dead && isRange) {
-      // Respawn in shooting range
-      es.player.health = 100
     }
 
     // ── Net: broadcast at 20 Hz ──────────────────────────────────────────────
@@ -1458,6 +1584,17 @@ export function GameScene() {
     if (btTimer.current >= 0.03) {
       btTimer.current = 0
       setBulletTime(Math.round(es.focus), es.isBulletTime)
+    }
+    hudMutTimer.current += delta
+    if (hudMutTimer.current >= 0.25) {
+      hudMutTimer.current = 0
+      updateMutatorHUD(
+        Math.ceil(es.roundTimer),
+        es.playerLives,
+        es.p2Lives,
+        es.inSuddenDeath,
+        chaosModeActive && es.chaosWeaponId !== null,
+      )
     }
   })
 
@@ -1545,6 +1682,8 @@ export function GameScene() {
       />
 
       <ParticleSystem />
+      <PickupSystem />
+      <SuddenDeathOverlay />
       {DEBUG_VIEW && <DebugView />}
 
       {/* Script system */}

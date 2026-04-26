@@ -9,6 +9,12 @@ interface Props { player2?: boolean }
 export function PlayerMesh({ player2 = false }: Props) {
   const innerRef     = useRef<THREE.Group>(null)
   const healthBarRef = useRef<THREE.Mesh>(null)
+  const leftArmRef   = useRef<THREE.Mesh>(null)
+  const rightArmRef  = useRef<THREE.Mesh>(null)
+  const leftLegRef   = useRef<THREE.Mesh>(null)
+  const rightLegRef  = useRef<THREE.Mesh>(null)
+  const walkPhase    = useRef(0)
+  const prevPos      = useRef({ x: 0, y: 0 })
 
   const skinMat    = useMemo(() => new THREE.MeshStandardMaterial({ color: '#d4956a', roughness: 0.7, metalness: 0.0 }), [])
   const uniformMat = useMemo(() => new THREE.MeshStandardMaterial({
@@ -28,9 +34,10 @@ export function PlayerMesh({ player2 = false }: Props) {
     color: '#1a1a1a', emissive: '#111111', emissiveIntensity: 0.2, roughness: 0.2, metalness: 0.9,
   }), [])
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     const es  = entityStore
     const now = state.clock.elapsedTime
+    const dt  = Math.min(delta, 0.05)
     const p   = player2 ? es.player2 : es.player
 
     if (player2 && !es.player2Active) {
@@ -54,13 +61,64 @@ export function PlayerMesh({ player2 = false }: Props) {
       else mat.color.setHex(0xff2200)
     }
 
-    // Dive roll spin
+    // Detect movement
+    const isMoving = Math.abs(p.position.x - prevPos.current.x) > 0.0005 ||
+                     Math.abs(p.position.y - prevPos.current.y) > 0.0005
+    prevPos.current.x = p.position.x
+    prevPos.current.y = p.position.y
+
     if (!player2 && innerRef.current) {
       if (es.maneuver === 'dive') {
+        // Dive roll: spin body + spread limbs
         innerRef.current.rotation.z = now * Math.PI * 10
+        if (leftArmRef.current) {
+          leftArmRef.current.rotation.x = 0.2
+          leftArmRef.current.rotation.z = Math.PI * 0.55
+        }
+        if (rightArmRef.current) {
+          rightArmRef.current.rotation.x = 0.2
+          rightArmRef.current.rotation.z = -Math.PI * 0.55
+        }
+        if (leftLegRef.current) {
+          leftLegRef.current.rotation.x = -0.65
+          leftLegRef.current.rotation.z = 0.15
+        }
+        if (rightLegRef.current) {
+          rightLegRef.current.rotation.x = 0.65
+          rightLegRef.current.rotation.z = -0.15
+        }
       } else {
+        // Upright: recover spin, apply walk cycle
         innerRef.current.rotation.z = THREE.MathUtils.lerp(innerRef.current.rotation.z, 0, 0.25)
+
+        if (isMoving) walkPhase.current += dt * 9
+        const swing = Math.sin(walkPhase.current)
+
+        if (leftArmRef.current) {
+          leftArmRef.current.rotation.x = THREE.MathUtils.lerp(leftArmRef.current.rotation.x,  0.35 - swing * 0.38, 0.3)
+          leftArmRef.current.rotation.z = THREE.MathUtils.lerp(leftArmRef.current.rotation.z,  0.18, 0.3)
+        }
+        if (rightArmRef.current) {
+          rightArmRef.current.rotation.x = THREE.MathUtils.lerp(rightArmRef.current.rotation.x, 0.55 + swing * 0.38, 0.3)
+          rightArmRef.current.rotation.z = THREE.MathUtils.lerp(rightArmRef.current.rotation.z, -0.12, 0.3)
+        }
+        if (leftLegRef.current) {
+          leftLegRef.current.rotation.x = THREE.MathUtils.lerp(leftLegRef.current.rotation.x,  swing * 0.52, 0.3)
+          leftLegRef.current.rotation.z = THREE.MathUtils.lerp(leftLegRef.current.rotation.z,  0, 0.3)
+        }
+        if (rightLegRef.current) {
+          rightLegRef.current.rotation.x = THREE.MathUtils.lerp(rightLegRef.current.rotation.x, -swing * 0.52, 0.3)
+          rightLegRef.current.rotation.z = THREE.MathUtils.lerp(rightLegRef.current.rotation.z,  0, 0.3)
+        }
       }
+    } else if (player2) {
+      // P2 walk cycle only
+      if (isMoving) walkPhase.current += dt * 9
+      const swing = Math.sin(walkPhase.current)
+      if (leftLegRef.current)  leftLegRef.current.rotation.x  =  swing * 0.52
+      if (rightLegRef.current) rightLegRef.current.rotation.x = -swing * 0.52
+      if (leftArmRef.current)  leftArmRef.current.rotation.x  = 0.35 - swing * 0.38
+      if (rightArmRef.current) rightArmRef.current.rotation.x = 0.55 + swing * 0.38
     }
 
     // Low-health pulse
@@ -92,11 +150,11 @@ export function PlayerMesh({ player2 = false }: Props) {
           <boxGeometry args={[0.34, 0.30, 0.23]} />
         </mesh>
         {/* Left arm */}
-        <mesh material={uniformMat} position={[-0.26, 0.13, -0.09]} rotation={[0.35, 0, 0.18]} castShadow>
+        <mesh ref={leftArmRef} material={uniformMat} position={[-0.26, 0.13, -0.09]} rotation={[0.35, 0, 0.18]} castShadow>
           <boxGeometry args={[0.11, 0.11, 0.28]} />
         </mesh>
         {/* Right arm (weapon arm) */}
-        <mesh material={uniformMat} position={[0.14, 0.13, -0.26]} rotation={[0.55, 0, -0.12]} castShadow>
+        <mesh ref={rightArmRef} material={uniformMat} position={[0.14, 0.13, -0.26]} rotation={[0.55, 0, -0.12]} castShadow>
           <boxGeometry args={[0.11, 0.11, 0.30]} />
         </mesh>
         {/* Primary weapon */}
@@ -110,11 +168,11 @@ export function PlayerMesh({ player2 = false }: Props) {
           </mesh>
         )}
         {/* Left leg */}
-        <mesh material={pantsMat} position={[-0.09, -0.20, 0.02]} castShadow>
+        <mesh ref={leftLegRef} material={pantsMat} position={[-0.09, -0.20, 0.02]} castShadow>
           <boxGeometry args={[0.12, 0.24, 0.14]} />
         </mesh>
         {/* Right leg */}
-        <mesh material={pantsMat} position={[0.09, -0.20, 0.02]} castShadow>
+        <mesh ref={rightLegRef} material={pantsMat} position={[0.09, -0.20, 0.02]} castShadow>
           <boxGeometry args={[0.12, 0.24, 0.14]} />
         </mesh>
       </group>

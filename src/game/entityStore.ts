@@ -1,6 +1,25 @@
 import * as THREE from 'three'
-import type { EnemyType } from './types'
+import type { EnemyType, WeaponId } from './types'
 import { FOCUS_MAX } from './types'
+
+// ── Pickup system ─────────────────────────────────────────────────────────────
+export type PickupKind     = 'ammo' | 'weapon' | 'health' | 'credits' | 'bad_package'
+export type ChaosModifier  = 'normal' | 'explosive' | 'jammed'
+
+export interface PickupData {
+  id:            string
+  x:             number
+  z:             number
+  kind:          PickupKind
+  weaponId:      WeaponId
+  amount:        number
+  active:        boolean
+  spawnTime:     number
+  isChaos:       boolean
+  chaosModifier: ChaosModifier
+  fuseTimer:     number   // bad_package: seconds until explosion; <0 = dud
+  fallY:         number   // chaos crate: current Y (>0 = still falling)
+}
 
 export interface EnemyData {
   id: string
@@ -155,6 +174,21 @@ function makeEntityStore() {
     // Reload & per-weapon ammo
     reloadTimer: 0,
     weaponAmmo: new Map<string, number>(),
+    // ── Mutators: round time & lives ─────────────────────────────────────────
+    roundTimer:      0 as number,
+    roundTimerActive: false,
+    playerLives:     3,
+    p2Lives:         3,
+    inSuddenDeath:   false,
+    sdMargin:        0 as number,
+    sdTimer:         0 as number,
+    // ── Mutators: pickups ────────────────────────────────────────────────────
+    pickups:          [] as PickupData[],
+    pickupIdCounter:  0,
+    // ── Mutators: chaos weapon ───────────────────────────────────────────────
+    chaosWeaponId:   null as WeaponId | null,
+    chaosAmmo:       0,
+    chaosModifier:   'normal' as ChaosModifier,
     // ── Player 2 (local co-op) ───────────────────────────────────────────────
     player2: {
       position: new THREE.Vector2(2, 0),
@@ -213,6 +247,18 @@ export function resetEntityStore() {
   s.burstTimer = 0
   s.reloadTimer = 0
   s.weaponAmmo.clear()
+  s.roundTimer       = 0
+  s.roundTimerActive = false
+  s.playerLives      = 3
+  s.p2Lives          = 3
+  s.inSuddenDeath    = false
+  s.sdMargin         = 0
+  s.sdTimer          = 0
+  s.pickups          = []
+  s.pickupIdCounter  = 0
+  s.chaosWeaponId    = null
+  s.chaosAmmo        = 0
+  s.chaosModifier    = 'normal'
   s.player2.position.set(2, 0)
   s.player2.angle = 0
   s.player2.health = 100

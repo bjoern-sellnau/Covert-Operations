@@ -94,6 +94,11 @@ export function HUD() {
   const ammo          = useGameStore((s) => s.ammo)
   const maxAmmo       = useGameStore((s) => s.maxAmmo)
   const creditsEarned = useGameStore((s) => s.creditsEarned)
+  const roundTimer    = useGameStore((s) => s.roundTimer)
+  const playerLives   = useGameStore((s) => s.playerLives)
+  const inSuddenDeath = useGameStore((s) => s.inSuddenDeath)
+  const chaosActive   = useGameStore((s) => s.chaosActive)
+  const cameraMode    = useGameStore((s) => s.cameraMode)
 
   const { selectedWeapon, selectedAmmo, isAkimbo, ownedWeapons } = useLoadoutStore()
   const weaponCfg = WEAPON_CONFIGS[selectedWeapon]
@@ -172,10 +177,43 @@ export function HUD() {
           </div>
         </div>
 
-        {/* Center: Wave */}
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ color: '#aaaacc', fontSize: 11, letterSpacing: 2 }}>WAVE</div>
-          <div style={{ color: '#00aaff', fontSize: 32, fontWeight: 'bold', lineHeight: 1, textShadow: '0 0 12px #00aaff' }}>{wave}</div>
+        {/* Center: Wave + Timer + Lives + Camera mode */}
+        <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+          {roundTimer > 0 ? (
+            <>
+              <div style={{ color: inSuddenDeath ? '#cc1100' : '#aaaacc', fontSize: 9, letterSpacing: 3,
+                animation: inSuddenDeath ? 'btPulse 0.4s ease-in-out infinite alternate' : 'none' }}>
+                {inSuddenDeath ? 'SUDDEN DEATH' : 'ZEIT'}
+              </div>
+              <div style={{
+                color: inSuddenDeath ? '#ff1100' : roundTimer < 30 ? '#ff6600' : '#00aaff',
+                fontSize: 36, fontWeight: 'bold', lineHeight: 1,
+                textShadow: inSuddenDeath ? '0 0 16px #ff0000' : '0 0 12px #00aaff',
+                animation: roundTimer < 10 ? 'btPulse 0.5s ease-in-out infinite alternate' : 'none',
+              }}>
+                {Math.floor(roundTimer / 60)}:{String(Math.floor(roundTimer % 60)).padStart(2, '0')}
+              </div>
+              {playerLives < 999 && (
+                <div style={{ color: '#ff6600', fontSize: 13, letterSpacing: 1 }}>
+                  {'♥ '.repeat(Math.max(0, playerLives)).trim() || '—'}
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <div style={{ color: '#aaaacc', fontSize: 11, letterSpacing: 2 }}>WAVE</div>
+              <div style={{ color: '#00aaff', fontSize: 32, fontWeight: 'bold', lineHeight: 1, textShadow: '0 0 12px #00aaff' }}>{wave}</div>
+            </>
+          )}
+          {chaosActive && (
+            <div style={{ color: '#cc00ff', fontSize: 9, letterSpacing: 2, marginTop: 2,
+              textShadow: '0 0 8px #cc00ff', animation: 'btPulse 0.3s ease-in-out infinite alternate' }}>
+              ★ CHAOS
+            </div>
+          )}
+          <div style={{ color: '#2a2a3a', fontSize: 8, letterSpacing: 2, marginTop: 2 }}>
+            [F] {cameraMode.toUpperCase()}
+          </div>
         </div>
 
         {/* Right: Score + Ammo + Grenades + Credits */}
