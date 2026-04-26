@@ -112,6 +112,8 @@ export function HUD() {
   const [vernActive,  setVernActive]  = useState(false)
   const [reloadTimer, setReloadTimer] = useState(0)
   const [weaponAmmo,  setWeaponAmmo]  = useState<Map<string, number>>(new Map())
+  const [chaosAmmo,   setChaosAmmo]   = useState(0)
+  const [chaosWpnId,  setChaosWpnId]  = useState<WeaponId | null>(null)
   useEffect(() => {
     const id = setInterval(() => {
       setDiveCd(Math.max(0, entityStore.diveCooldown))
@@ -122,6 +124,8 @@ export function HUD() {
       setVernActive(entityStore.vernichterProjectile !== null)
       setReloadTimer(entityStore.reloadTimer)
       setWeaponAmmo(new Map(entityStore.weaponAmmo))
+      setChaosAmmo(entityStore.chaosAmmo)
+      setChaosWpnId(entityStore.chaosWeaponId)
     }, 50)
     return () => clearInterval(id)
   }, [])
@@ -129,9 +133,13 @@ export function HUD() {
   const hpPct     = Math.max(0, health / PLAYER_MAX_HEALTH) * 100
   const hpColor   = hpPct > 50 ? '#00ff88' : hpPct > 25 ? '#ffaa00' : '#ff3300'
   const focusPct  = (focus / FOCUS_MAX) * 100
-  const ammoPct   = maxAmmo > 0 ? (ammo / maxAmmo) * 100 : 0
+  const isMelee   = !!weaponCfg.isMelee
+  const showChaosAmmo = chaosActive && chaosWpnId !== null
+  const displayAmmo   = showChaosAmmo ? chaosAmmo : ammo
+  const displayMax    = showChaosAmmo ? chaosAmmo : maxAmmo
+  const ammoPct   = displayMax > 0 ? (displayAmmo / displayMax) * 100 : 0
   const ammoColor = ammoPct > 40 ? '#00ccff' : ammoPct > 15 ? '#ffaa00' : '#ff3300'
-  const outOfAmmo = ammo === 0
+  const outOfAmmo = displayAmmo === 0
   const canAkimbo = isAkimbo && (selectedWeapon === 'pistol' || selectedWeapon === 'smg')
 
   return (
@@ -228,18 +236,20 @@ export function HUD() {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6, marginBottom: 3 }}>
               {canAkimbo && <span style={{ color: '#cc44ff', fontSize: 9, letterSpacing: 2, textShadow: '0 0 6px #cc44ff' }}>AKIMBO</span>}
-              <span style={{ color: ammoCfg.color, fontSize: 9, letterSpacing: 2 }}>{ammoCfg.shortName}</span>
-              <span style={{ color: '#445566', fontSize: 10, letterSpacing: 2 }}>{weaponCfg.shortName}</span>
+              {showChaosAmmo && <span style={{ color: '#cc00ff', fontSize: 9, letterSpacing: 2, textShadow: '0 0 6px #cc00ff' }}>CHAOS</span>}
+              {!isMelee && !showChaosAmmo && <span style={{ color: ammoCfg.color, fontSize: 9, letterSpacing: 2 }}>{ammoCfg.shortName}</span>}
+              <span style={{ color: '#445566', fontSize: 10, letterSpacing: 2 }}>{showChaosAmmo && chaosWpnId ? WEAPON_CONFIGS[chaosWpnId].shortName : weaponCfg.shortName}</span>
             </div>
             <div style={{ height: 8, background: '#111122', border: `1px solid ${outOfAmmo ? '#ff3300' : '#334'}`, borderRadius: 2, overflow: 'hidden', marginBottom: 3 }}>
               <div style={{
-                height: '100%', width: `${ammoPct}%`, background: ammoColor,
+                height: '100%', width: `${isMelee ? (maxAmmo > 0 ? (ammo / maxAmmo) * 100 : 0) : ammoPct}%`,
+                background: isMelee ? (ammo / maxAmmo > 0.5 ? '#ff8844' : ammo / maxAmmo > 0.2 ? '#ffaa00' : '#ff3300') : ammoColor,
                 transition: 'width 0.05s', boxShadow: `0 0 4px ${ammoColor}`,
                 animation: outOfAmmo ? 'btPulse 0.3s ease-in-out infinite alternate' : 'none',
               }} />
             </div>
-            <div style={{ color: outOfAmmo ? '#ff3300' : ammoColor, fontSize: 11, fontWeight: 'bold' }}>
-              {outOfAmmo ? 'LEER' : `${ammo} / ${maxAmmo}`}
+            <div style={{ color: outOfAmmo ? '#ff3300' : isMelee ? '#ff8844' : ammoColor, fontSize: 11, fontWeight: 'bold' }}>
+              {outOfAmmo ? (isMelee ? 'KAPUTT' : 'LEER') : isMelee ? `${ammo} / ${maxAmmo} Treffer` : `${displayAmmo} / ${displayMax}`}
             </div>
           </div>
 

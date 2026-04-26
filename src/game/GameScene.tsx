@@ -591,16 +591,22 @@ export function GameScene() {
       }
     }
 
-    // ── Mobile: camera mode cycle (topdown ↔ iso) ────────────────────────────
+    // ── Mobile: camera mode cycle (topdown → iso → fps) ─────────────────────
     if (mobileCamJust) {
-      const next: CameraMode = cameraModeRef.current === 'topdown' ? 'iso' : 'topdown'
+      const next: CameraMode = cameraModeRef.current === 'topdown' ? 'iso'
+        : cameraModeRef.current === 'iso' ? 'fps' : 'topdown'
       cameraModeRef.current = next
       setCameraMode(next)
+      if (next === 'topdown') { camera.position.set(0, 22, 9); camera.lookAt(0, 0, -1) }
     }
+
+    // ── Melee swing timer ────────────────────────────────────────────────────
+    if (es.meleeSwing > 0) es.meleeSwing = Math.max(0, es.meleeSwing - rawDt)
 
     // ── R: reload ─────────────────────────────────────────────────────────────
     const gameMode2 = useGameStore.getState().gameMode
-    if (rJust && es.reloadTimer <= 0 && es.ammo < es.maxAmmo && gameMode2 !== 'shooting_range') {
+    if (rJust && es.reloadTimer <= 0 && es.ammo < es.maxAmmo && gameMode2 !== 'shooting_range'
+      && !WEAPON_CONFIGS[useLoadoutStore.getState().selectedWeapon].isMelee) {
       es.reloadTimer = WEAPON_CONFIGS[useLoadoutStore.getState().selectedWeapon].reloadTime
     }
     if (es.reloadTimer > 0) {
@@ -643,7 +649,7 @@ export function GameScene() {
     }
 
     // ── Aim direction ─────────────────────────────────────────────────────────
-    if (cameraModeRef.current !== 'fps' && es.maneuver !== 'spin') {
+    if ((cameraModeRef.current !== 'fps' || mobileControls) && es.maneuver !== 'spin') {
       if (mobileControls) {
         // Auto-aim at nearest enemy
         let nearDist = Infinity
@@ -730,6 +736,16 @@ export function GameScene() {
         const len  = Math.sqrt(mx * mx + mz * mz)
         dx = len > 0 ? mx / len : 0
         dz = len > 0 ? mz / len : 0
+      } else if (cameraModeRef.current === 'iso' && (dx !== 0 || dz !== 0)) {
+        // Transform WASD through ISO camera's ground-projected axes
+        // Camera offset ~(+15, 20, -8) → forward=(-15/17, 8/17), right=(8/17, 15/17)
+        const ISO_FX = -15 / 17, ISO_FZ = 8 / 17
+        const ISO_RX = 8 / 17,   ISO_RZ = 15 / 17
+        const mx  = ISO_FX * (-dz) + ISO_RX * dx
+        const mz  = ISO_FZ * (-dz) + ISO_RZ * dx
+        const len = Math.sqrt(mx * mx + mz * mz)
+        dx = len > 0 ? mx / len : 0
+        dz = len > 0 ? mz / len : 0
       } else if (dx !== 0 || dz !== 0) {
         const len = Math.sqrt(dx * dx + dz * dz)
         dx /= len; dz /= len
@@ -766,7 +782,7 @@ export function GameScene() {
         const px = es.player.position.x
         const pz = es.player.position.y
         camera.position.lerp(new THREE.Vector3(px, 22, pz + 9), 0.1)
-        camera.lookAt(px, 0, pz)
+        camera.lookAt(px, 0, pz - 1)
       } else if (Math.abs(camera.position.y - 22) > 0.5) {
         camera.position.set(0, 22, 9)
         camera.lookAt(0, 0, -1)
@@ -934,7 +950,7 @@ export function GameScene() {
     const chaosModeActive = mutators.chaosMode && useGameStore.getState().gameMode !== 'shooting_range'
     const canShootChaos   = !chaosModeActive || (es.chaosWeaponId !== null && es.chaosAmmo > 0)
     const isShooting = (input.current.mouseButtons.has(0) || (mobileControls && mobileInput.fire))
-      && es.reloadTimer <= 0 && canShootChaos
+      && es.reloadTimer <= 0 && (canShootChaos || weaponCfg.isMelee)
 
     // Helper: spawn one regular bullet
     const spawnBullet = (angle: number, lateralOff = 0) => {
@@ -1096,6 +1112,52 @@ export function GameScene() {
           es.chaosWeaponId = null
         }
       }
+    }
+
+    // ── Melee attack (fire button, when melee weapon equipped) ───────────────
+    const isMeleeWeapon = weaponCfg.isMelee
+    if (isMeleeWeapon && isShooting && es.player.shootCooldown <= 0 && es.ammo > 0) {
+      es.player.shootCooldown = weaponCfg.shootCooldown
+      es.meleeSwing = weaponCfg.shootCooldown * 0.7
+
+      const maxDur  = loadout.getMaxAmmoFor(loadout.selectedWeapon)
+      const durPct  = weaponCfg.stackable ? es.ammo / maxDur : 1
+      const dmg     = Math.round(weaponCfg.baseDamage * Math.max(0.4, durPct))
+      const range   = weaponCfg.meleeRange ?? 1.8
+      const halfArc = (weaponCfg.meleeArc ?? Math.PI * 0.6) / 2
+
+      let hitCount = 0
+      for (const [, enemy] of es.enemies) {
+        const dx   = enemy.position.x - es.player.position.x
+        const dz   = enemy.position.y - es.player.position.y
+        const dist = Math.sqrt(dx * dx + dz * dz)
+        if (dist > range) continue
+        let diff = Math.atan2(dx, -dz) - es.player.angle
+        while (diff > Math.PI) diff -= 2 * Math.PI
+        while (diff < -Math.PI) diff += 2 * Math.PI
+        if (Math.abs(diff) > halfArc) continue
+        enemy.health -= dmg
+        enemy.hitTime = now
+        spawnParticles(enemy.position.x, enemy.position.y, 'blood', BLOOD_COUNTS[bloodIntensity])
+        hitCount++
+      }
+
+      WEAPON_SOUNDS[loadout.selectedWeapon]?.()
+
+      // Decrement durability (not for stick with 9999 base)
+      if (weaponCfg.stackable) {
+        es.ammo = Math.max(0, es.ammo - 1)
+        es.weaponAmmo.set(loadout.selectedWeapon, es.ammo)
+        if (es.ammo <= 0) {
+          const next = loadout.ownedWeapons.find(w => !WEAPON_CONFIGS[w].isMelee) ?? 'pistol'
+          loadout.selectWeapon(next)
+          es.ammo    = es.weaponAmmo.get(next) ?? loadout.getMaxAmmoFor(next)
+          es.maxAmmo = loadout.getMaxAmmoFor(next)
+          setWaveMessage('KAPUTT! ✗')
+          setTimeout(() => setWaveMessage(''), 1400)
+        }
+      }
+      void hitCount
     }
 
     // ── Declare removal/score accumulators ───────────────────────────────────

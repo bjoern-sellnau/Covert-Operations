@@ -114,7 +114,7 @@ export function MobileControls() {
   }
 
   const safeArea = 'env(safe-area-inset-bottom, 0px)'
-  const modeLabel = cameraMode === 'iso' ? 'ISO' : 'TOP'
+  const modeLabel = cameraMode === 'fps' ? 'FPS' : cameraMode === 'iso' ? 'ISO' : 'TOP'
 
   return (
     <div style={{

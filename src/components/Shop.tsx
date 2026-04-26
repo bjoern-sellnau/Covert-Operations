@@ -6,7 +6,7 @@ import {
   type WeaponId, type EquipmentId, type AmmoId,
 } from '../game/types'
 
-type Category = 'waffen' | 'ausruestung' | 'munition' | 'ladung'
+type Category = 'waffen' | 'nahkampf' | 'ausruestung' | 'munition' | 'ladung'
 
 // ── Stat bars ───────────────────────────────────────────────────────────────
 
@@ -226,6 +226,94 @@ function AmmoCard({ id }: { id: AmmoId }) {
         </div>
       )}
       <div style={{ color: '#445566', fontSize: 11, lineHeight: 1.4 }}>{cfg.description}</div>
+    </div>
+  )
+}
+
+// ── Melee card ───────────────────────────────────────────────────────────────
+
+function MeleeCard({ id }: { id: WeaponId }) {
+  const cfg = WEAPON_CONFIGS[id]
+  const { ownedWeapons, selectedWeapon, credits, meleeStacks, buyWeapon, selectWeapon } = useLoadoutStore()
+  const owned     = ownedWeapons.includes(id)
+  const selected  = selectedWeapon === id
+  const canAfford = credits >= cfg.price
+  const stacks    = meleeStacks[id] ?? 1
+  const totalDur  = cfg.stackable ? cfg.baseAmmo * stacks : cfg.baseAmmo
+
+  return (
+    <div
+      style={{
+        background: selected ? '#1a0800' : '#080812',
+        border: `1px solid ${selected ? '#ff8800' : owned ? '#443322' : '#111122'}`,
+        borderRadius: 4, padding: '14px 16px', cursor: 'pointer',
+        transition: 'all 0.15s',
+        boxShadow: selected ? '0 0 12px #ff880033' : 'none',
+      }}
+      onClick={() => { if (owned) selectWeapon(id); else buyWeapon(id) }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+        <div>
+          <div style={{ color: selected ? '#ff9933' : '#ffccaa', fontSize: 14, fontWeight: 'bold', letterSpacing: 1 }}>
+            {cfg.name}
+          </div>
+          <div style={{ color: '#445566', fontSize: 11, marginTop: 2 }}>{cfg.shortName} · NAHKAMPF</div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          {owned ? (
+            <div style={{
+              color: selected ? '#ff9933' : '#664422', fontSize: 11, letterSpacing: 2,
+              padding: '3px 8px', border: `1px solid ${selected ? '#ff9933' : '#443322'}`, borderRadius: 2,
+            }}>
+              {selected ? 'AKTIV' : 'BESESSEN'}
+            </div>
+          ) : (
+            <div style={{ color: canAfford ? '#ffee00' : '#664400', fontSize: 13, fontWeight: 'bold' }}>
+              {cfg.price} CR
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginBottom: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ color: '#445566', fontSize: 10, width: 60, letterSpacing: 1 }}>SCHADEN</div>
+          <StatBar value={cfg.statDamage} color="#ff8844" />
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ color: '#445566', fontSize: 10, width: 60, letterSpacing: 1 }}>TEMPO</div>
+          <StatBar value={cfg.statRate} color="#ffaa00" />
+        </div>
+      </div>
+
+      <div style={{ color: '#445566', fontSize: 11, lineHeight: 1.4, marginBottom: 8 }}>{cfg.description}</div>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        {cfg.stackable ? (
+          <div style={{ color: '#664433', fontSize: 10 }}>
+            HALTBARKEIT: {owned ? `${totalDur} Treffer (${stacks}×)` : `${cfg.baseAmmo} Treffer`}
+          </div>
+        ) : (
+          <div style={{ color: '#446644', fontSize: 10 }}>UNZERSTÖRBAR ∞</div>
+        )}
+        {owned && cfg.stackable && (
+          <div
+            onClick={(e) => { e.stopPropagation(); buyWeapon(id) }}
+            style={{
+              padding: '4px 10px', borderRadius: 2, cursor: canAfford ? 'pointer' : 'default',
+              background: canAfford ? '#553300' : 'transparent',
+              border: `1px solid ${canAfford ? '#ff8800' : '#443322'}`,
+              color: canAfford ? '#ffcc88' : '#664433', fontSize: 10, letterSpacing: 1,
+            }}
+          >
+            +1 KAUFEN ({cfg.price} CR)
+          </div>
+        )}
+      </div>
+
+      {!owned && !canAfford && (
+        <div style={{ color: '#442200', fontSize: 10, marginTop: 6, letterSpacing: 1 }}>NICHT GENUG CREDITS</div>
+      )}
     </div>
   )
 }
@@ -519,6 +607,7 @@ export function Shop() {
           borderBottom: '1px solid #111122', overflowX: 'auto',
         }}>
           <button style={tabStyle(category === 'waffen')}      onClick={() => setCategory('waffen')}>Waffen</button>
+          <button style={tabStyle(category === 'nahkampf')}    onClick={() => setCategory('nahkampf')}>Nahkampf</button>
           <button style={tabStyle(category === 'ausruestung')} onClick={() => setCategory('ausruestung')}>Ausrüstung</button>
           <button style={tabStyle(category === 'munition')}    onClick={() => setCategory('munition')}>Munition</button>
           <button style={tabStyle(category === 'ladung')}      onClick={() => setCategory('ladung')}>Ladung</button>
@@ -535,6 +624,7 @@ export function Shop() {
           }}>
             <div style={{ color: '#334455', fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>KATEGORIE</div>
             <button style={tabStyle(category === 'waffen')}      onClick={() => setCategory('waffen')}>Waffen</button>
+            <button style={tabStyle(category === 'nahkampf')}    onClick={() => setCategory('nahkampf')}>Nahkampf</button>
             <button style={tabStyle(category === 'ausruestung')} onClick={() => setCategory('ausruestung')}>Ausrüstung</button>
             <button style={tabStyle(category === 'munition')}    onClick={() => setCategory('munition')}>Munition</button>
             {category === 'ausruestung' && (
@@ -581,6 +671,15 @@ export function Shop() {
               <AkimboCard />
               <div style={{ color: '#553322', fontSize: 10, letterSpacing: 3, marginTop: 8, marginBottom: 4 }}>BFG</div>
               <VernichterCard />
+            </>
+          )}
+
+          {category === 'nahkampf' && (
+            <>
+              <div style={{ color: '#553322', fontSize: 10, letterSpacing: 3, marginBottom: 4 }}>NAHKAMPFWAFFEN</div>
+              {(['knife', 'bat', 'stick'] as WeaponId[]).map((id) => (
+                <MeleeCard key={id} id={id} />
+              ))}
             </>
           )}
 
