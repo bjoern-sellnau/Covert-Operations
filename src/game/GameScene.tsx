@@ -297,6 +297,15 @@ export function GameScene() {
 
   useEffect(() => { phaseRef.current = phase }, [phase])
 
+  // Exit pointer lock whenever we leave the playing phase (game over, menu, etc.)
+  useEffect(() => {
+    if (phase !== 'playing' && cameraModeRef.current === 'fps') {
+      document.exitPointerLock()
+      cameraModeRef.current = 'topdown'
+      setCameraMode('topdown')
+    }
+  }, [phase, setCameraMode])
+
   // ── Initialize ───────────────────────────────────────────────────────────
   useEffect(() => {
     if (phase !== 'playing') return
