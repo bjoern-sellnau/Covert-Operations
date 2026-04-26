@@ -9,11 +9,13 @@ interface SettingsStore {
   musicEnabled: boolean
   skyFPV: boolean
   musicTrack: MusicTrack
+  cameraFollow: boolean
   setBloodIntensity: (v: 0 | 1 | 2 | 3) => void
   setMobileControls: (v: boolean) => void
   setMusicEnabled: (v: boolean) => void
   setSkyFPV: (v: boolean) => void
   setMusicTrack: (v: MusicTrack) => void
+  setCameraFollow: (v: boolean) => void
 }
 
 export const useSettingsStore = create<SettingsStore>()(
@@ -24,11 +26,13 @@ export const useSettingsStore = create<SettingsStore>()(
       musicEnabled: true,
       skyFPV: false,
       musicTrack: 'auto',
+      cameraFollow: false,
       setBloodIntensity: (bloodIntensity) => set({ bloodIntensity }),
       setMobileControls: (mobileControls) => set({ mobileControls }),
       setMusicEnabled: (musicEnabled) => set({ musicEnabled }),
       setSkyFPV: (skyFPV) => set({ skyFPV }),
       setMusicTrack: (musicTrack) => set({ musicTrack }),
+      setCameraFollow: (cameraFollow) => set({ cameraFollow }),
     }),
     { name: 'covert-ops-settings-v1' },
   ),

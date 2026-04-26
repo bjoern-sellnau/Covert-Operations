@@ -1,5 +1,7 @@
 import { useRef } from 'react'
 import { mobileInput } from '../store/mobileStore'
+import { useGameStore } from '../store/gameStore'
+import { useSettingsStore } from '../store/settingsStore'
 
 const MAX_R = 48   // joystick thumb max travel (px)
 
@@ -45,11 +47,38 @@ function ActionBtn({ label, color, bg, size, sub, onDown, onUp }: {
   )
 }
 
+function SmallBtn({ label, active, color, onTap }: {
+  label: string; active?: boolean; color: string; onTap: () => void
+}) {
+  return (
+    <div
+      onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); onTap() }}
+      style={{
+        padding: '6px 10px', borderRadius: 4,
+        background: active ? `${color}33` : 'rgba(0,0,0,0.55)',
+        border: `1px solid ${active ? color : color + '55'}`,
+        color: active ? color : color + 'aa',
+        fontFamily: "'Courier New', monospace", fontSize: 10, fontWeight: 'bold',
+        letterSpacing: 1, pointerEvents: 'auto', touchAction: 'none',
+        userSelect: 'none', WebkitUserSelect: 'none', cursor: 'pointer',
+        boxShadow: active ? `0 0 8px ${color}44` : 'none',
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {label}
+    </div>
+  )
+}
+
 export function MobileControls() {
-  const baseRef  = useRef<HTMLDivElement>(null)
-  const thumbRef = useRef<HTMLDivElement>(null)
+  const baseRef   = useRef<HTMLDivElement>(null)
+  const thumbRef  = useRef<HTMLDivElement>(null)
   const originRef = useRef({ x: 0, y: 0 })
   const activeRef = useRef(false)
+
+  const cameraMode   = useGameStore((s) => s.cameraMode)
+  const cameraFollow = useSettingsStore((s) => s.cameraFollow)
+  const setCameraFollow = useSettingsStore((s) => s.setCameraFollow)
 
   function onJoyDown(e: React.PointerEvent) {
     e.currentTarget.setPointerCapture(e.pointerId)
@@ -85,12 +114,32 @@ export function MobileControls() {
   }
 
   const safeArea = 'env(safe-area-inset-bottom, 0px)'
+  const modeLabel = cameraMode === 'iso' ? 'ISO' : 'TOP'
 
   return (
     <div style={{
       position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, pointerEvents: 'none', zIndex: 50,
       fontFamily: "'Courier New', monospace",
     }}>
+
+      {/* ── Camera controls — top left ── */}
+      <div style={{
+        position: 'absolute', top: 16, left: 16,
+        display: 'flex', gap: 8, pointerEvents: 'none',
+      }}>
+        <SmallBtn
+          label={`CAM: ${modeLabel}`}
+          color="#00aaff"
+          onTap={() => { mobileInput.cameraModeJust = true }}
+        />
+        <SmallBtn
+          label={cameraFollow ? 'LOCK ●' : 'LOCK ○'}
+          active={cameraFollow}
+          color="#ffaa00"
+          onTap={() => setCameraFollow(!cameraFollow)}
+        />
+      </div>
+
       {/* ── Left virtual joystick ── */}
       <div
         ref={baseRef}
@@ -125,6 +174,25 @@ export function MobileControls() {
           boxShadow: '0 0 10px rgba(0,170,255,0.8)',
           transform: 'translate(-50%,-50%)', pointerEvents: 'none',
         }} />
+      </div>
+
+      {/* ── Weapon prev / next — above joystick ── */}
+      <div style={{
+        position: 'absolute',
+        bottom: `calc(24px + ${safeArea} + 140px)`,
+        left: 24,
+        display: 'flex', gap: 8, pointerEvents: 'none',
+      }}>
+        <ActionBtn
+          label="◀" sub="WPN" color="#ffaa00" bg="rgba(60,35,0,0.7)" size={52}
+          onDown={() => { mobileInput.weaponPrevJust = true }}
+          onUp={() => {}}
+        />
+        <ActionBtn
+          label="▶" sub="WPN" color="#ffaa00" bg="rgba(60,35,0,0.7)" size={52}
+          onDown={() => { mobileInput.weaponNextJust = true }}
+          onUp={() => {}}
+        />
       </div>
 
       {/* ── Right action buttons ── */}

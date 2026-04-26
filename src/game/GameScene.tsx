@@ -438,8 +438,11 @@ export function GameScene() {
     const mobileControls = useSettingsStore.getState().mobileControls
 
     // Consume one-shot mobile flags at the top of the frame
-    const mobileGrenJust = mobileInput.grenadeJust; mobileInput.grenadeJust = false
-    const mobileDiveJust = mobileInput.diveJust;    mobileInput.diveJust    = false
+    const mobileGrenJust = mobileInput.grenadeJust;    mobileInput.grenadeJust    = false
+    const mobileDiveJust = mobileInput.diveJust;       mobileInput.diveJust       = false
+    const mobileWpnPrev  = mobileInput.weaponPrevJust; mobileInput.weaponPrevJust = false
+    const mobileWpnNext  = mobileInput.weaponNextJust; mobileInput.weaponNextJust = false
+    const mobileCamJust  = mobileInput.cameraModeJust; mobileInput.cameraModeJust = false
 
     // ── Mutators: round timer & sudden death ──────────────────────────────────
     const mutators = useMutatorsStore.getState()
@@ -567,6 +570,32 @@ export function GameScene() {
           break
         }
       }
+    }
+
+    // ── Mobile: prev/next weapon ─────────────────────────────────────────────
+    if (mobileWpnPrev || mobileWpnNext) {
+      const loadoutNow = useLoadoutStore.getState()
+      const weapons    = loadoutNow.ownedWeapons
+      if (weapons.length > 1) {
+        const idx    = weapons.indexOf(loadoutNow.selectedWeapon)
+        const delta  = mobileWpnNext ? 1 : weapons.length - 1
+        const target = weapons[(idx + delta) % weapons.length]
+        if (target !== loadoutNow.selectedWeapon) {
+          es.weaponAmmo.set(loadoutNow.selectedWeapon, es.ammo)
+          const newMax = loadoutNow.getMaxAmmoFor(target)
+          es.ammo      = es.weaponAmmo.get(target) ?? newMax
+          es.maxAmmo   = newMax
+          es.reloadTimer = 0
+          loadoutNow.selectWeapon(target)
+        }
+      }
+    }
+
+    // ── Mobile: camera mode cycle (topdown ↔ iso) ────────────────────────────
+    if (mobileCamJust) {
+      const next: CameraMode = cameraModeRef.current === 'topdown' ? 'iso' : 'topdown'
+      cameraModeRef.current = next
+      setCameraMode(next)
     }
 
     // ── R: reload ─────────────────────────────────────────────────────────────
@@ -731,8 +760,14 @@ export function GameScene() {
       camera.position.lerp(new THREE.Vector3(tx, 20, tz), 0.08)
       camera.lookAt(es.player.position.x, 0, es.player.position.y)
     } else {
-      // topdown — static overhead
-      if (Math.abs(camera.position.y - 22) > 0.5) {
+      // topdown — optionally follow player
+      const cameraFollow = useSettingsStore.getState().cameraFollow
+      if (cameraFollow) {
+        const px = es.player.position.x
+        const pz = es.player.position.y
+        camera.position.lerp(new THREE.Vector3(px, 22, pz + 9), 0.1)
+        camera.lookAt(px, 0, pz)
+      } else if (Math.abs(camera.position.y - 22) > 0.5) {
         camera.position.set(0, 22, 9)
         camera.lookAt(0, 0, -1)
       }
