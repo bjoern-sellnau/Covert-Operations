@@ -41,6 +41,7 @@ import { Arena } from './Arena'
 import { PlayerMesh } from './PlayerMesh'
 import { EnemyMesh } from './EnemyMesh'
 import { BulletMesh } from './BulletMesh'
+import { EnemyBulletMesh } from './EnemyBulletMesh'
 import { ParticleSystem } from './ParticleSystem'
 import { ScriptEngine, resetScriptRuntime } from './ScriptEngine'
 import { FogOfWar } from './FogOfWar'
@@ -244,7 +245,9 @@ export function GameScene() {
   const updateP2HUD     = useGameStore((s) => s.updateP2HUD)
   const setBulletTime   = useGameStore((s) => s.setBulletTime)
   const setEnemyIds     = useGameStore((s) => s.setEnemyIds)
-  const setBulletIds    = useGameStore((s) => s.setBulletIds)
+  const setBulletIds        = useGameStore((s) => s.setBulletIds)
+  const setEnemyBulletIds   = useGameStore((s) => s.setEnemyBulletIds)
+  const enemyBulletIds      = useGameStore((s) => s.enemyBulletIds)
   const setWaveMessage     = useGameStore((s) => s.setWaveMessage)
   const setCameraMode      = useGameStore((s) => s.setCameraMode)
   const updateMutatorHUD   = useGameStore((s) => s.updateMutatorHUD)
@@ -510,7 +513,7 @@ export function GameScene() {
               id: snap.id, type: snap.type as EnemyType,
               position: new THREE.Vector2(snap.x, snap.z),
               health: snap.h, hitTime: -10, lastDamageTime: -10,
-              aiTimer: 0, aiState: 0,
+              aiTimer: 0, aiState: 0, shootCooldown: Math.random() / cfg.shootRate,
             })
           }
         }
@@ -1488,13 +1491,16 @@ export function GameScene() {
       }
       _toPlayer.set(targetX - enemy.position.x, targetY - enemy.position.y)
       const dist = _toPlayer.length()
+      // Save aim direction before _toPlayer gets overwritten by movement delta
+      const aimX = dist > 0.05 ? _toPlayer.x / dist : 0
+      const aimY = dist > 0.05 ? _toPlayer.y / dist : 0
 
       if (dist > 0.05) {
         let mx = _toPlayer.x / dist
         let mz = _toPlayer.y / dist
 
         if (enemy.type === 'berserker') {
-          // Erratic zigzag charge — oscillates perpendicular every ~0.4s
+          // Erratic zigzag charge — always rushes regardless of shoot range
           enemy.aiTimer += rawDt
           if (enemy.aiTimer > 0.4) { enemy.aiTimer = 0; enemy.aiState = 1 - enemy.aiState }
           const jitter = (enemy.aiState === 0 ? 1 : -1) * 0.55
@@ -1503,39 +1509,27 @@ export function GameScene() {
           const mlen = Math.sqrt(mx * mx + mz * mz)
           mx /= mlen; mz /= mlen
         } else if (enemy.type === 'flanker') {
-          // Strafe sideways while closing in — switches flank side every 1.5s
+          // Strafe sideways while closing in
           enemy.aiTimer += rawDt
           if (enemy.aiTimer > 1.5) { enemy.aiTimer = 0; enemy.aiState ^= 1 }
           const side = enemy.aiState === 0 ? 1 : -1
-          // Blend: 60% toward player, 40% perpendicular
           const px = (-mz) * side
           const pz = mx * side
           mx = mx * 0.6 + px * 0.4
           mz = mz * 0.6 + pz * 0.4
           const mlen = Math.sqrt(mx * mx + mz * mz)
           mx /= mlen; mz /= mlen
-        } else if (enemy.type === 'juggernaut') {
-          // Slow but steady — charges directly, brief pause before reaching player
-          if (dist > 3) {
-            // Slow approach
-          } else {
-            // Close-range: speed boost to guarantee hit
-            _toPlayer.x = mx * cfg.speed * 1.5 * dt
-            _toPlayer.y = mz * cfg.speed * 1.5 * dt
-            enemy.position.x += _toPlayer.x
-            enemy.position.y += _toPlayer.y
-          }
         }
 
-        _toPlayer.x = mx * cfg.speed * dt
-        _toPlayer.y = mz * cfg.speed * dt
-        if (enemy.type !== 'juggernaut' || dist > 3) {
-          let ex = enemy.position.x + _toPlayer.x
-          let ez = enemy.position.y + _toPlayer.y
-          if (level) { const r = resolveCircleVsLevel(ex, ez, cfg.size, level); ex = r.x; ez = r.z }
-          enemy.position.x = ex
-          enemy.position.y = ez
-        }
+        // Non-berserker enemies slow to 30% when within shooting range
+        const speedMult = (enemy.type !== 'berserker' && dist < cfg.shootRange) ? 0.3 : 1.0
+        _toPlayer.x = mx * cfg.speed * speedMult * dt
+        _toPlayer.y = mz * cfg.speed * speedMult * dt
+        let ex = enemy.position.x + _toPlayer.x
+        let ez = enemy.position.y + _toPlayer.y
+        if (level) { const r = resolveCircleVsLevel(ex, ez, cfg.size, level); ex = r.x; ez = r.z }
+        enemy.position.x = ex
+        enemy.position.y = ez
       }
 
       for (const [bid, bullet] of es.bullets) {
@@ -1563,23 +1557,51 @@ export function GameScene() {
         }
       }
 
-      // Damage P1
-      const distP1 = Math.hypot(es.player.position.x - enemy.position.x, es.player.position.y - enemy.position.y)
-      if (distP1 < cfg.size + PLAYER_RADIUS && now > es.player.invincibleUntil) {
-        es.player.health -= cfg.damage
-        es.player.invincibleUntil = now + INVINCIBLE_DURATION
-        if (es.player.health < 0) es.player.health = 0
-        playHit(0.9)
+      // Enemy shoots at target player
+      enemy.shootCooldown -= rawDt
+      if (enemy.shootCooldown <= 0 && dist >= cfg.size + 0.3 && dist < cfg.shootRange) {
+        enemy.shootCooldown = 1 / cfg.shootRate
+        const ebId = `eb-${++es.enemyBulletIdCounter}`
+        es.enemyBullets.set(ebId, {
+          id: ebId,
+          position: new THREE.Vector2(
+            enemy.position.x + aimX * (cfg.size + 0.25),
+            enemy.position.y + aimY * (cfg.size + 0.25),
+          ),
+          velocity: new THREE.Vector2(aimX * cfg.bulletSpeed, aimY * cfg.bulletSpeed),
+          lifetime: 3.5,
+          damage: cfg.damage,
+        })
+        setEnemyBulletIds(Array.from(es.enemyBullets.keys()))
       }
-      // Damage P2
-      if (es.player2Active && es.player2.health > 0) {
-        const distP2 = Math.hypot(es.player2.position.x - enemy.position.x, es.player2.position.y - enemy.position.y)
-        if (distP2 < cfg.size + PLAYER_RADIUS && now > es.player2.invincibleUntil) {
-          es.player2.health -= cfg.damage
+    }
+
+    // ── Enemy bullet movement & player collision ──────────────────────────────
+    const ebToRemove: string[] = []
+    for (const [ebId, eb] of es.enemyBullets) {
+      eb.position.x += eb.velocity.x * rawDt
+      eb.position.y += eb.velocity.y * rawDt
+      eb.lifetime -= rawDt
+      if (eb.lifetime <= 0 || Math.abs(eb.position.x) > ARENA_HALF + 2 || Math.abs(eb.position.y) > ARENA_HALF + 2) {
+        ebToRemove.push(ebId); continue
+      }
+      if (Math.hypot(es.player.position.x - eb.position.x, es.player.position.y - eb.position.y) < PLAYER_RADIUS + 0.1 && now > es.player.invincibleUntil) {
+        es.player.health = Math.max(0, es.player.health - eb.damage)
+        es.player.invincibleUntil = now + INVINCIBLE_DURATION
+        playHit(0.9)
+        ebToRemove.push(ebId); continue
+      }
+      if (es.player2Active && es.player2.health > 0 && now > es.player2.invincibleUntil) {
+        if (Math.hypot(es.player2.position.x - eb.position.x, es.player2.position.y - eb.position.y) < PLAYER_RADIUS + 0.1) {
+          es.player2.health = Math.max(0, es.player2.health - eb.damage)
           es.player2.invincibleUntil = now + INVINCIBLE_DURATION
-          if (es.player2.health < 0) es.player2.health = 0
+          ebToRemove.push(ebId); continue
         }
       }
+    }
+    if (ebToRemove.length > 0) {
+      for (const id of ebToRemove) es.enemyBullets.delete(id)
+      setEnemyBulletIds(Array.from(es.enemyBullets.keys()))
     }
 
     // ── Apply removals + enemy drops ──────────────────────────────────────────
@@ -1733,6 +1755,7 @@ export function GameScene() {
       </group>
       {enemyIds.map((id) => <EnemyMesh key={id} id={id} />)}
       {bulletIds.map((id) => <BulletMesh key={id} id={id} />)}
+      {enemyBulletIds.map((id) => <EnemyBulletMesh key={id} id={id} />)}
 
       {/* Pre-allocated grenade meshes */}
       {Array.from({ length: MAX_GRENADES }, (_, i) => (

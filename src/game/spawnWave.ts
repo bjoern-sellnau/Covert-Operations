@@ -53,6 +53,7 @@ export function spawnWave(wave: number): string[] {
       lastDamageTime: -999,
       aiTimer: 0,
       aiState: Math.random() > 0.5 ? 0 : 1,
+      shootCooldown: Math.random() / ENEMY_CONFIGS[type].shootRate,
     })
     ids.push(id)
   }

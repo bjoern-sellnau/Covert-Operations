@@ -17,15 +17,18 @@ export interface EnemyConfig {
   scoreValue: number
   creditValue: number
   segments: number
+  shootRange: number   // distance at which enemy starts shooting
+  shootRate: number    // shots per second
+  bulletSpeed: number  // enemy bullet speed
 }
 
 export const ENEMY_CONFIGS: Record<EnemyType, EnemyConfig> = {
-  basic:      { speed: 2.5, health: 1,  size: 0.45, damage: 8,  color: '#cc2222', emissive: '#ff0000', scoreValue: 10,  creditValue: 5,  segments: 6  },
-  fast:       { speed: 5.0, health: 1,  size: 0.3,  damage: 12, color: '#cc6600', emissive: '#ff8800', scoreValue: 25,  creditValue: 10, segments: 4  },
-  tank:       { speed: 1.4, health: 4,  size: 0.75, damage: 20, color: '#6600cc', emissive: '#8800ff', scoreValue: 60,  creditValue: 25, segments: 8  },
-  berserker:  { speed: 6.5, health: 2,  size: 0.35, damage: 22, color: '#cc0066', emissive: '#ff0044', scoreValue: 30,  creditValue: 12, segments: 5  },
-  flanker:    { speed: 3.2, health: 1,  size: 0.40, damage: 14, color: '#cc8800', emissive: '#ffaa00', scoreValue: 20,  creditValue: 8,  segments: 6  },
-  juggernaut: { speed: 1.1, health: 10, size: 1.00, damage: 40, color: '#334455', emissive: '#112233', scoreValue: 80,  creditValue: 30, segments: 10 },
+  basic:      { speed: 2.5, health: 1,  size: 0.45, damage: 12, color: '#cc2222', emissive: '#ff0000', scoreValue: 10,  creditValue: 5,  segments: 6,  shootRange: 7,  shootRate: 1.2,  bulletSpeed: 8  },
+  fast:       { speed: 5.0, health: 1,  size: 0.3,  damage: 8,  color: '#cc6600', emissive: '#ff8800', scoreValue: 25,  creditValue: 10, segments: 4,  shootRange: 5,  shootRate: 2.5,  bulletSpeed: 14 },
+  tank:       { speed: 1.4, health: 4,  size: 0.75, damage: 25, color: '#6600cc', emissive: '#8800ff', scoreValue: 60,  creditValue: 25, segments: 8,  shootRange: 9,  shootRate: 0.5,  bulletSpeed: 6  },
+  berserker:  { speed: 6.5, health: 2,  size: 0.35, damage: 15, color: '#cc0066', emissive: '#ff0044', scoreValue: 30,  creditValue: 12, segments: 5,  shootRange: 3,  shootRate: 4.0,  bulletSpeed: 16 },
+  flanker:    { speed: 3.2, health: 1,  size: 0.40, damage: 12, color: '#cc8800', emissive: '#ffaa00', scoreValue: 20,  creditValue: 8,  segments: 6,  shootRange: 8,  shootRate: 1.8,  bulletSpeed: 10 },
+  juggernaut: { speed: 1.1, health: 10, size: 1.00, damage: 50, color: '#334455', emissive: '#112233', scoreValue: 80,  creditValue: 30, segments: 10, shootRange: 12, shootRate: 0.25, bulletSpeed: 5  },
 }
 
 // ── Weapons ────────────────────────────────────────────────────────────────

@@ -140,6 +140,7 @@ function executePendingActions(
             lastDamageTime: -999,
             aiTimer: 0,
             aiState: Math.random() > 0.5 ? 0 : 1,
+            shootCooldown: Math.random() / ENEMY_CONFIGS[action.enemyType].shootRate,
           })
           newIds.push(id)
         }

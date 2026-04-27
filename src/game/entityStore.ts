@@ -30,6 +30,15 @@ export interface EnemyData {
   lastDamageTime: number
   aiTimer: number    // general-purpose per-enemy AI timer
   aiState: number    // general-purpose per-enemy AI state integer
+  shootCooldown: number
+}
+
+export interface EnemyBulletData {
+  id: string
+  position: THREE.Vector2
+  velocity: THREE.Vector2
+  lifetime: number
+  damage: number
 }
 
 export interface BulletData {
@@ -133,6 +142,8 @@ function makeEntityStore() {
     } as PlayerData,
     enemies: new Map<string, EnemyData>(),
     bullets: new Map<string, BulletData>(),
+    enemyBullets: new Map<string, EnemyBulletData>(),
+    enemyBulletIdCounter: 0,
     mouseWorld: new THREE.Vector3(0, 0, 0),
     score: 0,
     wave: 1,
@@ -220,6 +231,7 @@ export function resetEntityStore() {
   s.player.invincibleUntil = 0
   s.enemies.clear()
   s.bullets.clear()
+  s.enemyBullets.clear()
   s.mouseWorld.set(0, 0, 0)
   s.score = 0
   s.wave = 1

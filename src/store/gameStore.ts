@@ -10,6 +10,7 @@ interface GameStore {
   wave: number
   enemyIds: string[]
   bulletIds: string[]
+  enemyBulletIds: string[]
   waveMessage: string
   focus: number
   isBulletTime: boolean
@@ -40,6 +41,7 @@ interface GameStore {
   setBulletTime: (focus: number, active: boolean) => void
   setEnemyIds: (ids: string[]) => void
   setBulletIds: (ids: string[]) => void
+  setEnemyBulletIds: (ids: string[]) => void
   setWaveMessage: (msg: string) => void
   setCameraMode: (v: CameraMode) => void
   setPlaytesting: (v: boolean) => void
@@ -54,6 +56,7 @@ export const useGameStore = create<GameStore>((set) => ({
   wave: 1,
   enemyIds: [],
   bulletIds: [],
+  enemyBulletIds: [],
   waveMessage: '',
   focus: 100,
   isBulletTime: false,
@@ -83,7 +86,8 @@ export const useGameStore = create<GameStore>((set) => ({
     set({ p2Active, p2Health, p2Ammo, p2MaxAmmo }),
   setBulletTime: (focus, isBulletTime) => set({ focus, isBulletTime }),
   setEnemyIds:   (ids) => set({ enemyIds: ids }),
-  setBulletIds:  (ids) => set({ bulletIds: ids }),
+  setBulletIds:      (ids) => set({ bulletIds: ids }),
+  setEnemyBulletIds: (ids) => set({ enemyBulletIds: ids }),
   setWaveMessage: (msg) => set({ waveMessage: msg }),
   setCameraMode:  (cameraMode) => set({ cameraMode }),
   setPlaytesting: (isPlaytesting) => set({ isPlaytesting }),
@@ -92,7 +96,7 @@ export const useGameStore = create<GameStore>((set) => ({
   reset: () =>
     set({
       health: 100, score: 0, wave: 1,
-      enemyIds: [], bulletIds: [], waveMessage: '',
+      enemyIds: [], bulletIds: [], enemyBulletIds: [], waveMessage: '',
       focus: 100, isBulletTime: false,
       ammo: 48, maxAmmo: 48, creditsEarned: 0, cameraMode: 'topdown',
       gameMode: 'arena',
