@@ -573,9 +573,242 @@ export function startGameMusic10() {
   _track = 'game10'
 }
 
+// ── Game track 11 — Cyberpunk (G minor, 128 BPM) ─────────────────────────────
+
+const G11_BPM = 128, G11_BEAT = 60/G11_BPM, G11_16T = G11_BEAT/4, G11_BAR = G11_BEAT*4
+const G11_BASS = [49, 49, 73.42, 49, 58.27, 49, 65.41, 73.42]
+const G11_LEAD = [392, 349.23, 392, 440, 392, 349.23, 311.13, 349.23]
+
+function scheduleGame11Bar(t: number) {
+  kick(t, 0.52); kick(t+G11_BEAT*2, 0.48)
+  snare(t+G11_BEAT, 0.20); snare(t+G11_BEAT*3, 0.20)
+  for (let i=0;i<16;i++) hihat(t+G11_16T*i, i%4===0?0.07:i%2===0?0.04:0.02, 0.018)
+  for (let i=0;i<8;i++) {
+    note(G11_BASS[i], t+(G11_BEAT/2)*i, (G11_BEAT/2)*0.85, 0.28, 'sawtooth', 320)
+    note(G11_LEAD[i], t+(G11_BEAT/2)*i, (G11_BEAT/2)*0.6, 0.11, 'square', 3000)
+  }
+}
+
+export function startGameMusic11() {
+  if (_track === 'game11') return
+  startScheduler(G11_BAR, scheduleGame11Bar)
+  startPad([49, 73.42, 98, 146.83], 'sawtooth', 600, 0.018)
+  _track = 'game11'
+}
+
+// ── Game track 12 — Hardstyle (A minor, 150 BPM) ─────────────────────────────
+
+const G12_BPM = 150, G12_BEAT = 60/G12_BPM, G12_16T = G12_BEAT/4, G12_BAR = G12_BEAT*4
+const G12_BASS = [55, 55, 55, 82.41, 55, 55, 82.41, 55]
+
+function scheduleGame12Bar(t: number) {
+  kick(t, 0.70); kick(t+G12_BEAT*2, 0.65)
+  snare(t+G12_BEAT, 0.30); snare(t+G12_BEAT*3, 0.30)
+  for (let i=0;i<16;i++) hihat(t+G12_16T*i, 0.05, 0.015)
+  for (let i=0;i<8;i++)
+    note(G12_BASS[i], t+(G12_BEAT/2)*i, (G12_BEAT/2)*0.7, 0.32, 'sawtooth', 280)
+  note(220, t, G12_BEAT*2, 0.08, 'sine', 1800)
+  note(196, t+G12_BEAT*2, G12_BEAT*2, 0.08, 'sine', 1800)
+}
+
+export function startGameMusic12() {
+  if (_track === 'game12') return
+  startScheduler(G12_BAR, scheduleGame12Bar)
+  startPad([55, 82.41, 110], 'sawtooth', 300, 0.020)
+  _track = 'game12'
+}
+
+// ── Game track 13 — Dark Electro (C minor, 140 BPM) ──────────────────────────
+
+const G13_BPM = 140, G13_BEAT = 60/G13_BPM, G13_16T = G13_BEAT/4, G13_BAR = G13_BEAT*4
+const G13_BASS = [65.41, 65.41, 77.78, 65.41, 65.41, 87.31, 77.78, 65.41]
+const G13_LEAD = [261.63, 311.13, 349.23, 311.13, 261.63, 233.08, 246.94, 261.63]
+
+function scheduleGame13Bar(t: number) {
+  kick(t, 0.55); kick(t+G13_BEAT, 0.30); kick(t+G13_BEAT*2, 0.55); kick(t+G13_BEAT*3, 0.30)
+  snare(t+G13_BEAT, 0.22); snare(t+G13_BEAT*3, 0.22)
+  for (let i=0;i<16;i++) hihat(t+G13_16T*i, i%2===0?0.06:0.03, 0.016)
+  for (let i=0;i<8;i++) {
+    note(G13_BASS[i], t+(G13_BEAT/2)*i, (G13_BEAT/2)*0.8, 0.25, 'sawtooth', 350)
+    note(G13_LEAD[i], t+(G13_BEAT/2)*i, (G13_BEAT/2)*0.65, 0.09, 'square', 2400)
+  }
+}
+
+export function startGameMusic13() {
+  if (_track === 'game13') return
+  startScheduler(G13_BAR, scheduleGame13Bar)
+  startPad([65.41, 97.99, 130.81], 'sawtooth', 400, 0.018)
+  _track = 'game13'
+}
+
+// ── Game track 14 — Breakbeat (E minor, 132 BPM) ─────────────────────────────
+
+const G14_BPM = 132, G14_BEAT = 60/G14_BPM, G14_16T = G14_BEAT/4, G14_BAR = G14_BEAT*4
+const G14_KICK = [0, 0.75, 2, 2.5, 3.25]
+const G14_BASS = [82.41, 82.41, 98, 82.41, 73.42, 82.41, 98, 110]
+const G14_LEAD = [329.63, 392, 440, 392, 329.63, 293.66, 329.63, 392]
+
+function scheduleGame14Bar(t: number) {
+  for (const p of G14_KICK) kick(t+G14_BEAT*p, 0.55)
+  snare(t+G14_BEAT, 0.24); snare(t+G14_BEAT*3, 0.20)
+  for (let i=0;i<16;i++) hihat(t+G14_16T*i, i%4===0?0.07:0.035, 0.020)
+  for (let i=0;i<8;i++) {
+    note(G14_BASS[i], t+(G14_BEAT/2)*i, (G14_BEAT/2)*0.8, 0.26, 'sawtooth', 450)
+    note(G14_LEAD[i], t+(G14_BEAT/2)*i, (G14_BEAT/2)*0.6, 0.10, 'square', 2200)
+  }
+}
+
+export function startGameMusic14() {
+  if (_track === 'game14') return
+  startScheduler(G14_BAR, scheduleGame14Bar)
+  startPad([82.41, 123.47, 164.81], 'sawtooth', 500, 0.016)
+  _track = 'game14'
+}
+
+// ── Game track 15 — Orchestral War (D minor, 90 BPM) ─────────────────────────
+
+const G15_BPM = 90, G15_BEAT = 60/G15_BPM, G15_8TH = G15_BEAT/2, G15_BAR = G15_BEAT*4
+const G15_BASS = [73.42, 55, 65.41, 73.42, 58.27, 55, 61.74, 73.42]
+const G15_MEL  = [293.66, 349.23, 440, 392, 349.23, 311.13, 329.63, 293.66]
+const G15_CTR  = [146.83, 130.81, 146.83, 164.81, 146.83, 130.81, 123.47, 130.81]
+
+function scheduleGame15Bar(t: number) {
+  kick(t, 0.60); kick(t+G15_BEAT*2, 0.55)
+  snare(t+G15_BEAT, 0.28); snare(t+G15_BEAT*3, 0.28)
+  for (let i=0;i<8;i++) hihat(t+G15_8TH*i, i%2===0?0.06:0.03, 0.03)
+  for (let i=0;i<8;i++) {
+    note(G15_BASS[i], t+G15_8TH*i, G15_8TH*0.9, 0.30, 'sine', 200)
+    note(G15_MEL[i],  t+G15_8TH*i, G15_8TH*0.8, 0.13, 'sine', 2800)
+    note(G15_CTR[i],  t+G15_8TH*i, G15_8TH*1.2, 0.07, 'triangle', 1200)
+  }
+}
+
+export function startGameMusic15() {
+  if (_track === 'game15') return
+  startScheduler(G15_BAR, scheduleGame15Bar)
+  startPad([73.42, 110, 146.83, 220], 'sine', 1600, 0.022)
+  _track = 'game15'
+}
+
+// ── Game track 16 — Neurofunk (D minor, 170 BPM) ─────────────────────────────
+
+const G16_BPM = 170, G16_BEAT = 60/G16_BPM, G16_16T = G16_BEAT/4, G16_BAR = G16_BEAT*4
+const G16_KICK = [0, 0.5, 3]
+const G16_SNARE = [2, 3.5]
+const G16_BASS = [36.71, 36.71, 55, 36.71, 43.65, 36.71, 49, 55]
+
+function scheduleGame16Bar(t: number) {
+  for (const p of G16_KICK) kick(t+G16_BEAT*p, 0.60)
+  for (const p of G16_SNARE) snare(t+G16_BEAT*p, 0.26)
+  for (let i=0;i<16;i++) hihat(t+G16_16T*i, i%4===0?0.08:0.03, 0.015)
+  for (let i=0;i<8;i++)
+    note(G16_BASS[i], t+(G16_BEAT/2)*i, (G16_BEAT/2)*0.85, 0.38, 'sine', 130)
+  note(293.66, t, G16_BEAT, 0.08, 'square', 2000)
+  note(311.13, t+G16_BEAT*2, G16_BEAT, 0.08, 'square', 2000)
+}
+
+export function startGameMusic16() {
+  if (_track === 'game16') return
+  startScheduler(G16_BAR, scheduleGame16Bar)
+  startPad([36.71, 55, 73.42], 'sine', 150, 0.025)
+  _track = 'game16'
+}
+
+// ── Game track 17 — Industrial March (B minor, 160 BPM) ──────────────────────
+
+const G17_BPM = 160, G17_BEAT = 60/G17_BPM, G17_16T = G17_BEAT/4, G17_BAR = G17_BEAT*4
+const G17_BASS = [61.74, 61.74, 61.74, 73.42, 61.74, 61.74, 82.41, 61.74]
+const G17_RIFF = [246.94, 293.66, 246.94, 369.99, 246.94, 329.63, 246.94, 277.18]
+
+function scheduleGame17Bar(t: number) {
+  for (let b=0;b<4;b++) { kick(t+G17_BEAT*b, 0.60); kick(t+G17_BEAT*(b+0.5), 0.35) }
+  snare(t+G17_BEAT, 0.28); snare(t+G17_BEAT*3, 0.28)
+  for (let i=0;i<16;i++) hihat(t+G17_16T*i, 0.04, 0.012)
+  for (let i=0;i<8;i++) {
+    note(G17_BASS[i], t+(G17_BEAT/2)*i, (G17_BEAT/2)*0.65, 0.30, 'sawtooth', 300)
+    note(G17_RIFF[i], t+(G17_BEAT/2)*i, (G17_BEAT/2)*0.5, 0.13, 'square', 2600)
+  }
+}
+
+export function startGameMusic17() {
+  if (_track === 'game17') return
+  startScheduler(G17_BAR, scheduleGame17Bar)
+  startPad([61.74, 92.5, 123.47], 'sawtooth', 350, 0.018)
+  _track = 'game17'
+}
+
+// ── Game track 18 — Lo-Fi Hip Hop (C major, 85 BPM) ──────────────────────────
+
+const G18_BPM = 85, G18_BEAT = 60/G18_BPM, G18_8TH = G18_BEAT/2, G18_BAR = G18_BEAT*4
+const G18_BASS = [65.41, 65.41, 77.78, 65.41, 87.31, 65.41, 77.78, 73.42]
+const G18_MEL  = [523.25, 493.88, 440, 392, 440, 493.88, 523.25, 587.33]
+
+function scheduleGame18Bar(t: number) {
+  kick(t, 0.45)
+  hihat(t+G18_BEAT, 0.15, 0.10); hihat(t+G18_BEAT*3+G18_BEAT*0.5, 0.10, 0.08)
+  for (let i=0;i<8;i++) hihat(t+G18_8TH*i, 0.04, 0.04)
+  for (let i=0;i<8;i++) {
+    note(G18_BASS[i], t+G18_8TH*i, G18_8TH*1.1, 0.18, 'sine', 350)
+    if (i%2===0) note(G18_MEL[i], t+G18_8TH*i, G18_8TH*1.5, 0.07, 'triangle', 2500)
+  }
+}
+
+export function startGameMusic18() {
+  if (_track === 'game18') return
+  startScheduler(G18_BAR, scheduleGame18Bar)
+  startPad([65.41, 97.99, 130.81, 196], 'triangle', 1500, 0.020)
+  _track = 'game18'
+}
+
+// ── Game track 19 — Psytrance (A minor, 148 BPM) ─────────────────────────────
+
+const G19_BPM = 148, G19_BEAT = 60/G19_BPM, G19_16T = G19_BEAT/4, G19_BAR = G19_BEAT*4
+const G19_ARP  = [220, 261.63, 329.63, 440, 523.25, 440, 329.63, 261.63]
+const G19_BASS = [55, 55, 55, 82.41, 55, 55, 55, 65.41]
+
+function scheduleGame19Bar(t: number) {
+  for (let b=0;b<4;b++) kick(t+G19_BEAT*b, 0.60)
+  snare(t+G19_BEAT, 0.16); snare(t+G19_BEAT*3, 0.16)
+  for (let i=0;i<16;i++) hihat(t+G19_16T*i, i%4===0?0.09:0.04, 0.018)
+  for (let i=0;i<16;i++)
+    note(G19_ARP[i%8], t+G19_16T*i, G19_16T*1.2, 0.09, 'sine', 5000)
+  for (let i=0;i<8;i++)
+    note(G19_BASS[i], t+(G19_BEAT/2)*i, (G19_BEAT/2)*0.85, 0.28, 'sine', 160)
+}
+
+export function startGameMusic19() {
+  if (_track === 'game19') return
+  startScheduler(G19_BAR, scheduleGame19Bar)
+  startPad([55, 82.41, 110, 164.81], 'sine', 3500, 0.016)
+  _track = 'game19'
+}
+
+// ── Game track 20 — Minimal Techno (F minor, 135 BPM) ────────────────────────
+
+const G20_BPM = 135, G20_BEAT = 60/G20_BPM, G20_16T = G20_BEAT/4, G20_BAR = G20_BEAT*4
+const G20_BASS = [43.65, 43.65, 65.41, 43.65, 58.27, 43.65, 65.41, 43.65]
+const G20_LEAD = [174.61, 207.65, 174.61, 261.63, 174.61, 207.65, 233.08, 174.61]
+
+function scheduleGame20Bar(t: number) {
+  for (let b=0;b<4;b++) kick(t+G20_BEAT*b, 0.52)
+  snare(t+G20_BEAT*2, 0.18)
+  for (let i=0;i<16;i++) hihat(t+G20_16T*i, i%2===0?0.07:0.03, 0.016)
+  for (let i=0;i<8;i++) {
+    note(G20_BASS[i], t+(G20_BEAT/2)*i, (G20_BEAT/2)*0.8, 0.30, 'sawtooth', 280)
+    note(G20_LEAD[i], t+(G20_BEAT/2)*i, (G20_BEAT/2)*0.55, 0.09, 'square', 1800)
+  }
+}
+
+export function startGameMusic20() {
+  if (_track === 'game20') return
+  startScheduler(G20_BAR, scheduleGame20Bar)
+  startPad([43.65, 65.41, 87.31], 'sawtooth', 420, 0.018)
+  _track = 'game20'
+}
+
 // ── Preview ───────────────────────────────────────────────────────────────────
 
-export function previewTrack(track: 'game1' | 'game2' | 'game3' | 'game4' | 'game5' | 'game6' | 'game7' | 'game8' | 'game9' | 'game10', durationMs = 7000) {
+export function previewTrack(track: 'game1' | 'game2' | 'game3' | 'game4' | 'game5' | 'game6' | 'game7' | 'game8' | 'game9' | 'game10' | 'game11' | 'game12' | 'game13' | 'game14' | 'game15' | 'game16' | 'game17' | 'game18' | 'game19' | 'game20', durationMs = 7000) {
   stopMusic()  // clears _track so the start guards pass, cancels any existing preview timer
   if      (track === 'game1')  startGameMusic()
   else if (track === 'game2')  startGameMusic2()
@@ -586,7 +819,17 @@ export function previewTrack(track: 'game1' | 'game2' | 'game3' | 'game4' | 'gam
   else if (track === 'game7')  startGameMusic7()
   else if (track === 'game8')  startGameMusic8()
   else if (track === 'game9')  startGameMusic9()
-  else                         startGameMusic10()
+  else if (track === 'game10') startGameMusic10()
+  else if (track === 'game11') startGameMusic11()
+  else if (track === 'game12') startGameMusic12()
+  else if (track === 'game13') startGameMusic13()
+  else if (track === 'game14') startGameMusic14()
+  else if (track === 'game15') startGameMusic15()
+  else if (track === 'game16') startGameMusic16()
+  else if (track === 'game17') startGameMusic17()
+  else if (track === 'game18') startGameMusic18()
+  else if (track === 'game19') startGameMusic19()
+  else                         startGameMusic20()
   _previewTimer = setTimeout(() => {
     _previewTimer = null
     stopMusic()

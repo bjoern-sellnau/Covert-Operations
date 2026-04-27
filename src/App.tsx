@@ -3,7 +3,7 @@ import { useGameStore } from './store/gameStore'
 import { useNetStore } from './net/netStore'
 import { useSettingsStore } from './store/settingsStore'
 import { socket } from './net/socket'
-import { startMenuMusic, startGameMusic, startGameMusic2, startGameMusic3, startGameMusic4, startGameMusic5, startGameMusic6, startGameMusic7, startGameMusic8, startGameMusic9, startGameMusic10, startSkydiveMusic, stopMusic } from './game/music'
+import { startMenuMusic, startGameMusic, startGameMusic2, startGameMusic3, startGameMusic4, startGameMusic5, startGameMusic6, startGameMusic7, startGameMusic8, startGameMusic9, startGameMusic10, startGameMusic11, startGameMusic12, startGameMusic13, startGameMusic14, startGameMusic15, startGameMusic16, startGameMusic17, startGameMusic18, startGameMusic19, startGameMusic20, startSkydiveMusic, stopMusic } from './game/music'
 import { Game } from './game/Game'
 import { HUD } from './components/HUD'
 import { MainMenu } from './components/MainMenu'
@@ -54,6 +54,16 @@ export function App() {
     else if (musicTrack === 'game8')  startGameMusic8()
     else if (musicTrack === 'game9')  startGameMusic9()
     else if (musicTrack === 'game10') startGameMusic10()
+    else if (musicTrack === 'game11') startGameMusic11()
+    else if (musicTrack === 'game12') startGameMusic12()
+    else if (musicTrack === 'game13') startGameMusic13()
+    else if (musicTrack === 'game14') startGameMusic14()
+    else if (musicTrack === 'game15') startGameMusic15()
+    else if (musicTrack === 'game16') startGameMusic16()
+    else if (musicTrack === 'game17') startGameMusic17()
+    else if (musicTrack === 'game18') startGameMusic18()
+    else if (musicTrack === 'game19') startGameMusic19()
+    else if (musicTrack === 'game20') startGameMusic20()
     else startGameMusic()
   }, [phase, musicEnabled, musicTrack])
 

@@ -14,7 +14,7 @@ export function OptionsScreen() {
 
   const [previewing, setPreviewing] = useState<string | null>(null)
 
-  type PreviewId = 'game1' | 'game2' | 'game3' | 'game4' | 'game5' | 'game6' | 'game7' | 'game8' | 'game9' | 'game10'
+  type PreviewId = 'game1' | 'game2' | 'game3' | 'game4' | 'game5' | 'game6' | 'game7' | 'game8' | 'game9' | 'game10' | 'game11' | 'game12' | 'game13' | 'game14' | 'game15' | 'game16' | 'game17' | 'game18' | 'game19' | 'game20'
 
   function handlePreview(val: PreviewId) {
     if (previewing === val) {
@@ -58,6 +58,16 @@ export function OptionsScreen() {
     ['game8',  'TRACK 8',  '#ffdd00', 'H-Moll 112 BPM Spy Jazz'],
     ['game9',  'TRACK 9',  '#aa00ff', 'D-Moll 174 BPM Drum & Bass'],
     ['game10', 'TRACK 10', '#ff66cc', 'A-Moll 100 BPM Synthwave'],
+    ['game11', 'TRACK 11', '#33ddff', 'G-Moll 128 BPM Cyberpunk'],
+    ['game12', 'TRACK 12', '#ff3300', 'A-Moll 150 BPM Hardstyle'],
+    ['game13', 'TRACK 13', '#00ff99', 'C-Moll 140 BPM Dark Electro'],
+    ['game14', 'TRACK 14', '#ff9900', 'E-Moll 132 BPM Breakbeat'],
+    ['game15', 'TRACK 15', '#eeeeee', 'D-Moll 90 BPM Orchestral War'],
+    ['game16', 'TRACK 16', '#bb00ff', 'D-Moll 170 BPM Neurofunk'],
+    ['game17', 'TRACK 17', '#ff4400', 'H-Moll 160 BPM Industrial March'],
+    ['game18', 'TRACK 18', '#88ccff', 'C-Dur 85 BPM Lo-Fi'],
+    ['game19', 'TRACK 19', '#00eebb', 'A-Moll 148 BPM Psytrance'],
+    ['game20', 'TRACK 20', '#cc99ff', 'F-Moll 135 BPM Minimal Techno'],
   ]
 
   return (
