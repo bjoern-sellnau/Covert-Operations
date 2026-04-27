@@ -36,6 +36,7 @@ import {
   MAX_BOUNCES,
   VERNICHTER_SPEED, VERNICHTER_RADIUS, VERNICHTER_DAMAGE,
   LASER_RANGE, LASER_WIDTH,
+  ION_DELAY, ION_BEAM_DURATION, ION_RADIUS,
 } from './types'
 import type { EnemyType } from './types'
 import { Arena } from './Arena'
@@ -269,6 +270,8 @@ export function GameScene() {
   const vernichterMeshRef    = useRef<THREE.Mesh>(null)
   const vernichterLightRef   = useRef<THREE.PointLight>(null)
   const laserBeamMeshRef     = useRef<THREE.Mesh>(null)
+  const ionReticleMeshRef    = useRef<THREE.Mesh>(null)
+  const ionBeamMeshRefs      = [useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null)]
   const weaponProjMeshRef    = useRef<THREE.Mesh>(null)
   const weaponProjLightRef   = useRef<THREE.PointLight>(null)
   const MAX_BANANAS = 6
@@ -299,6 +302,7 @@ export function GameScene() {
   const rPrev     = useRef(false)
   const vPrev     = useRef(false)
   const lPrev     = useRef(false)
+  const iPrev     = useRef(false)
   // Edge-detection refs — P2
   const p2GrenPrev   = useRef(false)
   const p2GpShootPrev = useRef(false)
@@ -341,6 +345,7 @@ export function GameScene() {
     entityStore.grenadeCount   = isRange ? 99 : 3
     entityStore.vernichterAmmo = loadout.vernichterStock
     entityStore.laserAmmo      = loadout.laserStock
+    entityStore.ionAmmo        = loadout.ionStock
     entityStore.ammo2          = isRange ? 9999 : loadout.getMaxAmmo()
     entityStore.maxAmmo2       = entityStore.ammo2
     entityStore.grenadeCount2  = isRange ? 99 : 3
@@ -557,6 +562,7 @@ export function GameScene() {
     const rDown     = keys.has('KeyR')
     const vDown     = keys.has('KeyV')
     const lDown     = keys.has('KeyL')
+    const iDown     = keys.has('KeyI')
     const spaceJust = (spaceDown && !spacePrev.current) || mobileDiveJust
     const qJust     = qDown     && !qPrev.current
     const eJust     = eDown     && !ePrev.current
@@ -564,6 +570,7 @@ export function GameScene() {
     const rJust     = rDown     && !rPrev.current   // reload
     const vJust     = vDown     && !vPrev.current   // vernichter
     const lJust     = lDown     && !lPrev.current   // death laser
+    const iJust     = iDown     && !iPrev.current   // ion cannon
     spacePrev.current = spaceDown
     qPrev.current     = qDown
     ePrev.current     = eDown
@@ -571,6 +578,7 @@ export function GameScene() {
     rPrev.current     = rDown
     vPrev.current     = vDown
     lPrev.current     = lDown
+    iPrev.current     = iDown
 
     // ── Number keys 1-5: weapon switching ────────────────────────────────────
     {
@@ -1467,6 +1475,61 @@ export function GameScene() {
       laserBeamMeshRef.current.visible = false
     }
 
+    // ── Ion Cannon (I) ───────────────────────────────────────────────────────
+    if (iJust && es.ionAmmo > 0 && !es.ionTarget) {
+      es.ionAmmo--
+      es.ionTarget = { x: es.mouseWorld.x, z: es.mouseWorld.z, delay: ION_DELAY, beamTimer: 0 }
+    }
+
+    if (es.ionTarget) {
+      const ion = es.ionTarget
+      if (ion.delay > 0) {
+        // Countdown — show reticle
+        ion.delay -= rawDt
+        if (ionReticleMeshRef.current) {
+          const pulse = Math.sin(now * 12) * 0.1 + 1
+          ionReticleMeshRef.current.position.set(ion.x, 0.05, ion.z)
+          ionReticleMeshRef.current.scale.set(pulse, 1, pulse)
+          ionReticleMeshRef.current.visible = true
+        }
+        ionBeamMeshRefs.forEach((r) => { if (r.current) r.current.visible = false })
+      } else if (ion.beamTimer === 0) {
+        // Impact frame: deal damage
+        ion.beamTimer = ION_BEAM_DURATION
+        if (ionReticleMeshRef.current) ionReticleMeshRef.current.visible = false
+        spawnParticles(ion.x, ion.z, 'explosion', 80)
+        spawnParticles(ion.x, ion.z, 'explosion', 60)
+        spawnParticles(ion.x, ion.z, 'spark', 40)
+        spawnDecal(ion.x, ion.z, 3.5)
+        doSplash(ion.x, ion.z, ION_RADIUS, 999, true, true)
+      } else {
+        // Beam visible phase
+        ion.beamTimer -= rawDt
+        if (ionReticleMeshRef.current) ionReticleMeshRef.current.visible = false
+        const beamFade = Math.max(0, ion.beamTimer / ION_BEAM_DURATION)
+        const offsets = [[-1,  -1], [1, -1], [-1, 1], [1, 1]] as const
+        ionBeamMeshRefs.forEach((r, idx) => {
+          if (!r.current) return
+          const [ox, oz] = offsets[idx]
+          const bx = ion.x + ox * ION_RADIUS * 0.6
+          const bz = ion.z + oz * ION_RADIUS * 0.6
+          r.current.position.set(bx, 15 * (1 - beamFade), bz)
+          r.current.scale.set(0.4 * beamFade, 30, 0.4 * beamFade)
+          r.current.visible = true
+          const mat = r.current.material as THREE.MeshStandardMaterial
+          mat.emissiveIntensity = 8 * beamFade
+          mat.opacity = beamFade
+        })
+        if (ion.beamTimer <= 0) {
+          es.ionTarget = null
+          ionBeamMeshRefs.forEach((r) => { if (r.current) r.current.visible = false })
+        }
+      }
+    } else {
+      if (ionReticleMeshRef.current) ionReticleMeshRef.current.visible = false
+      ionBeamMeshRefs.forEach((r) => { if (r.current) r.current.visible = false })
+    }
+
     // ── Update weapon projectile (plasma / bazooka) ───────────────────────────
     if (es.weaponProjectile) {
       const wp  = es.weaponProjectile
@@ -1913,6 +1976,20 @@ export function GameScene() {
         distance={12}
         decay={2}
       />
+
+      {/* Ion Cannon reticle */}
+      <mesh ref={ionReticleMeshRef} visible={false} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[1.8, 2.2, 32]} />
+        <meshStandardMaterial color="#00ffcc" emissive="#00ffcc" emissiveIntensity={4} transparent opacity={0.8} />
+      </mesh>
+
+      {/* Ion Cannon beams (4 pillars) */}
+      {ionBeamMeshRefs.map((ref, i) => (
+        <mesh key={i} ref={ref} visible={false}>
+          <cylinderGeometry args={[1, 1, 1, 8]} />
+          <meshStandardMaterial color="#00ffcc" emissive="#00ffcc" emissiveIntensity={8} transparent opacity={0.9} />
+        </mesh>
+      ))}
 
       {/* Death Laser beam */}
       <mesh ref={laserBeamMeshRef} visible={false}>

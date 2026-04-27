@@ -176,3 +176,9 @@ export const VERNICHTER_AMMO_PRICE = 300
 export const LASER_RANGE      = 40   // beam length in world units
 export const LASER_WIDTH      = 0.8  // beam hit radius (2D circle vs ray)
 export const LASER_AMMO_PRICE = 250
+
+// Ion Cannon
+export const ION_DELAY        = 1.5  // seconds between mark and impact
+export const ION_BEAM_DURATION = 0.6 // seconds beams are visible
+export const ION_RADIUS       = 8    // explosion radius
+export const ION_AMMO_PRICE   = 400

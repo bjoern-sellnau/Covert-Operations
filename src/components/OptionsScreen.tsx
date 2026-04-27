@@ -208,7 +208,8 @@ export function OptionsScreen() {
             WASD — Bewegen &nbsp;·&nbsp; Maus — Zielen &nbsp;·&nbsp; LMT — Schießen<br />
             G — Granate &nbsp;·&nbsp; Space — Dive &nbsp;·&nbsp; Shift — Bullet Time<br />
             1–5 — Waffe wechseln &nbsp;·&nbsp; R — Nachladen &nbsp;·&nbsp; V — Vernichter<br />
-            L — Todeslaser &nbsp;·&nbsp; F — Ego-Perspektive &nbsp;·&nbsp; Q / E — Ballett-Spin (Akimbo)
+            L — Todeslaser &nbsp;·&nbsp; I — Ionen-Kanone &nbsp;·&nbsp; F — Ego-Perspektive<br />
+            Q / E — Ballett-Spin (Akimbo)
           </div>
         </div>
 

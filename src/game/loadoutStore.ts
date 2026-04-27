@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import {
   WEAPON_CONFIGS, EQUIPMENT_CONFIGS, AMMO_CONFIGS,
-  STARTING_CREDITS, AKIMBO_PRICE, VERNICHTER_AMMO_PRICE, LASER_AMMO_PRICE,
+  STARTING_CREDITS, AKIMBO_PRICE, VERNICHTER_AMMO_PRICE, LASER_AMMO_PRICE, ION_AMMO_PRICE,
   type WeaponId, type EquipmentId, type AmmoId,
 } from './types'
 
@@ -16,6 +16,7 @@ interface LoadoutStore {
   isAkimbo: boolean
   vernichterStock: number
   laserStock: number
+  ionStock: number
   meleeStacks: Partial<Record<WeaponId, number>>
 
   addCredits: (n: number) => void
@@ -29,6 +30,7 @@ interface LoadoutStore {
   toggleAkimbo: () => void
   buyVernichterAmmo: () => boolean
   buyLaserAmmo: () => boolean
+  buyIonAmmo: () => boolean
   getMaxAmmo: () => number
   getMaxAmmoFor: (id: WeaponId) => number
   getDamageBonus: () => number
@@ -46,6 +48,7 @@ export const useLoadoutStore = create<LoadoutStore>()(
       isAkimbo: false,
       vernichterStock: 1,
       laserStock: 0,
+      ionStock: 0,
       meleeStacks: {},
 
       addCredits: (n) => set((s) => ({ credits: s.credits + n })),
@@ -153,6 +156,13 @@ export const useLoadoutStore = create<LoadoutStore>()(
         const s = get()
         if (s.credits < LASER_AMMO_PRICE) return false
         set((st) => ({ credits: st.credits - LASER_AMMO_PRICE, laserStock: st.laserStock + 1 }))
+        return true
+      },
+
+      buyIonAmmo: () => {
+        const s = get()
+        if (s.credits < ION_AMMO_PRICE) return false
+        set((st) => ({ credits: st.credits - ION_AMMO_PRICE, ionStock: st.ionStock + 1 }))
         return true
       },
 

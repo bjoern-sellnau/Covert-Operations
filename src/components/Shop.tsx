@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useGameStore } from '../store/gameStore'
 import { useLoadoutStore } from '../game/loadoutStore'
 import {
-  WEAPON_CONFIGS, EQUIPMENT_CONFIGS, AMMO_CONFIGS, AKIMBO_PRICE, VERNICHTER_AMMO_PRICE, LASER_AMMO_PRICE,
+  WEAPON_CONFIGS, EQUIPMENT_CONFIGS, AMMO_CONFIGS, AKIMBO_PRICE, VERNICHTER_AMMO_PRICE, LASER_AMMO_PRICE, ION_AMMO_PRICE,
   type WeaponId, type EquipmentId, type AmmoId,
 } from '../game/types'
 
@@ -542,6 +542,56 @@ function LaserCard() {
   )
 }
 
+// ── Ion Cannon card ──────────────────────────────────────────────────────────
+
+function IonCard() {
+  const { credits, ionStock, buyIonAmmo } = useLoadoutStore()
+  const canAfford = credits >= ION_AMMO_PRICE
+
+  return (
+    <div
+      style={{
+        background: '#001511',
+        border: '1px solid #00ffcc44',
+        borderRadius: 4,
+        padding: '14px 16px',
+        cursor: canAfford ? 'pointer' : 'default',
+        transition: 'border-color 0.15s',
+        boxShadow: '0 0 20px #00ffcc11, inset 0 0 30px #00ccaa08',
+      }}
+      onClick={() => canAfford && buyIonAmmo()}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+        <div>
+          <div style={{ color: '#00ffcc', fontSize: 16, fontWeight: 'bold', letterSpacing: 2, textShadow: '0 0 12px #00ffaa' }}>
+            IONEN-KANONE
+          </div>
+          <div style={{ color: '#335544', fontSize: 11, marginTop: 2, letterSpacing: 1 }}>Orbital-Schlag · [I]-Taste · 1.5s Verzögerung</div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ color: '#00ffcc', fontSize: 11, letterSpacing: 2, padding: '3px 8px', border: '1px solid #00ffaa', borderRadius: 2, marginBottom: 4 }}>
+            ×{ionStock} VORRAT
+          </div>
+          <div style={{ color: canAfford ? '#ffee00' : '#664400', fontSize: 13, fontWeight: 'bold' }}>
+            {ION_AMMO_PRICE} CR / Schuss
+          </div>
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
+        <div style={{ color: '#00ffcc', fontSize: 12, fontWeight: 'bold' }}>Radius: 8m</div>
+        <div style={{ color: '#00ffcc', fontSize: 12, fontWeight: 'bold' }}>4 Strahlen aus dem Orbit</div>
+      </div>
+      <div style={{ color: '#335544', fontSize: 11, lineHeight: 1.5 }}>
+        Zielmarker auf Mausposition setzen. Nach 1.5s konvergieren 4 Ionenstrahlen vom Himmel.
+        Spieler ist immun. Vernichtet alle Gegner im Radius.
+      </div>
+      {!canAfford && (
+        <div style={{ color: '#442200', fontSize: 10, marginTop: 6, letterSpacing: 1 }}>NICHT GENUG CREDITS</div>
+      )}
+    </div>
+  )
+}
+
 // ── Main Shop ────────────────────────────────────────────────────────────────
 
 export function Shop() {
@@ -671,6 +721,7 @@ export function Shop() {
               <div style={{ color: '#553322', fontSize: 10, letterSpacing: 3, marginTop: 8, marginBottom: 4 }}>SPEZIALWAFFEN</div>
               <VernichterCard />
               <LaserCard />
+              <IonCard />
             </>
           )}
 
