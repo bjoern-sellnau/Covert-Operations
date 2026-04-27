@@ -985,8 +985,8 @@ export function GameScene() {
       }
     }
 
-    // Helper: splash explosion (plasma / bazooka / banana)
-    const doSplash = (sx: number, sz: number, radius: number, dmg: number, isLarge: boolean) => {
+    // Helper: splash explosion (plasma / bazooka / banana / bfg)
+    const doSplash = (sx: number, sz: number, radius: number, dmg: number, isLarge: boolean, skipPlayer = false) => {
       if (isLarge) playExplosionLarge()
       else         playExplosionSmall()
       spawnParticles(sx, sz, 'explosion', EXPL_COUNTS[bloodIntensity])
@@ -1009,11 +1009,13 @@ export function GameScene() {
           }
         }
       }
-      _diff.set(sx - es.player.position.x, sz - es.player.position.y)
-      if (_diff.length() < radius && now > es.player.invincibleUntil) {
-        const falloff = 1 - _diff.length() / radius
-        es.player.health -= Math.round(dmg * 0.5 * falloff)
-        es.player.invincibleUntil = now + INVINCIBLE_DURATION
+      if (!skipPlayer) {
+        _diff.set(sx - es.player.position.x, sz - es.player.position.y)
+        if (_diff.length() < radius && now > es.player.invincibleUntil) {
+          const falloff = 1 - _diff.length() / radius
+          es.player.health -= Math.round(dmg * 0.5 * falloff)
+          es.player.invincibleUntil = now + INVINCIBLE_DURATION
+        }
       }
     }
 
@@ -1402,30 +1404,34 @@ export function GameScene() {
 
       const projRadius  = wcf.projectileRadius ?? 2.5
       const projDamage  = wcf.projectileDamage ?? 30
+      const isBfgProj   = loadout.selectedWeapon === 'bfg'
       const isLargeProj = loadout.selectedWeapon === 'bazooka'
 
       if (weaponProjMeshRef.current) {
-        const pulse = Math.sin(now * 14) * 0.1 + 1
-        weaponProjMeshRef.current.position.set(wp.x, 0.35, wp.z)
-        weaponProjMeshRef.current.scale.setScalar(pulse)
+        const pulse = Math.sin(now * (isBfgProj ? 6 : 14)) * (isBfgProj ? 0.2 : 0.1) + 1
+        weaponProjMeshRef.current.position.set(wp.x, 0.5, wp.z)
+        weaponProjMeshRef.current.scale.setScalar(pulse * (isBfgProj ? 3.5 : 1))
         weaponProjMeshRef.current.visible = true
         const mat = weaponProjMeshRef.current.material as THREE.MeshStandardMaterial
-        mat.color.set(isLargeProj ? '#ff6600' : '#00ccff')
-        mat.emissive.set(isLargeProj ? '#ff2200' : '#0066ff')
+        mat.color.set(isBfgProj ? '#00ff44' : isLargeProj ? '#ff6600' : '#00ccff')
+        mat.emissive.set(isBfgProj ? '#00cc22' : isLargeProj ? '#ff2200' : '#0066ff')
+        mat.emissiveIntensity = isBfgProj ? 3 : 2
       }
       if (weaponProjLightRef.current) {
-        weaponProjLightRef.current.position.set(wp.x, 1.2, wp.z)
-        weaponProjLightRef.current.color.set(isLargeProj ? '#ff4400' : '#00aaff')
+        weaponProjLightRef.current.position.set(wp.x, 1.5, wp.z)
+        weaponProjLightRef.current.color.set(isBfgProj ? '#00ff44' : isLargeProj ? '#ff4400' : '#00aaff')
+        weaponProjLightRef.current.intensity = isBfgProj ? 16 : 5
+        weaponProjLightRef.current.distance  = isBfgProj ? 20 : 10
         weaponProjLightRef.current.visible = true
       }
 
       const oob = Math.abs(wp.x) > ARENA_HALF - 0.5 || Math.abs(wp.z) > ARENA_HALF - 0.5
       let hitSomething = oob
-      if (!oob && level && pointIntersectsLevel(wp.x, wp.z, 0.25, level)) hitSomething = true
+      if (!oob && level && pointIntersectsLevel(wp.x, wp.z, isBfgProj ? 1.0 : 0.25, level)) hitSomething = true
       if (!hitSomething) {
         for (const enemy of es.enemies.values()) {
           _diff.set(wp.x - enemy.position.x, wp.z - enemy.position.y)
-          if (_diff.length() < ENEMY_CONFIGS[enemy.type].size + 0.4) { hitSomething = true; break }
+          if (_diff.length() < ENEMY_CONFIGS[enemy.type].size + (isBfgProj ? 1.5 : 0.4)) { hitSomething = true; break }
         }
       }
 
@@ -1433,7 +1439,13 @@ export function GameScene() {
         es.weaponProjectile = null
         if (weaponProjMeshRef.current)  weaponProjMeshRef.current.visible  = false
         if (weaponProjLightRef.current) weaponProjLightRef.current.visible = false
-        doSplash(wp.x, wp.z, projRadius, projDamage, isLargeProj)
+        if (isBfgProj) {
+          // Extra BFG explosion particles
+          spawnParticles(wp.x, wp.z, 'explosion', 80)
+          spawnParticles(wp.x, wp.z, 'explosion', 60)
+          spawnParticles(wp.x, wp.z, 'spark', SPARK_COUNTS[bloodIntensity] * 3)
+        }
+        doSplash(wp.x, wp.z, projRadius, projDamage, isLargeProj || isBfgProj, isBfgProj)
       }
     } else {
       if (weaponProjMeshRef.current)  weaponProjMeshRef.current.visible  = false

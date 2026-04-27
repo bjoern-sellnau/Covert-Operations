@@ -1,7 +1,7 @@
 export type GamePhase = 'menu' | 'missions' | 'briefing' | 'mutators' | 'lobby' | 'options' | 'shop' | 'playing' | 'gameover' | 'editor' | 'skydive' | 'skydive_win'
 
 export type EnemyType = 'basic' | 'fast' | 'tank' | 'berserker' | 'flanker' | 'juggernaut'
-export type WeaponId = 'pistol' | 'smg' | 'shotgun' | 'rifle' | 'uzi' | 'mp5' | 'm16' | 'blaster' | 'plasma' | 'bazooka' | 'flak' | 'banana' | 'knife' | 'bat' | 'stick'
+export type WeaponId = 'pistol' | 'smg' | 'shotgun' | 'rifle' | 'uzi' | 'mp5' | 'm16' | 'blaster' | 'plasma' | 'bazooka' | 'flak' | 'banana' | 'knife' | 'bat' | 'stick' | 'bfg'
 export type EquipmentId = 'backpack' | 'chest_pouch' | 'leg_pouch'
 export type AmmoId = 'standard' | 'hollow_point' | 'ap'
 
@@ -82,6 +82,8 @@ export const WEAPON_CONFIGS: Record<WeaponId, WeaponConfig> = {
   plasma:  { name: 'Plasma-Werfer',        shortName: 'PLSM',  price: 320, baseDamage: 8,   pellets: 1, spread: 0,    shootCooldown: 0.7,   bulletSpeed: 8,  baseAmmo: 15,  statDamage: 5, statRate: 2, statRange: 3, reloadTime: 3.0, description: 'Langsames Projektil. Explosiv bei Einschlag (Radius 2.5m).', isProjectile: true, projectileSpeed: 8, projectileRadius: 2.5, projectileDamage: 30 },
   bazooka: { name: 'Panzerfaust RPG',      shortName: 'RPG',   price: 380, baseDamage: 20,  pellets: 1, spread: 0,    shootCooldown: 1.2,   bulletSpeed: 11, baseAmmo: 8,   statDamage: 5, statRate: 1, statRange: 4, reloadTime: 3.5, description: 'Schwere Rakete. Massiver Splash-Schaden (Radius 4.5m).', isProjectile: true, projectileSpeed: 11, projectileRadius: 4.5, projectileDamage: 70 },
   banana:  { name: 'Bananenwerfer',        shortName: 'BNNA',  price: 280, baseDamage: 15,  pellets: 1, spread: 0.05, shootCooldown: 0.9,   bulletSpeed: 10, baseAmmo: 12,  statDamage: 4, statRate: 2, statRange: 3, reloadTime: 2.5, description: 'Springende Granate. Explodiert nach 3s oder 5 Abprallern.', isBanana: true, maxBounces: 5, projectileRadius: 3.5, projectileDamage: 55 },
+
+  bfg:     { name: 'BFG-9000',              shortName: 'BFG',   price: 500, baseDamage: 999, pellets: 1, spread: 0, shootCooldown: 2.5, bulletSpeed: 4,  baseAmmo: 3,   statDamage: 5, statRate: 1, statRange: 5, reloadTime: 4.5, description: 'Massive grüne Plasmakugel. Vernichtet alle Gegner im Umkreis (Radius 12m). Spieler ist immun.', isProjectile: true, projectileSpeed: 4, projectileRadius: 12, projectileDamage: 999 },
 
   // ── Nahkampf ─────────────────────────────────────────────────────────────
   knife: { name: 'Messer',             shortName: 'MESSER', price: 60,  baseDamage: 28,  pellets: 1, spread: 0, shootCooldown: 0.38, bulletSpeed: 0, baseAmmo: 20,   statDamage: 3, statRate: 4, statRange: 1, reloadTime: 0, description: 'Schnelle Stiche. 20 Treffer, dann kaputt. Schaden nimmt ab.', isMelee: true, stackable: true, meleeRange: 1.6, meleeArc: Math.PI * 0.55 },

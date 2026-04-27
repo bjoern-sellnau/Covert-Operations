@@ -617,7 +617,7 @@ export function Shop() {
                 <WeaponCard key={id} id={id} />
               ))}
               <div style={{ color: '#553322', fontSize: 10, letterSpacing: 3, marginTop: 8, marginBottom: 4 }}>SCHWERE WAFFEN</div>
-              {(['plasma', 'bazooka', 'banana'] as WeaponId[]).map((id) => (
+              {(['plasma', 'bazooka', 'banana', 'bfg'] as WeaponId[]).map((id) => (
                 <WeaponCard key={id} id={id} />
               ))}
               <div style={{ color: '#553322', fontSize: 10, letterSpacing: 3, marginTop: 8, marginBottom: 4 }}>BFG</div>
