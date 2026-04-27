@@ -19,7 +19,7 @@ import type { NetGameState, NetPlayerInput } from '../net/netTypes'
 import { mobileInput } from '../store/mobileStore'
 import { useLoadoutStore } from './loadoutStore'
 import { useEditorStore } from '../editor/editorStore'
-import { useSettingsStore, BLOOD_COUNTS, EXPL_COUNTS, SPARK_COUNTS } from '../store/settingsStore'
+import { useSettingsStore, BLOOD_COUNTS, EXPL_COUNTS, SPARK_COUNTS, DIFFICULTY_MULTS } from '../store/settingsStore'
 import { useInput } from './useInput'
 import { spawnWave } from './spawnWave'
 import { GameLevelObjects, resolveCircleVsLevel, pointIntersectsLevel } from './GameLevelObjects'
@@ -317,6 +317,8 @@ export function GameScene() {
   useEffect(() => {
     if (phase !== 'playing') return
     resetEntityStore()
+    const playerHpMult = DIFFICULTY_MULTS[useSettingsStore.getState().difficulty][3]
+    entityStore.player.health = Math.round(100 * playerHpMult)
     resetScriptRuntime()
     useGameStore.getState().reset()
 
@@ -350,7 +352,7 @@ export function GameScene() {
       entityStore.p2Lives          = mutators.lives === 0 ? 999 : mutators.lives
     }
 
-    const ids = spawnWave(1)
+    const ids = spawnWave(1, DIFFICULTY_MULTS[useSettingsStore.getState().difficulty][0])
     setEnemyIds(ids)
     setWaveMessage(isRange ? 'SCHIESSTAND — Unbegrenzte Munition' : 'Wave 1')
     setTimeout(() => setWaveMessage(''), 2500)
@@ -443,6 +445,7 @@ export function GameScene() {
     const bloodIntensity = useSettingsStore.getState().bloodIntensity
     const netRole        = useNetStore.getState().role
     const mobileControls = useSettingsStore.getState().mobileControls
+    const [diffHpMult, diffDmgMult, diffSpeedMult, diffPlayerHpMult] = DIFFICULTY_MULTS[useSettingsStore.getState().difficulty]
 
     // Consume one-shot mobile flags at the top of the frame
     const mobileGrenJust = mobileInput.grenadeJust;    mobileInput.grenadeJust    = false
@@ -1523,8 +1526,8 @@ export function GameScene() {
 
         // Non-berserker enemies slow to 30% when within shooting range
         const speedMult = (enemy.type !== 'berserker' && dist < cfg.shootRange) ? 0.3 : 1.0
-        _toPlayer.x = mx * cfg.speed * speedMult * dt
-        _toPlayer.y = mz * cfg.speed * speedMult * dt
+        _toPlayer.x = mx * cfg.speed * speedMult * diffSpeedMult * dt
+        _toPlayer.y = mz * cfg.speed * speedMult * diffSpeedMult * dt
         let ex = enemy.position.x + _toPlayer.x
         let ez = enemy.position.y + _toPlayer.y
         if (level) { const r = resolveCircleVsLevel(ex, ez, cfg.size, level); ex = r.x; ez = r.z }
@@ -1570,7 +1573,7 @@ export function GameScene() {
           ),
           velocity: new THREE.Vector2(aimX * cfg.bulletSpeed, aimY * cfg.bulletSpeed),
           lifetime: 3.5,
-          damage: cfg.damage,
+          damage: Math.round(cfg.damage * diffDmgMult),
         })
         setEnemyBulletIds(Array.from(es.enemyBullets.keys()))
       }
@@ -1629,7 +1632,7 @@ export function GameScene() {
       es.waveBreakTimer -= dt
       if (es.waveBreakTimer <= 0) {
         es.inWaveBreak = false; es.wave++
-        const ids = spawnWave(es.wave)
+        const ids = spawnWave(es.wave, diffHpMult)
         setEnemyIds(ids)
         setWaveMessage(`Wave ${es.wave}`)
         setTimeout(() => setWaveMessage(''), 2000)
@@ -1641,12 +1644,13 @@ export function GameScene() {
     const p2Dead  = !es.player2Active || es.player2.health <= 0
     const isRange = useGameStore.getState().gameMode === 'shooting_range'
 
+    const maxPlayerHp = Math.round(100 * diffPlayerHpMult)
     if (p1Dead && isRange) {
-      es.player.health = 100
+      es.player.health = maxPlayerHp
     } else if (p1Dead && mutators.gameType === 'roundtime' && es.playerLives > 0) {
       // Lives-based respawn
       es.playerLives--
-      es.player.health = 100
+      es.player.health = maxPlayerHp
       es.player.position.set(0, 0)
       es.player.invincibleUntil = now + 2.2
     } else if (p1Dead && p2Dead && !isRange && !gameOverFiredRef.current) {

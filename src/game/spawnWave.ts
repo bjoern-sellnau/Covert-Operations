@@ -38,7 +38,7 @@ function spawnEdgePosition(): THREE.Vector2 {
   }
 }
 
-export function spawnWave(wave: number): string[] {
+export function spawnWave(wave: number, hpMult = 1): string[] {
   const types = getWaveComposition(wave)
   const ids: string[] = []
 
@@ -47,7 +47,7 @@ export function spawnWave(wave: number): string[] {
     entityStore.enemies.set(id, {
       id,
       position: spawnEdgePosition(),
-      health: ENEMY_CONFIGS[type].health,
+      health: Math.ceil(ENEMY_CONFIGS[type].health * hpMult),
       type,
       hitTime: -999,
       lastDamageTime: -999,

@@ -1,13 +1,15 @@
 import { useState } from 'react'
 import { useGameStore } from '../store/gameStore'
-import { useSettingsStore } from '../store/settingsStore'
+import { useSettingsStore, DIFFICULTY_LABELS, DIFFICULTY_MULTS } from '../store/settingsStore'
+import type { Difficulty } from '../store/settingsStore'
 import { useLoadoutStore } from '../game/loadoutStore'
 import { previewTrack, stopMusic } from '../game/music'
 
 export function OptionsScreen() {
   const setPhase            = useGameStore((s) => s.setPhase)
   const { bloodIntensity, setBloodIntensity, mobileControls, setMobileControls,
-          musicEnabled, setMusicEnabled, musicTrack, setMusicTrack } = useSettingsStore()
+          musicEnabled, setMusicEnabled, musicTrack, setMusicTrack,
+          difficulty, setDifficulty } = useSettingsStore()
   const { credits, setCredits } = useLoadoutStore()
 
   const [previewing, setPreviewing] = useState<string | null>(null)
@@ -73,6 +75,27 @@ export function OptionsScreen() {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: 'min(92vw, 420px)', paddingBottom: 24 }}>
+
+        {/* ── Difficulty ── */}
+        <div style={section}>
+          <div style={labelStyle}>Schwierigkeitsgrad</div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {(Object.keys(DIFFICULTY_LABELS) as Difficulty[]).map((d) => {
+              const colors: Record<Difficulty, string> = {
+                ultra_easy: '#00ff88', very_easy: '#44ee44', easy: '#aaee00',
+                normal: '#ffee00', hard: '#ff8800', hardcore: '#ff4400', nightmare: '#ff0044',
+              }
+              return (
+                <button key={d} style={tog(difficulty === d, colors[d])} onClick={() => setDifficulty(d)}>
+                  {DIFFICULTY_LABELS[d]}
+                </button>
+              )
+            })}
+          </div>
+          <div style={{ color: '#667788', fontSize: 9, letterSpacing: 1 }}>
+            {`Gegner-HP ×${DIFFICULTY_MULTS[difficulty][0]} · Schaden ×${DIFFICULTY_MULTS[difficulty][1]} · Speed ×${DIFFICULTY_MULTS[difficulty][2]} · Spieler-HP ×${DIFFICULTY_MULTS[difficulty][3]}`}
+          </div>
+        </div>
 
         {/* ── Blood intensity ── */}
         <div style={section}>

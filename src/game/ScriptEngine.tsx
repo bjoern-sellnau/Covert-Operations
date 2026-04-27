@@ -7,6 +7,7 @@ import { useEditorStore } from '../editor/editorStore'
 import type { Level } from '../editor/editorStore'
 import type { ScriptAction, DoorEntity, EmitterEntity, PortalEntity } from '../editor/scriptTypes'
 import { ENEMY_CONFIGS } from './types'
+import { useSettingsStore, DIFFICULTY_MULTS } from '../store/settingsStore'
 
 // ── Runtime state (mutable, read by collision system) ────────────────────────
 
@@ -134,7 +135,7 @@ function executePendingActions(
           entityStore.enemies.set(id, {
             id,
             position: new THREE.Vector2(Math.cos(angle) * dist, Math.sin(angle) * dist),
-            health: ENEMY_CONFIGS[action.enemyType].health,
+            health: Math.ceil(ENEMY_CONFIGS[action.enemyType].health * DIFFICULTY_MULTS[useSettingsStore.getState().difficulty][0]),
             type: action.enemyType,
             hitTime: -999,
             lastDamageTime: -999,
