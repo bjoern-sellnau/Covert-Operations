@@ -31,20 +31,24 @@ export function App() {
   const musicTrack     = useSettingsStore((s) => s.musicTrack)
 
   // ── Music ─────────────────────────────────────────────────────────────────
+  // Split into two effects: menu-phase music (no musicTrack dep) and playing-phase music
   useEffect(() => {
     if (!musicEnabled) { stopMusic(); return }
     if (phase === 'menu' || phase === 'missions' || phase === 'briefing' || phase === 'mutators' || phase === 'options' || phase === 'lobby' || phase === 'shop') {
       startMenuMusic()
-    } else if (phase === 'playing') {
-      if (musicTrack === 'game2') startGameMusic2()
-      else if (musicTrack === 'game3') startGameMusic3()
-      else if (musicTrack === 'game4') startGameMusic4()
-      else startGameMusic()
     } else if (phase === 'skydive') {
       startSkydiveMusic()
-    } else {
+    } else if (phase !== 'playing') {
       stopMusic()
     }
+  }, [phase, musicEnabled])
+
+  useEffect(() => {
+    if (phase !== 'playing' || !musicEnabled) return
+    if (musicTrack === 'game2') startGameMusic2()
+    else if (musicTrack === 'game3') startGameMusic3()
+    else if (musicTrack === 'game4') startGameMusic4()
+    else startGameMusic()
   }, [phase, musicEnabled, musicTrack])
 
   // ── Persistent socket event listeners (survive phase transitions) ────────

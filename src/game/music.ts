@@ -5,7 +5,7 @@ let _master: GainNode | null = null
 let _scheduler: ReturnType<typeof setInterval> | null = null
 let _padOscs: OscillatorNode[] = []
 let _nextBar = 0
-let _track: 'menu' | 'game' | 'game2' | 'game3' | 'game4' | 'skydive' | null = null
+let _track: 'menu' | 'game' | 'game2' | 'game3' | 'game4' | 'skydive' | 'game5' | 'game6' | 'game7' | 'game8' | 'game9' | 'game10' | 'game11' | 'game12' | 'game13' | 'game14' | 'game15' | 'game16' | 'game17' | 'game18' | 'game19' | 'game20' | 'game21' | 'game22' | 'game23' | 'game24' | null = null
 
 function ctx(): AudioContext {
   if (!_ctx) _ctx = new AudioContext()
@@ -53,6 +53,21 @@ function hihat(when: number, vol = 0.07, decay = 0.04) {
   src.start(when)
 }
 
+function snare(when: number, vol = 0.18) {
+  const c = ctx()
+  const buf = c.createBuffer(1, Math.floor(c.sampleRate * 0.12), c.sampleRate)
+  const data = buf.getChannelData(0)
+  for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1
+  const src = c.createBufferSource(); const env = c.createGain()
+  src.buffer = buf
+  env.gain.setValueAtTime(vol, when); env.gain.exponentialRampToValueAtTime(0.001, when + 0.11)
+  src.connect(env); env.connect(master()); src.start(when)
+  const body = c.createOscillator(); const benv = c.createGain()
+  body.frequency.setValueAtTime(190, when); body.frequency.exponentialRampToValueAtTime(90, when + 0.05)
+  benv.gain.setValueAtTime(vol * 0.5, when); benv.gain.exponentialRampToValueAtTime(0.001, when + 0.05)
+  body.connect(benv); benv.connect(master()); body.start(when); body.stop(when + 0.06)
+}
+
 function note(freq: number, when: number, dur: number, vol: number, type: OscillatorType = 'sine', filterHz = 4000) {
   const c = ctx()
   const osc  = c.createOscillator()
@@ -95,37 +110,63 @@ function stopPad() {
   _padOscs = []
 }
 
-// ── Menu music (A minor, 80 BPM) ─────────────────────────────────────────────
+// ── Menu music (A minor, 90 BPM — EPIC orchestral) ───────────────────────────
 
-const MENU_BPM    = 80
-const MENU_BEAT   = 60 / MENU_BPM          // 0.75 s
-const MENU_EIGHTH = MENU_BEAT / 2           // 0.375 s
-const MENU_BAR    = MENU_BEAT * 4           // 3 s
+const MENU_BPM    = 90
+const MENU_BEAT   = 60 / MENU_BPM
+const MENU_EIGHTH = MENU_BEAT / 2
+const MENU_BAR    = MENU_BEAT * 4
 
-// A minor Am7 arpeggio: A3 C4 E4 G4
-const MENU_ARP = [220, 261.63, 329.63, 392, 329.63, 261.63]
+// Flowing A-minor arpeggio for epic feel: A3 C4 E4 A4 G4 E4 C4 E4
+const MENU_ARP = [220, 261.63, 329.63, 440, 392, 329.63, 261.63, 329.63]
+
+// Heroic melody phrase A (Am: A4 C5 E5 D5 C5 B4 A4 0)
+const MENU_MEL_A = [440, 523.25, 659.26, 587.33, 523.25, 493.88, 440, 0]
+// Heroic melody phrase B (resolution: G4 A4 C5 E5 D5 C5 B4 A4)
+const MENU_MEL_B = [392, 440, 523.25, 659.26, 587.33, 523.25, 493.88, 440]
+
+// Counter-melody (triangle, lower register)
+const MENU_COUNTER = [220, 0, 261.63, 0, 246.94, 0, 220, 0]
+
+let _menuMelBar = 0
 
 function scheduleMenuBar(t: number) {
-  // Kick on beats 1 + 3
-  kick(t, 0.35)
-  kick(t + MENU_BEAT * 2, 0.22)
+  // Powerful kick on beats 1 and 3
+  kick(t, 0.5)
+  kick(t + MENU_BEAT * 2, 0.5)
+
+  // Snare on beats 2 and 4
+  snare(t + MENU_BEAT, 0.20)
+  snare(t + MENU_BEAT * 3, 0.20)
 
   // Hi-hats on every 1/8 note
   for (let i = 0; i < 8; i++) {
-    hihat(t + MENU_EIGHTH * i, i % 2 === 0 ? 0.06 : 0.035)
+    hihat(t + MENU_EIGHTH * i, i % 2 === 0 ? 0.07 : 0.04, 0.035)
   }
 
-  // Arpeggio — 6 notes spread across the bar
-  for (let i = 0; i < 6; i++) {
-    const freq = MENU_ARP[i % MENU_ARP.length]
-    note(freq, t + (MENU_BAR / 6) * i, MENU_BEAT * 0.9, 0.12, 'sine')
-    // Octave below ghost note
-    note(freq / 2, t + (MENU_BAR / 6) * i, MENU_BEAT * 1.4, 0.04, 'triangle')
+  // Flowing arpeggio with longer notes
+  for (let i = 0; i < 8; i++) {
+    note(MENU_ARP[i], t + MENU_EIGHTH * i, MENU_BEAT * 1.1, 0.10, 'sine')
   }
 
-  // Sub bass — root A1 on beat 1, E1 on beat 3
-  note(55,   t,                  MENU_BEAT * 1.8, 0.28, 'sine', 200)
-  note(82.4, t + MENU_BEAT * 2,  MENU_BEAT * 1.4, 0.20, 'sine', 200)
+  // Heroic melody — alternates between 2-bar phrases
+  const mel = _menuMelBar % 2 === 0 ? MENU_MEL_A : MENU_MEL_B
+  for (let i = 0; i < 8; i++) {
+    if (mel[i] > 0)
+      note(mel[i], t + MENU_EIGHTH * i, MENU_BEAT * 0.85, 0.13, 'sine', 3200)
+  }
+
+  // Counter-melody (triangle wave)
+  for (let i = 0; i < 8; i++) {
+    if (MENU_COUNTER[i] > 0)
+      note(MENU_COUNTER[i], t + MENU_EIGHTH * i, MENU_BEAT * 1.5, 0.07, 'triangle', 1600)
+  }
+
+  // Rich bass — alternating A1=55Hz and E1=41.2Hz
+  note(55,   t,                 MENU_BEAT * 1.9, 0.32, 'sine', 200)
+  note(41.2, t + MENU_BEAT * 2, MENU_BEAT * 1.6, 0.28, 'sine', 200)
+
+  _menuMelBar++
 }
 
 // ── Game music (D minor, 138 BPM) ────────────────────────────────────────────
@@ -192,7 +233,9 @@ function startScheduler(barLen: number, scheduleFn: (t: number) => void) {
 export function startMenuMusic() {
   if (_track === 'menu') return
   _track = 'menu'
-  startPad([110, 130.81, 164.81], 'sawtooth', 500, 0.022)
+  _menuMelBar = 0
+  // Dramatic choir-like pad: A2 C3 E3 G3 — multiple sine voices
+  startPad([110, 130.81, 164.81, 196], 'sine', 1800, 0.018)
   startScheduler(MENU_BAR, scheduleMenuBar)
 }
 
