@@ -24,10 +24,10 @@
 - ✅ 3.2 Shop: AkimboCard entfernen, WeaponCard mit "+1 AKIMBO KAUFEN"-Option
 
 ## 4. Tod-Waffen
-- 🔄 4.1 BFG: WeaponId, Config, Projektil-Logik, grüne Kugel-Visual
-- ⬜ 4.2 Todeslaser: Item-System, Strahl-Logik, Skelett-Effekt
-- ⬜ 4.3 Ionen-Kanone: Zielmarker, 4-Strahl-Animation, AOE
+- ✅ 4.1 BFG-9000: WeaponId, Config, massive grüne Kugel, Spieler immun
+- ✅ 4.2 Todeslaser: [L]-Taste, Sofortstrahl, Raycast-Logik, roter Strahl-Effekt
+- ✅ 4.3 Ionen-Kanone: [I]-Taste, Zielmarker, 1.5s Verzögerung, 4-Strahl-Animation, AOE
 
 ---
 
-*Zuletzt aktualisiert: Schritt 3.2 — starte 4.1*
+*Alle Aufgaben erledigt — Stand: 4.3*
