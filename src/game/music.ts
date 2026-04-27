@@ -2,6 +2,7 @@
 
 let _ctx: AudioContext | null = null
 let _master: GainNode | null = null
+let _trackGain: GainNode | null = null
 let _scheduler: ReturnType<typeof setInterval> | null = null
 let _padOscs: OscillatorNode[] = []
 let _nextBar = 0
@@ -23,6 +24,16 @@ function master(): GainNode {
   return _master
 }
 
+// Per-track gain node — disconnected on track switch to silence pre-scheduled notes
+function tgain(): GainNode {
+  if (!_trackGain) {
+    _trackGain = ctx().createGain()
+    _trackGain.gain.value = 1
+    _trackGain.connect(master())
+  }
+  return _trackGain
+}
+
 // ── Primitive builders ────────────────────────────────────────────────────────
 
 function kick(when: number, vol = 0.55) {
@@ -33,7 +44,7 @@ function kick(when: number, vol = 0.55) {
   osc.frequency.exponentialRampToValueAtTime(45, when + 0.12)
   env.gain.setValueAtTime(vol, when)
   env.gain.exponentialRampToValueAtTime(0.001, when + 0.28)
-  osc.connect(env); env.connect(master())
+  osc.connect(env); env.connect(tgain())
   osc.start(when); osc.stop(when + 0.3)
 }
 
@@ -49,7 +60,7 @@ function hihat(when: number, vol = 0.07, decay = 0.04) {
   filt.type = 'highpass'; filt.frequency.value = 6000
   env.gain.setValueAtTime(vol, when)
   env.gain.exponentialRampToValueAtTime(0.0001, when + decay)
-  src.connect(filt); filt.connect(env); env.connect(master())
+  src.connect(filt); filt.connect(env); env.connect(tgain())
   src.start(when)
 }
 
@@ -61,11 +72,11 @@ function snare(when: number, vol = 0.18) {
   const src = c.createBufferSource(); const env = c.createGain()
   src.buffer = buf
   env.gain.setValueAtTime(vol, when); env.gain.exponentialRampToValueAtTime(0.001, when + 0.11)
-  src.connect(env); env.connect(master()); src.start(when)
+  src.connect(env); env.connect(tgain()); src.start(when)
   const body = c.createOscillator(); const benv = c.createGain()
   body.frequency.setValueAtTime(190, when); body.frequency.exponentialRampToValueAtTime(90, when + 0.05)
   benv.gain.setValueAtTime(vol * 0.5, when); benv.gain.exponentialRampToValueAtTime(0.001, when + 0.05)
-  body.connect(benv); benv.connect(master()); body.start(when); body.stop(when + 0.06)
+  body.connect(benv); benv.connect(tgain()); body.start(when); body.stop(when + 0.06)
 }
 
 function note(freq: number, when: number, dur: number, vol: number, type: OscillatorType = 'sine', filterHz = 4000) {
@@ -78,7 +89,7 @@ function note(freq: number, when: number, dur: number, vol: number, type: Oscill
   env.gain.setValueAtTime(0, when)
   env.gain.linearRampToValueAtTime(vol, when + 0.015)
   env.gain.exponentialRampToValueAtTime(0.0001, when + dur)
-  osc.connect(filt); filt.connect(env); env.connect(master())
+  osc.connect(filt); filt.connect(env); env.connect(tgain())
   osc.start(when); osc.stop(when + dur + 0.02)
 }
 
@@ -98,7 +109,7 @@ function startPad(freqs: number[], type: OscillatorType, cutoff: number, vol: nu
       lfo.frequency.value = 0.18; lfog.gain.value = cutoff * 0.5
       g.gain.value = vol
       lfo.connect(lfog); lfog.connect(filt.frequency)
-      osc.connect(filt); filt.connect(g); g.connect(master())
+      osc.connect(filt); filt.connect(g); g.connect(tgain())
       lfo.start(); osc.start()
       _padOscs.push(osc, lfo)
     }
@@ -208,16 +219,20 @@ function scheduleGameBar(t: number) {
 // ── Public API ────────────────────────────────────────────────────────────────
 
 function startScheduler(barLen: number, scheduleFn: (t: number) => void) {
-  stopMusic()
+  stopMusic()  // disconnects old _trackGain, silencing pre-scheduled notes
   const c = ctx()
   _nextBar = c.currentTime + 0.05
+
+  // Fresh track gain — old one was disconnected by stopMusic
+  _trackGain = c.createGain()
+  _trackGain.gain.value = 1
+  _trackGain.connect(master())
 
   // Fade master in
   master().gain.cancelScheduledValues(c.currentTime)
   master().gain.setValueAtTime(0, c.currentTime)
   master().gain.linearRampToValueAtTime(0.4, c.currentTime + 1.5)
 
-  // Schedule first bar immediately
   scheduleFn(_nextBar)
   _nextBar += barLen
 
@@ -370,6 +385,8 @@ export function stopMusic() {
   _track = null
   if (_scheduler) { clearInterval(_scheduler); _scheduler = null }
   stopPad()
+  // Disconnect track gain to instantly silence all pre-scheduled notes
+  if (_trackGain) { try { _trackGain.disconnect() } catch { /**/ } ; _trackGain = null }
   if (_master) {
     const c = ctx()
     _master.gain.cancelScheduledValues(c.currentTime)

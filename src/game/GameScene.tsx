@@ -282,6 +282,10 @@ export function GameScene() {
   const netBroadcastTimer = useRef(0)
   const netSeqRef         = useRef(0)
 
+  // Prevent double-triggering of game over (race between useFrame and phaseRef update)
+  const gameOverFiredRef = useRef(false)
+  useEffect(() => { if (phase === 'playing') gameOverFiredRef.current = false }, [phase])
+
   // Edge-detection refs — P1
   const spacePrev = useRef(false)
   const qPrev     = useRef(false)
@@ -1623,12 +1627,24 @@ export function GameScene() {
       es.player.health = 100
       es.player.position.set(0, 0)
       es.player.invincibleUntil = now + 2.2
-    } else if (p1Dead && p2Dead && !isRange) {
-      if (cameraModeRef.current === 'fps') { document.exitPointerLock(); cameraModeRef.current = 'topdown'; setCameraMode('topdown') }
+    } else if (p1Dead && p2Dead && !isRange && !gameOverFiredRef.current) {
+      gameOverFiredRef.current = true
       useLoadoutStore.getState().addCredits(es.creditsEarned)
-      setPhase('gameover')
       useGameStore.getState().updateHUD(0, es.score, es.wave, es.ammo, es.maxAmmo, es.creditsEarned)
-      if (isPlaytesting) setTimeout(() => { setPlaytesting(false); setPhase('editor') }, 3000)
+      if (cameraModeRef.current === 'fps') {
+        document.exitPointerLock()
+        cameraModeRef.current = 'topdown'
+        setCameraMode('topdown')
+        // Delay until pointer lock is fully released so gameover screen is interactive
+        const pt = isPlaytesting
+        setTimeout(() => {
+          setPhase('gameover')
+          if (pt) setTimeout(() => { setPlaytesting(false); setPhase('editor') }, 3000)
+        }, 80)
+      } else {
+        setPhase('gameover')
+        if (isPlaytesting) setTimeout(() => { setPlaytesting(false); setPhase('editor') }, 3000)
+      }
       return
     }
 
