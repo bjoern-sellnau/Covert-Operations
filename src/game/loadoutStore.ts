@@ -62,6 +62,12 @@ export const useLoadoutStore = create<LoadoutStore>()(
             }))
             return true
           }
+          // Akimbo: buying a 2nd copy of pistol/smg unlocks dual-wield
+          if ((id === 'pistol' || id === 'smg') && !s.isAkimbo) {
+            if (s.credits < AKIMBO_PRICE) return false
+            set((st) => ({ credits: st.credits - AKIMBO_PRICE, isAkimbo: true, selectedWeapon: id }))
+            return true
+          }
           set({ selectedWeapon: id })
           return true
         }

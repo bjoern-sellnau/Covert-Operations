@@ -33,13 +33,15 @@ function StatBar({ value, max = 5, color }: { value: number; max?: number; color
 
 function WeaponCard({ id }: { id: WeaponId }) {
   const cfg = WEAPON_CONFIGS[id]
-  const { ownedWeapons, selectedWeapon, credits, buyWeapon, selectWeapon } = useLoadoutStore()
+  const { ownedWeapons, selectedWeapon, credits, buyWeapon, selectWeapon, isAkimbo } = useLoadoutStore()
   const owned = ownedWeapons.includes(id)
   const selected = selectedWeapon === id
   const canAfford = credits >= cfg.price
+  const akimboEligible = (id === 'pistol' || id === 'smg') && owned && !isAkimbo
+  const canAffordAkimbo = credits >= AKIMBO_PRICE
 
   const handleClick = () => {
-    if (owned) selectWeapon(id)
+    if (owned && !akimboEligible) selectWeapon(id)
     else buyWeapon(id)
   }
 
@@ -64,7 +66,7 @@ function WeaponCard({ id }: { id: WeaponId }) {
           <div style={{ color: '#445566', fontSize: 11, marginTop: 2 }}>{cfg.shortName}</div>
         </div>
         <div style={{ textAlign: 'right' }}>
-          {owned ? (
+          {owned && !akimboEligible ? (
             <div style={{
               color: selected ? '#00ffaa' : '#336655',
               fontSize: 11,
@@ -74,6 +76,10 @@ function WeaponCard({ id }: { id: WeaponId }) {
               borderRadius: 2,
             }}>
               {selected ? 'AKTIV' : 'BESESSEN'}
+            </div>
+          ) : akimboEligible ? (
+            <div style={{ color: canAffordAkimbo ? '#cc88ff' : '#664400', fontSize: 11, fontWeight: 'bold' }}>
+              +1 AKIMBO<br />{AKIMBO_PRICE} CR
             </div>
           ) : (
             <div style={{ color: canAfford ? '#ffee00' : '#664400', fontSize: 13, fontWeight: 'bold' }}>
@@ -108,6 +114,11 @@ function WeaponCard({ id }: { id: WeaponId }) {
       {!owned && !canAfford && (
         <div style={{ color: '#442200', fontSize: 10, marginTop: 6, letterSpacing: 1 }}>
           NICHT GENUG CREDITS
+        </div>
+      )}
+      {akimboEligible && !canAffordAkimbo && (
+        <div style={{ color: '#442266', fontSize: 10, marginTop: 6, letterSpacing: 1 }}>
+          NICHT GENUG CREDITS FÜR AKIMBO
         </div>
       )}
     </div>
@@ -483,64 +494,6 @@ function VernichterCard() {
 
 // ── Akimbo upgrade card ──────────────────────────────────────────────────────
 
-function AkimboCard() {
-  const { isAkimbo, selectedWeapon, credits, buyAkimbo } = useLoadoutStore()
-  const compatible = selectedWeapon === 'pistol' || selectedWeapon === 'smg'
-  const canAfford  = credits >= AKIMBO_PRICE
-
-  return (
-    <div
-      style={{
-        background: isAkimbo ? '#1a0a2e' : '#080812',
-        border: `1px solid ${isAkimbo ? '#cc44ff' : compatible ? '#331144' : '#111122'}`,
-        borderRadius: 4,
-        padding: '14px 16px',
-        cursor: compatible && !isAkimbo ? 'pointer' : 'default',
-        transition: 'border-color 0.15s',
-        boxShadow: isAkimbo ? '0 0 14px #cc44ff33, inset 0 0 20px #cc44ff11' : 'none',
-        opacity: compatible ? 1 : 0.5,
-      }}
-      onClick={() => compatible && !isAkimbo && buyAkimbo()}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
-        <div>
-          <div style={{ color: isAkimbo ? '#cc88ff' : '#cceeff', fontSize: 14, fontWeight: 'bold', letterSpacing: 1 }}>
-            AKIMBO UPGRADE
-          </div>
-          <div style={{ color: '#445566', fontSize: 11, marginTop: 2 }}>Dual Wield — Pistole / MP5</div>
-        </div>
-        <div style={{ textAlign: 'right' }}>
-          {isAkimbo ? (
-            <div style={{ color: '#cc88ff', fontSize: 11, letterSpacing: 2, padding: '3px 8px', border: '1px solid #cc44ff', borderRadius: 2 }}>
-              AKTIV
-            </div>
-          ) : (
-            <div style={{ color: canAfford && compatible ? '#ffee00' : '#664400', fontSize: 13, fontWeight: 'bold' }}>
-              {AKIMBO_PRICE} CR
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div style={{ color: '#cc44ff', fontSize: 12, fontWeight: 'bold', marginBottom: 6 }}>
-        ×2 Schüsse &nbsp;·&nbsp; Q/E Ballett-Spin &nbsp;·&nbsp; Zweiter Lauf
-      </div>
-      <div style={{ color: '#445566', fontSize: 11, lineHeight: 1.4 }}>
-        Zwei Pistolen gleichzeitig. Verbraucht doppelt Munition. Schaltet Ballett-Spin-Manöver frei (Q/E).
-      </div>
-
-      {!compatible && (
-        <div style={{ color: '#553300', fontSize: 10, marginTop: 8, letterSpacing: 1 }}>
-          NUR MIT PISTOLE ODER MP5
-        </div>
-      )}
-      {compatible && !isAkimbo && !canAfford && (
-        <div style={{ color: '#442200', fontSize: 10, marginTop: 6, letterSpacing: 1 }}>NICHT GENUG CREDITS</div>
-      )}
-    </div>
-  )
-}
-
 // ── Main Shop ────────────────────────────────────────────────────────────────
 
 export function Shop() {
@@ -667,8 +620,6 @@ export function Shop() {
               {(['plasma', 'bazooka', 'banana'] as WeaponId[]).map((id) => (
                 <WeaponCard key={id} id={id} />
               ))}
-              <div style={{ color: '#334455', fontSize: 10, letterSpacing: 3, marginTop: 8, marginBottom: 4 }}>UPGRADES</div>
-              <AkimboCard />
               <div style={{ color: '#553322', fontSize: 10, letterSpacing: 3, marginTop: 8, marginBottom: 4 }}>BFG</div>
               <VernichterCard />
             </>
