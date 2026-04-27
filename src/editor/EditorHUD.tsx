@@ -334,6 +334,10 @@ export function EditorHUD() {
         >
           ▶ TESTEN
         </button>
+
+        <div style={{ width: 1, height: 28, background: C.border }} />
+
+        <button style={btn()} onClick={() => setPhase('menu')}>← Menü</button>
       </div>
 
       {/* ── Left panel: palette + levels ── */}

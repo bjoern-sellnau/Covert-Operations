@@ -3,7 +3,7 @@ import { useGameStore } from './store/gameStore'
 import { useNetStore } from './net/netStore'
 import { useSettingsStore } from './store/settingsStore'
 import { socket } from './net/socket'
-import { startMenuMusic, startGameMusic, startGameMusic2, startGameMusic3, startGameMusic4, startSkydiveMusic, stopMusic } from './game/music'
+import { startMenuMusic, startGameMusic, startGameMusic2, startGameMusic3, startGameMusic4, startGameMusic5, startGameMusic6, startGameMusic7, startGameMusic8, startGameMusic9, startGameMusic10, startSkydiveMusic, stopMusic } from './game/music'
 import { Game } from './game/Game'
 import { HUD } from './components/HUD'
 import { MainMenu } from './components/MainMenu'
@@ -45,9 +45,15 @@ export function App() {
 
   useEffect(() => {
     if (phase !== 'playing' || !musicEnabled) return
-    if (musicTrack === 'game2') startGameMusic2()
-    else if (musicTrack === 'game3') startGameMusic3()
-    else if (musicTrack === 'game4') startGameMusic4()
+    if      (musicTrack === 'game2')  startGameMusic2()
+    else if (musicTrack === 'game3')  startGameMusic3()
+    else if (musicTrack === 'game4')  startGameMusic4()
+    else if (musicTrack === 'game5')  startGameMusic5()
+    else if (musicTrack === 'game6')  startGameMusic6()
+    else if (musicTrack === 'game7')  startGameMusic7()
+    else if (musicTrack === 'game8')  startGameMusic8()
+    else if (musicTrack === 'game9')  startGameMusic9()
+    else if (musicTrack === 'game10') startGameMusic10()
     else startGameMusic()
   }, [phase, musicEnabled, musicTrack])
 

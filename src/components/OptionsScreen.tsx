@@ -12,7 +12,9 @@ export function OptionsScreen() {
 
   const [previewing, setPreviewing] = useState<string | null>(null)
 
-  function handlePreview(val: 'game1' | 'game2' | 'game3' | 'game4') {
+  type PreviewId = 'game1' | 'game2' | 'game3' | 'game4' | 'game5' | 'game6' | 'game7' | 'game8' | 'game9' | 'game10'
+
+  function handlePreview(val: PreviewId) {
     if (previewing === val) {
       stopMusic()
       setPreviewing(null)
@@ -43,11 +45,17 @@ export function OptionsScreen() {
     boxShadow: active ? `0 0 10px ${color}44` : 'none',
   })
 
-  const tracks: Array<['game1' | 'game2' | 'game3' | 'game4', string, string, string]> = [
-    ['game1', 'TRACK 1', '#00aaff', 'D-Moll 138 BPM'],
-    ['game2', 'TRACK 2', '#ff4444', 'F#-Moll 150 BPM Industrial'],
-    ['game3', 'TRACK 3', '#44ff88', 'C-Moll 105 BPM Suspense'],
-    ['game4', 'TRACK 4', '#cc44ff', 'H-Moll 175 BPM Techno'],
+  const tracks: Array<[PreviewId, string, string, string]> = [
+    ['game1',  'TRACK 1',  '#00aaff', 'D-Moll 138 BPM'],
+    ['game2',  'TRACK 2',  '#ff4444', 'F#-Moll 150 BPM Industrial'],
+    ['game3',  'TRACK 3',  '#44ff88', 'C-Moll 105 BPM Suspense'],
+    ['game4',  'TRACK 4',  '#cc44ff', 'H-Moll 175 BPM Techno'],
+    ['game5',  'TRACK 5',  '#ff8800', 'E-Moll 120 BPM Action Rock'],
+    ['game6',  'TRACK 6',  '#ff2244', 'E-Moll 180 BPM Heavy Metal'],
+    ['game7',  'TRACK 7',  '#00ffee', 'A-Moll 138 BPM Trance'],
+    ['game8',  'TRACK 8',  '#ffdd00', 'H-Moll 112 BPM Spy Jazz'],
+    ['game9',  'TRACK 9',  '#aa00ff', 'D-Moll 174 BPM Drum & Bass'],
+    ['game10', 'TRACK 10', '#ff66cc', 'A-Moll 100 BPM Synthwave'],
   ]
 
   return (

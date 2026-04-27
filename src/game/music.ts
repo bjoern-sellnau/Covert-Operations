@@ -366,6 +366,7 @@ export function startGameMusic4() {
 }
 
 export function stopMusic() {
+  if (_previewTimer) { clearTimeout(_previewTimer); _previewTimer = null }
   _track = null
   if (_scheduler) { clearInterval(_scheduler); _scheduler = null }
   stopPad()
@@ -376,15 +377,199 @@ export function stopMusic() {
   }
 }
 
+// ── Game track 5 — Action Rock (E minor, 120 BPM) ────────────────────────────
+
+const G5_BPM    = 120
+const G5_BEAT   = 60 / G5_BPM
+const G5_EIGHTH = G5_BEAT / 2
+const G5_16TH   = G5_BEAT / 4
+const G5_BAR    = G5_BEAT * 4
+
+const G5_BASS = [82.41, 61.74, 82.41, 98, 110, 123.47, 110, 98]
+const G5_LEAD = [329.63, 392, 440, 493.88, 587.33, 493.88, 440, 392]
+
+function scheduleGame5Bar(t: number) {
+  kick(t, 0.55); kick(t + G5_BEAT * 2, 0.50)
+  snare(t + G5_BEAT, 0.22); snare(t + G5_BEAT * 3, 0.22)
+  for (let i = 0; i < 16; i++)
+    hihat(t + G5_16TH * i, i % 4 === 0 ? 0.07 : i % 2 === 0 ? 0.05 : 0.03, 0.025)
+  for (let i = 0; i < 8; i++) {
+    note(G5_BASS[i], t + G5_EIGHTH * i, G5_EIGHTH * 0.8, 0.24, 'sawtooth', 500)
+    note(G5_LEAD[i], t + G5_EIGHTH * i, G5_EIGHTH * 0.7, 0.10, 'square', 2000)
+  }
+}
+
+export function startGameMusic5() {
+  if (_track === 'game5') return
+  _track = 'game5'
+  startPad([82.41, 123.47, 164.81], 'sawtooth', 600, 0.020)
+  startScheduler(G5_BAR, scheduleGame5Bar)
+}
+
+// ── Game track 6 — Heavy Metal (E minor, 180 BPM) ────────────────────────────
+
+const G6_BPM    = 180
+const G6_BEAT   = 60 / G6_BPM
+const G6_EIGHTH = G6_BEAT / 2
+const G6_BAR    = G6_BEAT * 4
+
+const G6_BASS = [82.41, 82.41, 98, 82.41, 73.42, 82.41, 110, 82.41]
+const G6_LEAD = [329.63, 293.66, 261.63, 246.94, 220, 246.94, 261.63, 293.66]
+
+function scheduleGame6Bar(t: number) {
+  for (let i = 0; i < 8; i++) kick(t + G6_EIGHTH * i, 0.42 + (i === 0 ? 0.15 : 0))
+  snare(t + G6_BEAT, 0.26); snare(t + G6_BEAT * 3, 0.26)
+  const g6_16 = G6_BEAT / 4
+  for (let i = 0; i < 16; i++) hihat(t + g6_16 * i, 0.05, 0.015)
+  for (let i = 0; i < 8; i++) {
+    note(G6_BASS[i], t + G6_EIGHTH * i, G6_EIGHTH * 0.55, 0.28, 'sawtooth', 350)
+    note(G6_LEAD[i], t + G6_EIGHTH * i, G6_EIGHTH * 0.5, 0.12, 'square', 2800)
+  }
+}
+
+export function startGameMusic6() {
+  if (_track === 'game6') return
+  _track = 'game6'
+  startPad([82.41, 110, 138.59], 'sawtooth', 350, 0.018)
+  startScheduler(G6_BAR, scheduleGame6Bar)
+}
+
+// ── Game track 7 — Trance (A minor, 138 BPM) ─────────────────────────────────
+
+const G7_BPM    = 138
+const G7_BEAT   = 60 / G7_BPM
+const G7_16TH   = G7_BEAT / 4
+const G7_BAR    = G7_BEAT * 4
+
+const G7_ARP  = [220, 261.63, 329.63, 392, 440, 392, 329.63, 261.63]
+const G7_BASS = [55, 55, 55, 82.41, 55, 55, 55, 65.41]
+
+function scheduleGame7Bar(t: number) {
+  for (let b = 0; b < 4; b++) kick(t + G7_BEAT * b, 0.55)
+  snare(t + G7_BEAT, 0.18); snare(t + G7_BEAT * 3, 0.18)
+  for (let i = 0; i < 16; i++) hihat(t + G7_16TH * i, i % 4 === 0 ? 0.08 : 0.04, 0.02)
+  for (let i = 0; i < 16; i++)
+    note(G7_ARP[i % 8], t + G7_16TH * i, G7_16TH * 1.1, 0.08, 'sine', 4000)
+  for (let i = 0; i < 8; i++)
+    note(G7_BASS[i], t + (G7_BEAT / 2) * i, (G7_BEAT / 2) * 0.9, 0.28, 'sine', 160)
+}
+
+export function startGameMusic7() {
+  if (_track === 'game7') return
+  _track = 'game7'
+  startPad([55, 82.41, 110, 164.81], 'sine', 3000, 0.015)
+  startScheduler(G7_BAR, scheduleGame7Bar)
+}
+
+// ── Game track 8 — Spy Jazz (B minor, 112 BPM) ───────────────────────────────
+
+const G8_BPM    = 112
+const G8_BEAT   = 60 / G8_BPM
+const G8_EIGHTH = G8_BEAT / 2
+const G8_BAR    = G8_BEAT * 4
+
+const G8_BASS    = [61.74, 58.27, 55, 51.91, 49, 51.91, 55, 58.27]
+const G8_LEAD    = [493.88, 554.37, 587.33, 659.26, 698.46, 659.26, 587.33, 554.37]
+const G8_COUNTER = [246.94, 220, 196, 185, 164.81, 185, 196, 220]
+
+function scheduleGame8Bar(t: number) {
+  kick(t, 0.40); kick(t + G8_BEAT * 2, 0.35)
+  hihat(t + G8_BEAT, 0.12, 0.08); hihat(t + G8_BEAT * 3, 0.12, 0.08)
+  for (let i = 0; i < 4; i++) {
+    hihat(t + G8_BEAT * i, 0.04, 0.03)
+    hihat(t + G8_BEAT * i + G8_BEAT * 0.67, 0.03, 0.02)
+  }
+  for (let i = 0; i < 8; i++) {
+    note(G8_BASS[i],    t + G8_EIGHTH * i, G8_EIGHTH * 0.8, 0.22, 'sawtooth', 1200)
+    note(G8_LEAD[i],    t + G8_EIGHTH * i, G8_EIGHTH * 0.65, 0.11, 'sawtooth', 2200)
+    note(G8_COUNTER[i], t + G8_EIGHTH * i, G8_EIGHTH * 1.0,  0.06, 'triangle', 1600)
+  }
+}
+
+export function startGameMusic8() {
+  if (_track === 'game8') return
+  _track = 'game8'
+  startPad([61.74, 92.5, 123.47, 185], 'sawtooth', 1400, 0.015)
+  startScheduler(G8_BAR, scheduleGame8Bar)
+}
+
+// ── Game track 9 — Drum & Bass (D minor, 174 BPM) ────────────────────────────
+
+const G9_BPM    = 174
+const G9_BEAT   = 60 / G9_BPM
+const G9_16TH   = G9_BEAT / 4
+const G9_BAR    = G9_BEAT * 4
+
+const G9_KICK_OFFSETS  = [0, 0.5, 2.75, 3]
+const G9_SNARE_OFFSETS = [2, 3.5]
+const G9_BASS = [36.71, 36.71, 36.71, 55, 36.71, 36.71, 55, 36.71]
+const G9_LEAD = [293.66, 349.23, 440, 523.25, 440, 392, 349.23, 329.63]
+
+function scheduleGame9Bar(t: number) {
+  for (const pos of G9_KICK_OFFSETS) kick(t + G9_BEAT * pos, 0.55)
+  for (const pos of G9_SNARE_OFFSETS) snare(t + G9_BEAT * pos, 0.22)
+  for (let i = 0; i < 16; i++) hihat(t + G9_16TH * i, i % 4 === 0 ? 0.07 : 0.03, 0.015)
+  for (let i = 0; i < 8; i++) {
+    note(G9_BASS[i], t + (G9_BEAT / 2) * i, (G9_BEAT / 2) * 0.95, 0.35, 'sine', 140)
+    note(G9_LEAD[i], t + (G9_BEAT / 2) * i, (G9_BEAT / 2) * 0.6, 0.10, 'square', 2400)
+  }
+}
+
+export function startGameMusic9() {
+  if (_track === 'game9') return
+  _track = 'game9'
+  startPad([36.71, 55, 73.42], 'sine', 200, 0.020)
+  startScheduler(G9_BAR, scheduleGame9Bar)
+}
+
+// ── Game track 10 — Synthwave (A minor, 100 BPM) ─────────────────────────────
+
+const G10_BPM    = 100
+const G10_BEAT   = 60 / G10_BPM
+const G10_EIGHTH = G10_BEAT / 2
+const G10_16TH   = G10_BEAT / 4
+const G10_BAR    = G10_BEAT * 4
+
+const G10_ARP  = [220, 261.63, 329.63, 392, 493.88, 392, 329.63, 261.63]
+const G10_MEL  = [440, 392, 349.23, 329.63, 293.66, 329.63, 349.23, 392]
+const G10_BASS = [55, 55, 82.41, 55, 65.41, 55, 82.41, 55]
+
+function scheduleGame10Bar(t: number) {
+  kick(t, 0.50); kick(t + G10_BEAT * 0.5, 0.25)
+  kick(t + G10_BEAT * 2, 0.50); kick(t + G10_BEAT * 2.5, 0.25)
+  snare(t + G10_BEAT, 0.20); snare(t + G10_BEAT * 3, 0.20)
+  for (let i = 0; i < 16; i++) hihat(t + G10_16TH * i, i % 2 === 0 ? 0.06 : 0.03, 0.02)
+  for (let i = 0; i < 8; i++) {
+    note(G10_ARP[i],  t + G10_EIGHTH * i, G10_EIGHTH * 1.2, 0.09, 'sine', 5000)
+    note(G10_MEL[i],  t + G10_EIGHTH * i, G10_EIGHTH * 0.8, 0.12, 'sawtooth', 2800)
+    note(G10_BASS[i], t + G10_EIGHTH * i, G10_EIGHTH * 0.9, 0.26, 'sine', 180)
+  }
+}
+
+export function startGameMusic10() {
+  if (_track === 'game10') return
+  _track = 'game10'
+  startPad([55, 82.41, 110, 164.81], 'sine', 4000, 0.018)
+  startScheduler(G10_BAR, scheduleGame10Bar)
+}
+
+// ── Preview ───────────────────────────────────────────────────────────────────
+
 let _previewTimer: ReturnType<typeof setTimeout> | null = null
 
-export function previewTrack(track: 'game1' | 'game2' | 'game3' | 'game4', durationMs = 7000) {
+export function previewTrack(track: 'game1' | 'game2' | 'game3' | 'game4' | 'game5' | 'game6' | 'game7' | 'game8' | 'game9' | 'game10', durationMs = 7000) {
   if (_previewTimer) { clearTimeout(_previewTimer); _previewTimer = null }
   _track = null  // force restart
-  if (track === 'game1') startGameMusic()
-  else if (track === 'game2') startGameMusic2()
-  else if (track === 'game3') startGameMusic3()
-  else startGameMusic4()
+  if      (track === 'game1')  startGameMusic()
+  else if (track === 'game2')  startGameMusic2()
+  else if (track === 'game3')  startGameMusic3()
+  else if (track === 'game4')  startGameMusic4()
+  else if (track === 'game5')  startGameMusic5()
+  else if (track === 'game6')  startGameMusic6()
+  else if (track === 'game7')  startGameMusic7()
+  else if (track === 'game8')  startGameMusic8()
+  else if (track === 'game9')  startGameMusic9()
+  else                         startGameMusic10()
   _previewTimer = setTimeout(() => {
     _previewTimer = null
     stopMusic()
