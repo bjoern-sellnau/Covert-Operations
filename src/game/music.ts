@@ -7,6 +7,7 @@ let _scheduler: ReturnType<typeof setInterval> | null = null
 let _padOscs: OscillatorNode[] = []
 let _nextBar = 0
 let _track: 'menu' | 'game' | 'game2' | 'game3' | 'game4' | 'skydive' | 'game5' | 'game6' | 'game7' | 'game8' | 'game9' | 'game10' | 'game11' | 'game12' | 'game13' | 'game14' | 'game15' | 'game16' | 'game17' | 'game18' | 'game19' | 'game20' | 'game21' | 'game22' | 'game23' | 'game24' | null = null
+let _previewTimer: ReturnType<typeof setTimeout> | null = null
 
 function ctx(): AudioContext {
   if (!_ctx) _ctx = new AudioContext()
@@ -121,6 +122,18 @@ function stopPad() {
   _padOscs = []
 }
 
+function clearAudio() {
+  if (_previewTimer) { clearTimeout(_previewTimer); _previewTimer = null }
+  if (_scheduler) { clearInterval(_scheduler); _scheduler = null }
+  stopPad()
+  if (_trackGain) { try { _trackGain.disconnect() } catch { /**/ }; _trackGain = null }
+  if (_master) {
+    const c = ctx()
+    _master.gain.cancelScheduledValues(c.currentTime)
+    _master.gain.setTargetAtTime(0, c.currentTime, 0.4)
+  }
+}
+
 // ── Menu music (A minor, 90 BPM — EPIC orchestral) ───────────────────────────
 
 const MENU_BPM    = 90
@@ -219,11 +232,11 @@ function scheduleGameBar(t: number) {
 // ── Public API ────────────────────────────────────────────────────────────────
 
 function startScheduler(barLen: number, scheduleFn: (t: number) => void) {
-  stopMusic()  // disconnects old _trackGain, silencing pre-scheduled notes
+  clearAudio()  // disconnects old _trackGain, silencing pre-scheduled notes; does NOT reset _track
   const c = ctx()
   _nextBar = c.currentTime + 0.05
 
-  // Fresh track gain — old one was disconnected by stopMusic
+  // Fresh track gain — old one was disconnected by clearAudio
   _trackGain = c.createGain()
   _trackGain.gain.value = 1
   _trackGain.connect(master())
@@ -247,19 +260,18 @@ function startScheduler(barLen: number, scheduleFn: (t: number) => void) {
 
 export function startMenuMusic() {
   if (_track === 'menu') return
-  _track = 'menu'
   _menuMelBar = 0
-  // Dramatic choir-like pad: A2 C3 E3 G3 — multiple sine voices
-  startPad([110, 130.81, 164.81, 196], 'sine', 1800, 0.018)
   startScheduler(MENU_BAR, scheduleMenuBar)
+  startPad([110, 130.81, 164.81, 196], 'sine', 1800, 0.018)
+  _track = 'menu'
 }
 
 export function startGameMusic() {
   if (_track === 'game') return
-  _track = 'game'
   _gameMelBar = 0
-  startPad([73.42, 110, 146.83], 'sawtooth', 420, 0.018)
   startScheduler(GAME_BAR, scheduleGameBar)
+  startPad([73.42, 110, 146.83], 'sawtooth', 420, 0.018)
+  _track = 'game'
 }
 
 // ── Skydive music (E minor, 160 BPM, aggressive) ─────────────────────────────
@@ -289,9 +301,9 @@ function scheduleSkydiveBar(t: number) {
 
 export function startSkydiveMusic() {
   if (_track === 'skydive') return
-  _track = 'skydive'
-  startPad([82.41, 123.47, 164.81], 'sawtooth', 600, 0.025)
   startScheduler(SKY_BAR, scheduleSkydiveBar)
+  startPad([82.41, 123.47, 164.81], 'sawtooth', 600, 0.025)
+  _track = 'skydive'
 }
 
 // ── Game track 2 — Industrial metal (F# minor, 150 BPM) ──────────────────────
@@ -322,9 +334,9 @@ function scheduleGame2Bar(t: number) {
 
 export function startGameMusic2() {
   if (_track === 'game2') return
-  _track = 'game2'
-  startPad([92.5, 138.59, 185], 'sawtooth', 380, 0.020)
   startScheduler(G2_BAR, scheduleGame2Bar)
+  startPad([92.5, 138.59, 185], 'sawtooth', 380, 0.020)
+  _track = 'game2'
 }
 
 // ── Game track 3 — Dark suspense (C minor, 105 BPM) ──────────────────────────
@@ -349,9 +361,9 @@ function scheduleGame3Bar(t: number) {
 
 export function startGameMusic3() {
   if (_track === 'game3') return
-  _track = 'game3'
-  startPad([65.41, 97.99, 130.81], 'triangle', 350, 0.025)
   startScheduler(G3_BAR, scheduleGame3Bar)
+  startPad([65.41, 97.99, 130.81], 'triangle', 350, 0.025)
+  _track = 'game3'
 }
 
 // ── Game track 4 — Intense techno (B minor, 175 BPM) ─────────────────────────
@@ -375,23 +387,14 @@ function scheduleGame4Bar(t: number) {
 
 export function startGameMusic4() {
   if (_track === 'game4') return
-  _track = 'game4'
-  startPad([61.74, 92.5, 123.47], 'sawtooth', 500, 0.022)
   startScheduler(G4_BAR, scheduleGame4Bar)
+  startPad([61.74, 92.5, 123.47], 'sawtooth', 500, 0.022)
+  _track = 'game4'
 }
 
 export function stopMusic() {
-  if (_previewTimer) { clearTimeout(_previewTimer); _previewTimer = null }
   _track = null
-  if (_scheduler) { clearInterval(_scheduler); _scheduler = null }
-  stopPad()
-  // Disconnect track gain to instantly silence all pre-scheduled notes
-  if (_trackGain) { try { _trackGain.disconnect() } catch { /**/ } ; _trackGain = null }
-  if (_master) {
-    const c = ctx()
-    _master.gain.cancelScheduledValues(c.currentTime)
-    _master.gain.setTargetAtTime(0, c.currentTime, 0.4)
-  }
+  clearAudio()
 }
 
 // ── Game track 5 — Action Rock (E minor, 120 BPM) ────────────────────────────
@@ -418,9 +421,9 @@ function scheduleGame5Bar(t: number) {
 
 export function startGameMusic5() {
   if (_track === 'game5') return
-  _track = 'game5'
-  startPad([82.41, 123.47, 164.81], 'sawtooth', 600, 0.020)
   startScheduler(G5_BAR, scheduleGame5Bar)
+  startPad([82.41, 123.47, 164.81], 'sawtooth', 600, 0.020)
+  _track = 'game5'
 }
 
 // ── Game track 6 — Heavy Metal (E minor, 180 BPM) ────────────────────────────
@@ -446,9 +449,9 @@ function scheduleGame6Bar(t: number) {
 
 export function startGameMusic6() {
   if (_track === 'game6') return
-  _track = 'game6'
-  startPad([82.41, 110, 138.59], 'sawtooth', 350, 0.018)
   startScheduler(G6_BAR, scheduleGame6Bar)
+  startPad([82.41, 110, 138.59], 'sawtooth', 350, 0.018)
+  _track = 'game6'
 }
 
 // ── Game track 7 — Trance (A minor, 138 BPM) ─────────────────────────────────
@@ -473,9 +476,9 @@ function scheduleGame7Bar(t: number) {
 
 export function startGameMusic7() {
   if (_track === 'game7') return
-  _track = 'game7'
-  startPad([55, 82.41, 110, 164.81], 'sine', 3000, 0.015)
   startScheduler(G7_BAR, scheduleGame7Bar)
+  startPad([55, 82.41, 110, 164.81], 'sine', 3000, 0.015)
+  _track = 'game7'
 }
 
 // ── Game track 8 — Spy Jazz (B minor, 112 BPM) ───────────────────────────────
@@ -505,9 +508,9 @@ function scheduleGame8Bar(t: number) {
 
 export function startGameMusic8() {
   if (_track === 'game8') return
-  _track = 'game8'
-  startPad([61.74, 92.5, 123.47, 185], 'sawtooth', 1400, 0.015)
   startScheduler(G8_BAR, scheduleGame8Bar)
+  startPad([61.74, 92.5, 123.47, 185], 'sawtooth', 1400, 0.015)
+  _track = 'game8'
 }
 
 // ── Game track 9 — Drum & Bass (D minor, 174 BPM) ────────────────────────────
@@ -534,9 +537,9 @@ function scheduleGame9Bar(t: number) {
 
 export function startGameMusic9() {
   if (_track === 'game9') return
-  _track = 'game9'
-  startPad([36.71, 55, 73.42], 'sine', 200, 0.020)
   startScheduler(G9_BAR, scheduleGame9Bar)
+  startPad([36.71, 55, 73.42], 'sine', 200, 0.020)
+  _track = 'game9'
 }
 
 // ── Game track 10 — Synthwave (A minor, 100 BPM) ─────────────────────────────
@@ -565,18 +568,15 @@ function scheduleGame10Bar(t: number) {
 
 export function startGameMusic10() {
   if (_track === 'game10') return
-  _track = 'game10'
-  startPad([55, 82.41, 110, 164.81], 'sine', 4000, 0.018)
   startScheduler(G10_BAR, scheduleGame10Bar)
+  startPad([55, 82.41, 110, 164.81], 'sine', 4000, 0.018)
+  _track = 'game10'
 }
 
 // ── Preview ───────────────────────────────────────────────────────────────────
 
-let _previewTimer: ReturnType<typeof setTimeout> | null = null
-
 export function previewTrack(track: 'game1' | 'game2' | 'game3' | 'game4' | 'game5' | 'game6' | 'game7' | 'game8' | 'game9' | 'game10', durationMs = 7000) {
-  if (_previewTimer) { clearTimeout(_previewTimer); _previewTimer = null }
-  _track = null  // force restart
+  stopMusic()  // clears _track so the start guards pass, cancels any existing preview timer
   if      (track === 'game1')  startGameMusic()
   else if (track === 'game2')  startGameMusic2()
   else if (track === 'game3')  startGameMusic3()
