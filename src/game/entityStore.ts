@@ -174,6 +174,9 @@ function makeEntityStore() {
     // Vernichter
     vernichterAmmo: 1,
     vernichterProjectile: null as ProjectileData | null,
+    // Death Laser
+    laserAmmo: 0,
+    laserBeam: null as { x0: number; z0: number; x1: number; z1: number; timer: number } | null,
     // Plasma / Bazooka projectile (single in-flight)
     weaponProjectile: null as ProjectileData | null,
     // Banana grenades
@@ -255,6 +258,8 @@ export function resetEntityStore() {
   s.isAkimbo = false
   s.vernichterAmmo = 1
   s.vernichterProjectile = null
+  s.laserAmmo = 0
+  s.laserBeam = null
   s.weaponProjectile = null
   s.bananas = []
   s.meleeSwing = 0

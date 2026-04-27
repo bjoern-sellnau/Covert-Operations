@@ -35,6 +35,7 @@ import {
   GRENADE_SPEED, GRENADE_FUSE, GRENADE_BOUNCE, GRENADE_RADIUS, GRENADE_DAMAGE,
   MAX_BOUNCES,
   VERNICHTER_SPEED, VERNICHTER_RADIUS, VERNICHTER_DAMAGE,
+  LASER_RANGE, LASER_WIDTH,
 } from './types'
 import type { EnemyType } from './types'
 import { Arena } from './Arena'
@@ -267,6 +268,7 @@ export function GameScene() {
   const grenadeMeshRefs      = useRef<(THREE.Mesh | null)[]>(Array(MAX_GRENADES).fill(null))
   const vernichterMeshRef    = useRef<THREE.Mesh>(null)
   const vernichterLightRef   = useRef<THREE.PointLight>(null)
+  const laserBeamMeshRef     = useRef<THREE.Mesh>(null)
   const weaponProjMeshRef    = useRef<THREE.Mesh>(null)
   const weaponProjLightRef   = useRef<THREE.PointLight>(null)
   const MAX_BANANAS = 6
@@ -296,6 +298,7 @@ export function GameScene() {
   const gPrev     = useRef(false)
   const rPrev     = useRef(false)
   const vPrev     = useRef(false)
+  const lPrev     = useRef(false)
   // Edge-detection refs — P2
   const p2GrenPrev   = useRef(false)
   const p2GpShootPrev = useRef(false)
@@ -337,6 +340,7 @@ export function GameScene() {
       (loadout.selectedWeapon === 'pistol' || loadout.selectedWeapon === 'smg')
     entityStore.grenadeCount   = isRange ? 99 : 3
     entityStore.vernichterAmmo = loadout.vernichterStock
+    entityStore.laserAmmo      = loadout.laserStock
     entityStore.ammo2          = isRange ? 9999 : loadout.getMaxAmmo()
     entityStore.maxAmmo2       = entityStore.ammo2
     entityStore.grenadeCount2  = isRange ? 99 : 3
@@ -552,18 +556,21 @@ export function GameScene() {
     const gDown     = keys.has('KeyG')
     const rDown     = keys.has('KeyR')
     const vDown     = keys.has('KeyV')
+    const lDown     = keys.has('KeyL')
     const spaceJust = (spaceDown && !spacePrev.current) || mobileDiveJust
     const qJust     = qDown     && !qPrev.current
     const eJust     = eDown     && !ePrev.current
     const gJust     = (gDown && !gPrev.current) || mobileGrenJust
     const rJust     = rDown     && !rPrev.current   // reload
     const vJust     = vDown     && !vPrev.current   // vernichter
+    const lJust     = lDown     && !lPrev.current   // death laser
     spacePrev.current = spaceDown
     qPrev.current     = qDown
     ePrev.current     = eDown
     gPrev.current     = gDown
     rPrev.current     = rDown
     vPrev.current     = vDown
+    lPrev.current     = lDown
 
     // ── Number keys 1-5: weapon switching ────────────────────────────────────
     {
@@ -1395,6 +1402,71 @@ export function GameScene() {
       if (vernichterLightRef.current) vernichterLightRef.current.visible = false
     }
 
+    // ── Death Laser (L) ──────────────────────────────────────────────────────
+    if (lJust && es.laserAmmo > 0 && !es.laserBeam) {
+      es.laserAmmo--
+      const px = es.player.position.x, pz = es.player.position.y
+      const dx = _toMouse.x, dz = _toMouse.y
+      // Raycast: find beam endpoint (wall or far end)
+      const maxT = LASER_RANGE
+      let endT = maxT
+      if (Math.abs(dx) > 0.001) {
+        const tX = dx > 0 ? (ARENA_HALF - px) / dx : (-ARENA_HALF - px) / dx
+        if (tX > 0 && tX < endT) endT = tX
+      }
+      if (Math.abs(dz) > 0.001) {
+        const tZ = dz > 0 ? (ARENA_HALF - pz) / dz : (-ARENA_HALF - pz) / dz
+        if (tZ > 0 && tZ < endT) endT = tZ
+      }
+      const x1 = px + dx * endT, z1 = pz + dz * endT
+      es.laserBeam = { x0: px, z0: pz, x1, z1, timer: 0.55 }
+
+      // Kill all enemies within LASER_WIDTH of the ray
+      for (const [eid, enemy] of es.enemies) {
+        if (enemiesToRemove.includes(eid)) continue
+        // Point-to-line distance: project enemy onto ray
+        const ex = enemy.position.x - px, ez = enemy.position.y - pz
+        const t  = Math.max(0, Math.min(endT, ex * dx + ez * dz))
+        const cx = px + dx * t - enemy.position.x
+        const cz = pz + dz * t - enemy.position.y
+        if (Math.sqrt(cx*cx + cz*cz) < LASER_WIDTH + ENEMY_CONFIGS[enemy.type].size) {
+          enemy.health = 0
+          enemiesToRemove.push(eid)
+          scoreGained   += ENEMY_CONFIGS[enemy.type].scoreValue
+          creditsGained += ENEMY_CONFIGS[enemy.type].creditValue
+          spawnParticles(enemy.position.x, enemy.position.y, 'explosion', 25)
+          spawnParticles(enemy.position.x, enemy.position.y, 'spark', 12)
+          spawnDecal(enemy.position.x, enemy.position.y, 1.2)
+          playDeath(0.5)
+        }
+      }
+    }
+
+    // Update laser beam timer and mesh
+    if (es.laserBeam) {
+      es.laserBeam.timer -= rawDt
+      if (es.laserBeam.timer <= 0) {
+        es.laserBeam = null
+        if (laserBeamMeshRef.current) laserBeamMeshRef.current.visible = false
+      } else if (laserBeamMeshRef.current) {
+        const lb = es.laserBeam
+        const midX = (lb.x0 + lb.x1) * 0.5
+        const midZ = (lb.z0 + lb.z1) * 0.5
+        const len  = Math.hypot(lb.x1 - lb.x0, lb.z1 - lb.z0)
+        const ang  = Math.atan2(lb.x1 - lb.x0, lb.z1 - lb.z0)
+        const fade = lb.timer / 0.55
+        laserBeamMeshRef.current.position.set(midX, 0.5, midZ)
+        laserBeamMeshRef.current.rotation.y = ang
+        laserBeamMeshRef.current.scale.set(0.18 * fade, 1.5, len)
+        laserBeamMeshRef.current.visible = true
+        const mat = laserBeamMeshRef.current.material as THREE.MeshStandardMaterial
+        mat.emissiveIntensity = 6 * fade
+        mat.opacity = 0.9 * fade
+      }
+    } else if (laserBeamMeshRef.current) {
+      laserBeamMeshRef.current.visible = false
+    }
+
     // ── Update weapon projectile (plasma / bazooka) ───────────────────────────
     if (es.weaponProjectile) {
       const wp  = es.weaponProjectile
@@ -1841,6 +1913,20 @@ export function GameScene() {
         distance={12}
         decay={2}
       />
+
+      {/* Death Laser beam */}
+      <mesh ref={laserBeamMeshRef} visible={false}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial
+          color="#ff2200"
+          emissive="#ff4400"
+          emissiveIntensity={6}
+          roughness={0}
+          metalness={0}
+          transparent
+          opacity={0.9}
+        />
+      </mesh>
 
       <ParticleSystem />
       <PickupSystem />

@@ -171,3 +171,8 @@ export const VERNICHTER_SPEED      = 6
 export const VERNICHTER_RADIUS     = 9
 export const VERNICHTER_DAMAGE     = 500
 export const VERNICHTER_AMMO_PRICE = 300
+
+// Death Laser
+export const LASER_RANGE      = 40   // beam length in world units
+export const LASER_WIDTH      = 0.8  // beam hit radius (2D circle vs ray)
+export const LASER_AMMO_PRICE = 250

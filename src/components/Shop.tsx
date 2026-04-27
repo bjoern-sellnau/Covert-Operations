@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useGameStore } from '../store/gameStore'
 import { useLoadoutStore } from '../game/loadoutStore'
 import {
-  WEAPON_CONFIGS, EQUIPMENT_CONFIGS, AMMO_CONFIGS, AKIMBO_PRICE, VERNICHTER_AMMO_PRICE,
+  WEAPON_CONFIGS, EQUIPMENT_CONFIGS, AMMO_CONFIGS, AKIMBO_PRICE, VERNICHTER_AMMO_PRICE, LASER_AMMO_PRICE,
   type WeaponId, type EquipmentId, type AmmoId,
 } from '../game/types'
 
@@ -492,7 +492,55 @@ function VernichterCard() {
   )
 }
 
-// ── Akimbo upgrade card ──────────────────────────────────────────────────────
+// ── Death Laser card ─────────────────────────────────────────────────────────
+
+function LaserCard() {
+  const { credits, laserStock, buyLaserAmmo } = useLoadoutStore()
+  const canAfford = credits >= LASER_AMMO_PRICE
+
+  return (
+    <div
+      style={{
+        background: '#110005',
+        border: '1px solid #ff003344',
+        borderRadius: 4,
+        padding: '14px 16px',
+        cursor: canAfford ? 'pointer' : 'default',
+        transition: 'border-color 0.15s',
+        boxShadow: '0 0 20px #cc001122, inset 0 0 30px #aa000811',
+      }}
+      onClick={() => canAfford && buyLaserAmmo()}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+        <div>
+          <div style={{ color: '#ff2244', fontSize: 16, fontWeight: 'bold', letterSpacing: 2, textShadow: '0 0 12px #ff0022' }}>
+            TODESLASER
+          </div>
+          <div style={{ color: '#553344', fontSize: 11, marginTop: 2, letterSpacing: 1 }}>Sofortstrahl · [L]-Taste</div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ color: '#ff2244', fontSize: 11, letterSpacing: 2, padding: '3px 8px', border: '1px solid #ff0033', borderRadius: 2, marginBottom: 4 }}>
+            ×{laserStock} VORRAT
+          </div>
+          <div style={{ color: canAfford ? '#ffee00' : '#664400', fontSize: 13, fontWeight: 'bold' }}>
+            {LASER_AMMO_PRICE} CR / Schuss
+          </div>
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
+        <div style={{ color: '#ff2244', fontSize: 12, fontWeight: 'bold' }}>Reichweite: 40m</div>
+        <div style={{ color: '#ff2244', fontSize: 12, fontWeight: 'bold' }}>Schaden: INSTANT-TOD</div>
+      </div>
+      <div style={{ color: '#553344', fontSize: 11, lineHeight: 1.5 }}>
+        Augenblicklicher Strahl in Zielrichtung. Alle Gegner im Pfad werden sofort vernichtet.
+        Spieler ist nicht betroffen.
+      </div>
+      {!canAfford && (
+        <div style={{ color: '#442200', fontSize: 10, marginTop: 6, letterSpacing: 1 }}>NICHT GENUG CREDITS</div>
+      )}
+    </div>
+  )
+}
 
 // ── Main Shop ────────────────────────────────────────────────────────────────
 
@@ -620,8 +668,9 @@ export function Shop() {
               {(['plasma', 'bazooka', 'banana', 'bfg'] as WeaponId[]).map((id) => (
                 <WeaponCard key={id} id={id} />
               ))}
-              <div style={{ color: '#553322', fontSize: 10, letterSpacing: 3, marginTop: 8, marginBottom: 4 }}>BFG</div>
+              <div style={{ color: '#553322', fontSize: 10, letterSpacing: 3, marginTop: 8, marginBottom: 4 }}>SPEZIALWAFFEN</div>
               <VernichterCard />
+              <LaserCard />
             </>
           )}
 
