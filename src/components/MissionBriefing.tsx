@@ -105,7 +105,7 @@ export function MissionBriefing() {
 
   function launch() {
     if (gameMode === 'skydive') setPhase('skydive')
-    else if (gameMode === 'shooting_range') setPhase('playing')
+    else if (gameMode === 'shooting_range') setPhase('shop')
     else setPhase('mutators')
   }
 

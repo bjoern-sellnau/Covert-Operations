@@ -1341,8 +1341,8 @@ export function GameScene() {
     // ── Update Vernichter projectile ──────────────────────────────────────────
     if (es.vernichterProjectile) {
       const vp = es.vernichterProjectile
-      vp.x += vp.vx * rawDt
-      vp.z += vp.vz * rawDt
+      vp.x += vp.vx * dt
+      vp.z += vp.vz * dt
 
       // Pulsing glow mesh
       if (vernichterMeshRef.current) {
@@ -1534,8 +1534,8 @@ export function GameScene() {
     if (es.weaponProjectile) {
       const wp  = es.weaponProjectile
       const wcf = WEAPON_CONFIGS[loadout.selectedWeapon]
-      wp.x += wp.vx * rawDt
-      wp.z += wp.vz * rawDt
+      wp.x += wp.vx * dt
+      wp.z += wp.vz * dt
 
       const projRadius  = wcf.projectileRadius ?? 2.5
       const projDamage  = wcf.projectileDamage ?? 30

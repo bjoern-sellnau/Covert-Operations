@@ -598,6 +598,7 @@ export function Shop() {
   const [category, setCategory] = useState<Category>('waffen')
   const setPhase    = useGameStore((s) => s.setPhase)
   const setGameMode = useGameStore((s) => s.setGameMode)
+  const gameMode    = useGameStore((s) => s.gameMode)
   const { credits } = useLoadoutStore()
 
   const mob = typeof window !== 'undefined' && window.innerWidth < 640
@@ -785,7 +786,10 @@ export function Shop() {
         </button>
 
         <button
-          onClick={() => { setGameMode('arena'); setPhase('briefing') }}
+          onClick={() => {
+            if (gameMode === 'shooting_range') { setPhase('playing') }
+            else { setGameMode('arena'); setPhase('briefing') }
+          }}
           style={{
             background: '#00aaff22', border: '2px solid #00aaff', color: '#00ccff',
             fontSize: mob ? 16 : 14, letterSpacing: 4, padding: mob ? '16px' : '12px 36px',

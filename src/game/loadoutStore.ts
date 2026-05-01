@@ -60,6 +60,7 @@ export const useLoadoutStore = create<LoadoutStore>()(
         if (s.ownedWeapons.includes(id)) {
           if (cfg.stackable) {
             // Buy another copy: deduct credits, add a stack (increases max durability)
+            if ((s.meleeStacks[id] ?? 1) >= 5) return false
             if (s.credits < cfg.price) return false
             set((st) => ({
               credits:     st.credits - cfg.price,
@@ -147,6 +148,7 @@ export const useLoadoutStore = create<LoadoutStore>()(
 
       buyVernichterAmmo: () => {
         const s = get()
+        if (s.vernichterStock >= 5) return false
         if (s.credits < VERNICHTER_AMMO_PRICE) return false
         set((st) => ({ credits: st.credits - VERNICHTER_AMMO_PRICE, vernichterStock: st.vernichterStock + 1 }))
         return true
@@ -154,6 +156,7 @@ export const useLoadoutStore = create<LoadoutStore>()(
 
       buyLaserAmmo: () => {
         const s = get()
+        if (s.laserStock >= 3) return false
         if (s.credits < LASER_AMMO_PRICE) return false
         set((st) => ({ credits: st.credits - LASER_AMMO_PRICE, laserStock: st.laserStock + 1 }))
         return true
@@ -161,6 +164,7 @@ export const useLoadoutStore = create<LoadoutStore>()(
 
       buyIonAmmo: () => {
         const s = get()
+        if (s.ionStock >= 3) return false
         if (s.credits < ION_AMMO_PRICE) return false
         set((st) => ({ credits: st.credits - ION_AMMO_PRICE, ionStock: st.ionStock + 1 }))
         return true
