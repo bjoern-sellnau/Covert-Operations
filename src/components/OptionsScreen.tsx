@@ -14,7 +14,7 @@ export function OptionsScreen() {
 
   const [previewing, setPreviewing] = useState<string | null>(null)
 
-  type PreviewId = 'game1' | 'game2' | 'game3' | 'game4' | 'game5' | 'game6' | 'game7' | 'game8' | 'game9' | 'game10' | 'game11' | 'game12' | 'game13' | 'game14' | 'game15' | 'game16' | 'game17' | 'game18' | 'game19' | 'game20'
+  type PreviewId = 'game1' | 'game2' | 'game3' | 'game4' | 'game5' | 'game6' | 'game7' | 'game8' | 'game9' | 'game10' | 'game11' | 'game12' | 'game13' | 'game14' | 'game15' | 'game16' | 'game17' | 'game18' | 'game19' | 'game20' | 'game21' | 'game22' | 'game23' | 'game24' | 'game25' | 'game26' | 'game27' | 'game28' | 'game29' | 'game30'
 
   function handlePreview(val: PreviewId) {
     if (previewing === val) {
@@ -68,6 +68,16 @@ export function OptionsScreen() {
     ['game18', 'TRACK 18', '#88ccff', 'C-Dur 85 BPM Lo-Fi'],
     ['game19', 'TRACK 19', '#00eebb', 'A-Moll 148 BPM Psytrance'],
     ['game20', 'TRACK 20', '#cc99ff', 'F-Moll 135 BPM Minimal Techno'],
+    ['game21', 'TRACK 21', '#ff0066', 'E-Moll 145 BPM Aggrotech'],
+    ['game22', 'TRACK 22', '#ddaa00', 'D-Moll 95 BPM Epic Trailer'],
+    ['game23', 'TRACK 23', '#ff3300', 'E-Moll 190 BPM Speed Metal'],
+    ['game24', 'TRACK 24', '#ffdd44', 'C-Dur 120 BPM Electro Swing'],
+    ['game25', 'TRACK 25', '#334466', 'H-Moll 75 BPM Ambient Dark'],
+    ['game26', 'TRACK 26', '#00ff66', 'G-Moll 138 BPM Acid Techno'],
+    ['game27', 'TRACK 27', '#9966ff', 'A-Moll 140 BPM Trap'],
+    ['game28', 'TRACK 28', '#ff88cc', 'C-Moll 110 BPM Retrowave'],
+    ['game29', 'TRACK 29', '#ff6600', 'D-Moll 165 BPM Jungle'],
+    ['game30', 'TRACK 30', '#aaddff', 'E-Moll 125 BPM Hybrid Orchestral'],
   ]
 
   return (

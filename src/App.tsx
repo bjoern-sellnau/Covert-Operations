@@ -3,7 +3,7 @@ import { useGameStore } from './store/gameStore'
 import { useNetStore } from './net/netStore'
 import { useSettingsStore } from './store/settingsStore'
 import { socket } from './net/socket'
-import { startMenuMusic, startGameMusic, startGameMusic2, startGameMusic3, startGameMusic4, startGameMusic5, startGameMusic6, startGameMusic7, startGameMusic8, startGameMusic9, startGameMusic10, startGameMusic11, startGameMusic12, startGameMusic13, startGameMusic14, startGameMusic15, startGameMusic16, startGameMusic17, startGameMusic18, startGameMusic19, startGameMusic20, startSkydiveMusic, stopMusic } from './game/music'
+import { startMenuMusic, startGameMusic, startGameMusic2, startGameMusic3, startGameMusic4, startGameMusic5, startGameMusic6, startGameMusic7, startGameMusic8, startGameMusic9, startGameMusic10, startGameMusic11, startGameMusic12, startGameMusic13, startGameMusic14, startGameMusic15, startGameMusic16, startGameMusic17, startGameMusic18, startGameMusic19, startGameMusic20, startGameMusic21, startGameMusic22, startGameMusic23, startGameMusic24, startGameMusic25, startGameMusic26, startGameMusic27, startGameMusic28, startGameMusic29, startGameMusic30, startSkydiveMusic, stopMusic } from './game/music'
 import { Game } from './game/Game'
 import { HUD } from './components/HUD'
 import { MainMenu } from './components/MainMenu'
@@ -64,6 +64,16 @@ export function App() {
     else if (musicTrack === 'game18') startGameMusic18()
     else if (musicTrack === 'game19') startGameMusic19()
     else if (musicTrack === 'game20') startGameMusic20()
+    else if (musicTrack === 'game21') startGameMusic21()
+    else if (musicTrack === 'game22') startGameMusic22()
+    else if (musicTrack === 'game23') startGameMusic23()
+    else if (musicTrack === 'game24') startGameMusic24()
+    else if (musicTrack === 'game25') startGameMusic25()
+    else if (musicTrack === 'game26') startGameMusic26()
+    else if (musicTrack === 'game27') startGameMusic27()
+    else if (musicTrack === 'game28') startGameMusic28()
+    else if (musicTrack === 'game29') startGameMusic29()
+    else if (musicTrack === 'game30') startGameMusic30()
     else startGameMusic()
   }, [phase, musicEnabled, musicTrack])
 

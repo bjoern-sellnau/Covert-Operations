@@ -14,9 +14,9 @@
 
 ## 2. Musik-Fix + 20 neue Tracks
 - ✅ 2.1 Double-Music-Bug fixen (clearAudio-Pattern in music.ts)
-- ⬜ 2.2 Menü-Musik epischer machen
+- ✅ 2.2 Menü-Musik epischer machen
 - ✅ 2.3 Tracks 11–20 hinzufügen (music.ts)
-- ⬜ 2.4 Tracks 21–30 hinzufügen (music.ts)
+- ✅ 2.4 Tracks 21–30 hinzufügen (music.ts)
 - ✅ 2.5 settingsStore + App.tsx + OptionsScreen aktualisieren
 
 ## 3. Auto-Akimbo
