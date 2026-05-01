@@ -6,7 +6,7 @@ let _trackGain: GainNode | null = null
 let _scheduler: ReturnType<typeof setInterval> | null = null
 let _padOscs: OscillatorNode[] = []
 let _nextBar = 0
-let _track: 'menu' | 'game' | 'game2' | 'game3' | 'game4' | 'skydive' | 'game5' | 'game6' | 'game7' | 'game8' | 'game9' | 'game10' | 'game11' | 'game12' | 'game13' | 'game14' | 'game15' | 'game16' | 'game17' | 'game18' | 'game19' | 'game20' | 'game21' | 'game22' | 'game23' | 'game24' | 'game25' | 'game26' | 'game27' | 'game28' | 'game29' | 'game30' | null = null
+let _track: 'menu' | 'game' | 'game2' | 'game3' | 'game4' | 'skydive' | 'game5' | 'game6' | 'game7' | 'game8' | 'game9' | 'game10' | 'game11' | 'game12' | 'game13' | 'game14' | 'game15' | 'game16' | 'game17' | 'game18' | 'game19' | 'game20' | 'game21' | 'game22' | 'game23' | 'game24' | 'game25' | 'game26' | 'game27' | 'game28' | 'game29' | 'game30' | 'game31' | null = null
 let _previewTimer: ReturnType<typeof setTimeout> | null = null
 
 function ctx(): AudioContext {
@@ -168,6 +168,25 @@ function acidBass(freq: number, when: number, dur: number, vol: number) {
   osc.start(when); osc.stop(when + dur + 0.06)
 }
 
+function orchHit(rootFreq: number, when: number, vol: number) {
+  const c = ctx()
+  for (const ratio of [1, 1.1892, 1.4983, 2]) {  // root, m3, P5, octave
+    const osc  = c.createOscillator()
+    const filt = c.createBiquadFilter()
+    const env  = c.createGain()
+    osc.type = 'sawtooth'; osc.frequency.value = rootFreq * ratio
+    filt.type = 'lowpass'; filt.Q.value = 2.5
+    filt.frequency.setValueAtTime(200, when)
+    filt.frequency.linearRampToValueAtTime(4000, when + 0.04)
+    filt.frequency.exponentialRampToValueAtTime(900, when + 0.9)
+    env.gain.setValueAtTime(0, when)
+    env.gain.linearRampToValueAtTime(vol / 4, when + 0.02)
+    env.gain.exponentialRampToValueAtTime(0.001, when + 1.1)
+    osc.connect(filt); filt.connect(env); env.connect(tgain())
+    osc.start(when); osc.stop(when + 1.2)
+  }
+}
+
 function clearAudio() {
   if (_previewTimer) { clearTimeout(_previewTimer); _previewTimer = null }
   if (_scheduler) { clearInterval(_scheduler); _scheduler = null }
@@ -180,81 +199,90 @@ function clearAudio() {
   }
 }
 
-// ── Menu music (E minor, 128 BPM — Agent Techno) ─────────────────────────────
+// ── Menu music (D minor, 138 BPM — Epic Orchestral Agent Theme) ──────────────
 
-const MENU_BPM  = 128
-const MENU_BEAT = 60 / MENU_BPM   // 0.46875s
-const MENU_8TH  = MENU_BEAT / 2   // 0.234s
-const MENU_16TH = MENU_BEAT / 4   // 0.117s
-const MENU_BAR  = MENU_BEAT * 4   // 1.875s
+const MENU_BPM  = 138
+const MENU_BEAT = 60 / MENU_BPM   // 0.4348s
+const MENU_8TH  = MENU_BEAT / 2   // 0.2174s
+const MENU_16TH = MENU_BEAT / 4   // 0.1087s
+const MENU_BAR  = MENU_BEAT * 4   // 1.739s
 
-// Acid bass (16 steps, 16th notes) — E2 groove with chromatic passing tones
-const MENU_BASS = [82.41, 0, 82.41, 98, 0, 82.41, 73.42, 0, 65.41, 61.74, 0, 98, 110, 0, 82.41, 0]
-//                 E2     -   E2    G2  -   E2     D2     -   C2     B1     -   G2  A2   -  E2     -
+// Driving string ostinato (16 steps, 16th notes) — Dm arpeggio, urgent Herrmann-style
+const MENU_STR = [
+  146.83, 174.61, 220, 261.63, 220, 174.61, 220, 174.61,
+  146.83, 130.81, 146.83, 174.61, 220, 261.63, 293.66, 261.63,
+]
 
-// Spy arp lead (8th notes, 4-bar cycle) — angular intervals, chromatic tension
-const MENU_ARP_A = [329.63, 0,      392,    0,      493.88, 440,    392,    369.99] // E4 - G4 - B4 A4 G4 F#4
-const MENU_ARP_B = [329.63, 349.23, 329.63, 0,      392,    415.3,  440,    0]      // E4 F4 E4 - G4 Ab4 A4 — spy hook
-const MENU_ARP_C = [493.88, 523.25, 0,      587.33, 0,      523.25, 493.88, 440]   // B4 C5 - D5 - C5 B4 A4 — climax
-const MENU_ARP_D = [440,    392,    349.23, 329.63, 0,      293.66, 329.63, 0]      // A4 G4 F4 E4 - D4 E4 — resolve
+// Bass (8th notes, 4-bar cycle): D2 A1 walking
+const MENU_BASS_A = [73.42, 55,    73.42, 55,    43.65, 55,    73.42, 55]
+const MENU_BASS_B = [49,    73.42, 49,    73.42, 58.27, 73.42, 49,    58.27]
+const MENU_BASS_C = [73.42, 55,    73.42, 55,    43.65, 55,    65.41, 55]
+const MENU_BASS_D = [82.41, 61.74, 82.41, 49,    82.41, 61.74, 73.42, 55]
 
-// Counter melody (octave lower, triangle)
-const MENU_CTR_A = [164.81, 0,      196,    0,      246.94, 220,    196,    185]
-const MENU_CTR_B = [164.81, 174.61, 164.81, 0,      196,    207.65, 220,    0]
-const MENU_CTR_C = [246.94, 261.63, 0,      293.66, 0,      261.63, 246.94, 220]
-const MENU_CTR_D = [220,    196,    174.61, 164.81, 0,      146.83, 164.81, 0]
+// Spy agent melody (8th notes) — ascending Dm hook with Bb tritone peak
+const MENU_MEL_A = [293.66, 349.23, 440,    466.16, 440,    392,    349.23, 329.63] // D4 F4 A4 Bb4 A4 G4 F4 E4
+const MENU_MEL_B = [329.63, 349.23, 329.63, 0,      392,    415.3,  440,    0]      // E4 F4 E4 - G4 Ab4 A4 -
+const MENU_MEL_C = [587.33, 0,      523.25, 466.16, 440,    0,      392,    440]    // D5 - C5 Bb4 A4 - G4 A4 (peak)
+const MENU_MEL_D = [440,    415.3,  392,    349.23, 0,      329.63, 293.66, 0]      // A4 Ab4 G4 F4 - E4 D4 -
 
 let _menuMelBar = 0
 
 function scheduleMenuBar(t: number) {
   const phase = _menuMelBar % 4
 
-  // ── 4/4 techno kick ────────────────────────────────────────────────────────
-  for (let b = 0; b < 4; b++) kick(t + MENU_BEAT * b, b === 0 ? 0.72 : 0.60)
-
-  // ── Snare on 2+4 ──────────────────────────────────────────────────────────
-  snare(t + MENU_BEAT, 0.34)
-  snare(t + MENU_BEAT * 3, 0.28)
-
-  // ── 16th hi-hats: heavy on beats, medium on 8ths, ghost on 16ths ──────────
+  // ── Percussion ─────────────────────────────────────────────────────────────
+  for (let b = 0; b < 4; b++) kick(t + MENU_BEAT * b, b === 0 ? 0.75 : 0.60)
+  snare(t + MENU_BEAT, 0.38)
+  snare(t + MENU_BEAT * 3, 0.32)
+  if (phase === 0) timpani(t, 0.55)
+  if (phase === 2) timpani(t, 0.42)
   for (let i = 0; i < 16; i++) {
-    const vol = i % 4 === 0 ? 0.11 : (i % 2 === 0 ? 0.07 : 0.034)
-    hihat(t + MENU_16TH * i, vol, 0.022)
-  }
-  // Open hat on "and" of beat 2 — techno groove pocket
-  hihat(t + MENU_BEAT * 1.5, 0.15, 0.22)
-
-  // ── Acid bass (TB-303 style, filter sweep per note) ────────────────────────
-  for (let i = 0; i < 16; i++) {
-    if (MENU_BASS[i] > 0)
-      acidBass(MENU_BASS[i], t + MENU_16TH * i, MENU_16TH * 0.82, 0.42)
+    const vol = i % 4 === 0 ? 0.10 : (i % 2 === 0 ? 0.06 : 0.028)
+    hihat(t + MENU_16TH * i, vol, 0.020)
   }
 
-  // ── Spy arp lead (square wave — cold, angular) ────────────────────────────
-  const arps = [MENU_ARP_A, MENU_ARP_B, MENU_ARP_C, MENU_ARP_D]
-  const arp = arps[phase]
+  // ── Orchestra hit (bars 1 + 3 of phrase) ──────────────────────────────────
+  if (phase === 0) orchHit(73.42, t, 0.22)   // D2 minor chord
+  if (phase === 2) orchHit(49,    t, 0.18)   // G1 minor chord (subdominant)
+
+  // ── Driving string ostinato ────────────────────────────────────────────────
+  for (let i = 0; i < 16; i++)
+    note(MENU_STR[i], t + MENU_16TH * i, MENU_16TH * 0.65, 0.052, 'triangle', 1600)
+
+  // ── Bass ───────────────────────────────────────────────────────────────────
+  const basLines = [MENU_BASS_A, MENU_BASS_B, MENU_BASS_C, MENU_BASS_D]
+  const bas = basLines[phase]
+  for (let i = 0; i < 8; i++)
+    note(bas[i], t + MENU_8TH * i, MENU_8TH * 1.4, 0.34, 'sawtooth', 220)
+
+  // ── Brass fanfare ─────────────────────────────────────────────────────────
+  if (phase === 0) {
+    for (const f of [146.83, 220, 293.66, 440]) brass(f, t, MENU_BEAT * 1.8, 0.15)
+    brass(587.33, t, MENU_BEAT * 1.2, 0.08)
+  }
+  if (phase === 1) {
+    brass(349.23, t + MENU_BEAT,       MENU_BEAT * 0.9, 0.12)
+    brass(440,    t + MENU_BEAT,       MENU_BEAT * 0.9, 0.09)
+    brass(523.25, t + MENU_BEAT * 2.5, MENU_BEAT * 0.7, 0.10)
+  }
+  if (phase === 2) {
+    for (const f of [98, 146.83, 196, 293.66]) brass(f, t, MENU_BEAT * 1.8, 0.14)
+    brass(392, t, MENU_BEAT * 1.2, 0.07)
+  }
+  if (phase === 3) {
+    brass(329.63, t + MENU_BEAT,       MENU_BEAT * 0.8, 0.11)  // E4
+    brass(392,    t + MENU_BEAT * 2,   MENU_BEAT * 0.8, 0.11)  // G4
+    brass(466.16, t + MENU_BEAT * 3,   MENU_BEAT * 1.0, 0.13)  // Bb4 — tritone peak
+  }
+
+  // ── Spy agent melody ──────────────────────────────────────────────────────
+  const mels = [MENU_MEL_A, MENU_MEL_B, MENU_MEL_C, MENU_MEL_D]
+  const mel = mels[phase]
   for (let i = 0; i < 8; i++) {
-    if (arp[i] > 0) note(arp[i], t + MENU_8TH * i, MENU_8TH * 0.62, 0.13, 'square', 2400)
-  }
-
-  // ── Counter melody (triangle — warm contrast to lead) ─────────────────────
-  const ctrs = [MENU_CTR_A, MENU_CTR_B, MENU_CTR_C, MENU_CTR_D]
-  const ctr = ctrs[phase]
-  for (let i = 0; i < 8; i++) {
-    if (ctr[i] > 0) note(ctr[i], t + MENU_8TH * i, MENU_8TH * 0.78, 0.07, 'triangle', 1100)
-  }
-
-  // ── Off-beat chord stabs (Em / Dm alternating, sawtooth) ─────────────────
-  if (phase % 2 === 0) {
-    for (const f of [164.81, 196, 246.94])  // Em: E3 G3 B3
-      note(f, t + MENU_8TH, MENU_16TH * 1.8, 0.065, 'sawtooth', 900)
-    for (const f of [164.81, 196, 246.94])
-      note(f, t + MENU_BEAT * 2 + MENU_8TH, MENU_16TH * 1.8, 0.055, 'sawtooth', 900)
-  } else {
-    for (const f of [146.83, 174.61, 220])  // Dm: D3 F3 A3 — tritone tension
-      note(f, t + MENU_BEAT + MENU_8TH, MENU_16TH * 2.2, 0.060, 'sawtooth', 800)
-    for (const f of [146.83, 174.61, 220])
-      note(f, t + MENU_BEAT * 3 + MENU_8TH, MENU_16TH * 2.2, 0.055, 'sawtooth', 800)
+    if (mel[i] > 0) {
+      note(mel[i], t + MENU_8TH * i, MENU_8TH * 0.75, 0.14, 'square', 2600)
+      if (phase === 2) note(mel[i] * 0.5, t + MENU_8TH * i, MENU_8TH * 0.65, 0.06, 'sine', 1200)
+    }
   }
 
   _menuMelBar++
@@ -329,8 +357,8 @@ export function startMenuMusic() {
   if (_track === 'menu') return
   _menuMelBar = 0
   startScheduler(MENU_BAR, scheduleMenuBar)
-  // Cold filtered sawtooth pad: Em voicing (E1 B1 E2 G2 B2)
-  startPad([41.2, 61.74, 82.41, 98, 123.47], 'sawtooth', 260, 0.009)
+  // Epic Dm pad: D1 F1 A1 D2 F2 A2 (orchestral swell foundation)
+  startPad([36.71, 43.65, 55, 73.42, 87.31, 110], 'sawtooth', 380, 0.011)
   _track = 'menu'
 }
 
@@ -1137,9 +1165,69 @@ export function startGameMusic30() {
   _track = 'game30'
 }
 
+// ── Game track 31 — Agent Techno (E minor, 128 BPM) ──────────────────────────
+
+const G31_BEAT = 60 / 128
+const G31_8TH  = G31_BEAT / 2
+const G31_16TH = G31_BEAT / 4
+const G31_BAR  = G31_BEAT * 4
+
+const G31_BASS  = [82.41, 0, 82.41, 98, 0, 82.41, 73.42, 0, 65.41, 61.74, 0, 98, 110, 0, 82.41, 0]
+const G31_ARP_A = [329.63, 0,      392,    0,      493.88, 440,    392,    369.99]
+const G31_ARP_B = [329.63, 349.23, 329.63, 0,      392,    415.3,  440,    0]
+const G31_ARP_C = [493.88, 523.25, 0,      587.33, 0,      523.25, 493.88, 440]
+const G31_ARP_D = [440,    392,    349.23, 329.63, 0,      293.66, 329.63, 0]
+const G31_CTR_A = [164.81, 0,      196,    0,      246.94, 220,    196,    185]
+const G31_CTR_B = [164.81, 174.61, 164.81, 0,      196,    207.65, 220,    0]
+const G31_CTR_C = [246.94, 261.63, 0,      293.66, 0,      261.63, 246.94, 220]
+const G31_CTR_D = [220,    196,    174.61, 164.81, 0,      146.83, 164.81, 0]
+
+let _g31Bar = 0
+
+function scheduleG31Bar(t: number) {
+  const phase = _g31Bar % 4
+  for (let b = 0; b < 4; b++) kick(t + G31_BEAT * b, b === 0 ? 0.72 : 0.60)
+  snare(t + G31_BEAT, 0.34); snare(t + G31_BEAT * 3, 0.28)
+  for (let i = 0; i < 16; i++) {
+    hihat(t + G31_16TH * i, i % 4 === 0 ? 0.11 : (i % 2 === 0 ? 0.07 : 0.034), 0.022)
+  }
+  hihat(t + G31_BEAT * 1.5, 0.15, 0.22)
+  for (let i = 0; i < 16; i++) {
+    if (G31_BASS[i] > 0) acidBass(G31_BASS[i], t + G31_16TH * i, G31_16TH * 0.82, 0.42)
+  }
+  const arps = [G31_ARP_A, G31_ARP_B, G31_ARP_C, G31_ARP_D]
+  for (let i = 0; i < 8; i++) {
+    if (arps[phase][i] > 0) note(arps[phase][i], t + G31_8TH * i, G31_8TH * 0.62, 0.13, 'square', 2400)
+  }
+  const ctrs = [G31_CTR_A, G31_CTR_B, G31_CTR_C, G31_CTR_D]
+  for (let i = 0; i < 8; i++) {
+    if (ctrs[phase][i] > 0) note(ctrs[phase][i], t + G31_8TH * i, G31_8TH * 0.78, 0.07, 'triangle', 1100)
+  }
+  if (phase % 2 === 0) {
+    for (const f of [164.81, 196, 246.94]) {
+      note(f, t + G31_8TH,                  G31_16TH * 1.8, 0.065, 'sawtooth', 900)
+      note(f, t + G31_BEAT * 2 + G31_8TH,   G31_16TH * 1.8, 0.055, 'sawtooth', 900)
+    }
+  } else {
+    for (const f of [146.83, 174.61, 220]) {
+      note(f, t + G31_BEAT + G31_8TH,        G31_16TH * 2.2, 0.060, 'sawtooth', 800)
+      note(f, t + G31_BEAT * 3 + G31_8TH,    G31_16TH * 2.2, 0.055, 'sawtooth', 800)
+    }
+  }
+  _g31Bar++
+}
+
+export function startGameMusic31() {
+  if (_track === 'game31') return
+  _g31Bar = 0
+  startScheduler(G31_BAR, scheduleG31Bar)
+  startPad([41.2, 61.74, 82.41, 98, 123.47], 'sawtooth', 260, 0.009)
+  _track = 'game31'
+}
+
 // ── Preview ───────────────────────────────────────────────────────────────────
 
-export function previewTrack(track: 'game1' | 'game2' | 'game3' | 'game4' | 'game5' | 'game6' | 'game7' | 'game8' | 'game9' | 'game10' | 'game11' | 'game12' | 'game13' | 'game14' | 'game15' | 'game16' | 'game17' | 'game18' | 'game19' | 'game20' | 'game21' | 'game22' | 'game23' | 'game24' | 'game25' | 'game26' | 'game27' | 'game28' | 'game29' | 'game30', durationMs = 7000) {
+export function previewTrack(track: 'game1' | 'game2' | 'game3' | 'game4' | 'game5' | 'game6' | 'game7' | 'game8' | 'game9' | 'game10' | 'game11' | 'game12' | 'game13' | 'game14' | 'game15' | 'game16' | 'game17' | 'game18' | 'game19' | 'game20' | 'game21' | 'game22' | 'game23' | 'game24' | 'game25' | 'game26' | 'game27' | 'game28' | 'game29' | 'game30' | 'game31', durationMs = 7000) {
   stopMusic()  // clears _track so the start guards pass, cancels any existing preview timer
   if      (track === 'game1')  startGameMusic()
   else if (track === 'game2')  startGameMusic2()
@@ -1170,7 +1258,8 @@ export function previewTrack(track: 'game1' | 'game2' | 'game3' | 'game4' | 'gam
   else if (track === 'game27') startGameMusic27()
   else if (track === 'game28') startGameMusic28()
   else if (track === 'game29') startGameMusic29()
-  else                         startGameMusic30()
+  else if (track === 'game30') startGameMusic30()
+  else                         startGameMusic31()
   _previewTimer = setTimeout(() => {
     _previewTimer = null
     stopMusic()
