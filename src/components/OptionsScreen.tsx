@@ -5,23 +5,53 @@ import type { Difficulty } from '../store/settingsStore'
 import { useLoadoutStore } from '../game/loadoutStore'
 import { previewTrack, stopMusic } from '../game/music'
 
+type PreviewId = 'game1' | 'game2' | 'game3' | 'game4' | 'game5' | 'game6' | 'game7' | 'game8' | 'game9' | 'game10' | 'game11' | 'game12' | 'game13' | 'game14' | 'game15' | 'game16' | 'game17' | 'game18' | 'game19' | 'game20' | 'game21' | 'game22' | 'game23' | 'game24' | 'game25' | 'game26' | 'game27' | 'game28' | 'game29' | 'game30'
+
+const tracks: Array<[PreviewId, string, string, string]> = [
+  ['game1',  'TRACK 1',  '#00aaff', 'D-Moll 138 BPM'],
+  ['game2',  'TRACK 2',  '#ff4444', 'F#-Moll 150 BPM Industrial'],
+  ['game3',  'TRACK 3',  '#44ff88', 'C-Moll 105 BPM Suspense'],
+  ['game4',  'TRACK 4',  '#cc44ff', 'H-Moll 175 BPM Techno'],
+  ['game5',  'TRACK 5',  '#ff8800', 'E-Moll 120 BPM Action Rock'],
+  ['game6',  'TRACK 6',  '#ff2244', 'E-Moll 180 BPM Heavy Metal'],
+  ['game7',  'TRACK 7',  '#00ffee', 'A-Moll 138 BPM Trance'],
+  ['game8',  'TRACK 8',  '#ffdd00', 'H-Moll 112 BPM Spy Jazz'],
+  ['game9',  'TRACK 9',  '#aa00ff', 'D-Moll 174 BPM Drum & Bass'],
+  ['game10', 'TRACK 10', '#ff66cc', 'A-Moll 100 BPM Synthwave'],
+  ['game11', 'TRACK 11', '#33ddff', 'G-Moll 128 BPM Cyberpunk'],
+  ['game12', 'TRACK 12', '#ff3300', 'A-Moll 150 BPM Hardstyle'],
+  ['game13', 'TRACK 13', '#00ff99', 'C-Moll 140 BPM Dark Electro'],
+  ['game14', 'TRACK 14', '#ff9900', 'E-Moll 132 BPM Breakbeat'],
+  ['game15', 'TRACK 15', '#eeeeee', 'D-Moll 90 BPM Orchestral War'],
+  ['game16', 'TRACK 16', '#bb00ff', 'D-Moll 170 BPM Neurofunk'],
+  ['game17', 'TRACK 17', '#ff4400', 'H-Moll 160 BPM Industrial March'],
+  ['game18', 'TRACK 18', '#88ccff', 'C-Dur 85 BPM Lo-Fi'],
+  ['game19', 'TRACK 19', '#00eebb', 'A-Moll 148 BPM Psytrance'],
+  ['game20', 'TRACK 20', '#cc99ff', 'F-Moll 135 BPM Minimal Techno'],
+  ['game21', 'TRACK 21', '#ff0066', 'E-Moll 145 BPM Aggrotech'],
+  ['game22', 'TRACK 22', '#ddaa00', 'D-Moll 95 BPM Epic Trailer'],
+  ['game23', 'TRACK 23', '#ff3300', 'E-Moll 190 BPM Speed Metal'],
+  ['game24', 'TRACK 24', '#ffdd44', 'C-Dur 120 BPM Electro Swing'],
+  ['game25', 'TRACK 25', '#334466', 'H-Moll 75 BPM Ambient Dark'],
+  ['game26', 'TRACK 26', '#00ff66', 'G-Moll 138 BPM Acid Techno'],
+  ['game27', 'TRACK 27', '#9966ff', 'A-Moll 140 BPM Trap'],
+  ['game28', 'TRACK 28', '#ff88cc', 'C-Moll 110 BPM Retrowave'],
+  ['game29', 'TRACK 29', '#ff6600', 'D-Moll 165 BPM Jungle'],
+  ['game30', 'TRACK 30', '#aaddff', 'E-Moll 125 BPM Hybrid Orchestral'],
+]
+
 export function OptionsScreen() {
-  const setPhase            = useGameStore((s) => s.setPhase)
+  const setPhase = useGameStore((s) => s.setPhase)
   const { bloodIntensity, setBloodIntensity, mobileControls, setMobileControls,
           musicEnabled, setMusicEnabled, musicTrack, setMusicTrack,
           difficulty, setDifficulty } = useSettingsStore()
   const { credits, setCredits } = useLoadoutStore()
 
+  const [view, setView]           = useState<'main' | 'music'>('main')
   const [previewing, setPreviewing] = useState<string | null>(null)
 
-  type PreviewId = 'game1' | 'game2' | 'game3' | 'game4' | 'game5' | 'game6' | 'game7' | 'game8' | 'game9' | 'game10' | 'game11' | 'game12' | 'game13' | 'game14' | 'game15' | 'game16' | 'game17' | 'game18' | 'game19' | 'game20' | 'game21' | 'game22' | 'game23' | 'game24' | 'game25' | 'game26' | 'game27' | 'game28' | 'game29' | 'game30'
-
   function handlePreview(val: PreviewId) {
-    if (previewing === val) {
-      stopMusic()
-      setPreviewing(null)
-      return
-    }
+    if (previewing === val) { stopMusic(); setPreviewing(null); return }
     setPreviewing(val)
     previewTrack(val, 8000)
     setTimeout(() => setPreviewing((p) => p === val ? null : p), 8000)
@@ -29,10 +59,15 @@ export function OptionsScreen() {
 
   const bloodLabels = ['AUS', 'DEZENT', 'NORMAL', 'ÜBERTRIEBEN'] as const
 
+  const wrap: React.CSSProperties = {
+    position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
+    alignItems: 'center', overflowY: 'auto',
+    background: 'radial-gradient(ellipse at center, #070720 0%, #020208 70%)',
+    fontFamily: "'Courier New', monospace", userSelect: 'none',
+  }
   const section: React.CSSProperties = {
     display: 'flex', flexDirection: 'column', gap: 10,
-    padding: '16px 20px',
-    background: '#04050f',
+    padding: '16px 20px', background: '#04050f',
     border: '1px solid #141e2a', borderRadius: 4, width: '100%',
   }
   const labelStyle: React.CSSProperties = {
@@ -46,47 +81,69 @@ export function OptionsScreen() {
     fontFamily: "'Courier New', monospace", textTransform: 'uppercase', transition: 'all 0.12s',
     boxShadow: active ? `0 0 10px ${color}44` : 'none',
   })
+  const backBtn: React.CSSProperties = {
+    background: 'transparent', border: '1px solid #1a2a35', color: '#7799aa',
+    fontSize: 12, letterSpacing: 4, padding: '11px', cursor: 'pointer',
+    fontFamily: "'Courier New', monospace", textTransform: 'uppercase', transition: 'all 0.12s',
+  }
 
-  const tracks: Array<[PreviewId, string, string, string]> = [
-    ['game1',  'TRACK 1',  '#00aaff', 'D-Moll 138 BPM'],
-    ['game2',  'TRACK 2',  '#ff4444', 'F#-Moll 150 BPM Industrial'],
-    ['game3',  'TRACK 3',  '#44ff88', 'C-Moll 105 BPM Suspense'],
-    ['game4',  'TRACK 4',  '#cc44ff', 'H-Moll 175 BPM Techno'],
-    ['game5',  'TRACK 5',  '#ff8800', 'E-Moll 120 BPM Action Rock'],
-    ['game6',  'TRACK 6',  '#ff2244', 'E-Moll 180 BPM Heavy Metal'],
-    ['game7',  'TRACK 7',  '#00ffee', 'A-Moll 138 BPM Trance'],
-    ['game8',  'TRACK 8',  '#ffdd00', 'H-Moll 112 BPM Spy Jazz'],
-    ['game9',  'TRACK 9',  '#aa00ff', 'D-Moll 174 BPM Drum & Bass'],
-    ['game10', 'TRACK 10', '#ff66cc', 'A-Moll 100 BPM Synthwave'],
-    ['game11', 'TRACK 11', '#33ddff', 'G-Moll 128 BPM Cyberpunk'],
-    ['game12', 'TRACK 12', '#ff3300', 'A-Moll 150 BPM Hardstyle'],
-    ['game13', 'TRACK 13', '#00ff99', 'C-Moll 140 BPM Dark Electro'],
-    ['game14', 'TRACK 14', '#ff9900', 'E-Moll 132 BPM Breakbeat'],
-    ['game15', 'TRACK 15', '#eeeeee', 'D-Moll 90 BPM Orchestral War'],
-    ['game16', 'TRACK 16', '#bb00ff', 'D-Moll 170 BPM Neurofunk'],
-    ['game17', 'TRACK 17', '#ff4400', 'H-Moll 160 BPM Industrial March'],
-    ['game18', 'TRACK 18', '#88ccff', 'C-Dur 85 BPM Lo-Fi'],
-    ['game19', 'TRACK 19', '#00eebb', 'A-Moll 148 BPM Psytrance'],
-    ['game20', 'TRACK 20', '#cc99ff', 'F-Moll 135 BPM Minimal Techno'],
-    ['game21', 'TRACK 21', '#ff0066', 'E-Moll 145 BPM Aggrotech'],
-    ['game22', 'TRACK 22', '#ddaa00', 'D-Moll 95 BPM Epic Trailer'],
-    ['game23', 'TRACK 23', '#ff3300', 'E-Moll 190 BPM Speed Metal'],
-    ['game24', 'TRACK 24', '#ffdd44', 'C-Dur 120 BPM Electro Swing'],
-    ['game25', 'TRACK 25', '#334466', 'H-Moll 75 BPM Ambient Dark'],
-    ['game26', 'TRACK 26', '#00ff66', 'G-Moll 138 BPM Acid Techno'],
-    ['game27', 'TRACK 27', '#9966ff', 'A-Moll 140 BPM Trap'],
-    ['game28', 'TRACK 28', '#ff88cc', 'C-Moll 110 BPM Retrowave'],
-    ['game29', 'TRACK 29', '#ff6600', 'D-Moll 165 BPM Jungle'],
-    ['game30', 'TRACK 30', '#aaddff', 'E-Moll 125 BPM Hybrid Orchestral'],
-  ]
+  const currentTrack = tracks.find(([id]) => id === musicTrack)
+  const trackLabel   = musicTrack === 'auto' ? 'AUTO' : (currentTrack?.[1] ?? '—')
+  const trackColor   = currentTrack?.[2] ?? '#ffaa00'
 
+  // ── Music sub-screen ─────────────────────────────────────────────────────────
+  if (view === 'music') {
+    return (
+      <div style={wrap}>
+        <div style={{ color: '#00ccff', fontSize: 22, fontWeight: 'bold', letterSpacing: 6, marginTop: 24, marginBottom: 4, textShadow: '0 0 14px #00aaff88' }}>
+          KAMPF-MUSIK
+        </div>
+        <div style={{ color: '#445566', fontSize: 10, letterSpacing: 4, marginBottom: 20 }}>TRACK AUSWÄHLEN</div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: 'min(92vw, 480px)', paddingBottom: 24 }}>
+          {/* AUTO */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button style={tog(musicTrack === 'auto', '#ffaa00')} onClick={() => setMusicTrack('auto')}>AUTO</button>
+            <span style={{ color: '#667788', fontSize: 9, letterSpacing: 1 }}>Jeder Level hat seinen eigenen Track</span>
+          </div>
+
+          {/* Tracks */}
+          {tracks.map(([val, lbl, col, desc]) => (
+            <div key={val} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <button style={tog(musicTrack === val, col)} onClick={() => setMusicTrack(val)}>{lbl}</button>
+              <button
+                onClick={() => handlePreview(val)}
+                style={{
+                  background: previewing === val ? `${col}33` : 'transparent',
+                  border: `1px solid ${previewing === val ? col : '#223344'}`,
+                  color: previewing === val ? col : '#556677',
+                  fontSize: 10, letterSpacing: 1, padding: '6px 10px', cursor: 'pointer',
+                  fontFamily: 'inherit', transition: 'all 0.12s', flexShrink: 0,
+                  boxShadow: previewing === val ? `0 0 8px ${col}44` : 'none',
+                }}
+              >
+                {previewing === val ? '■ STOP' : '▶ PREVIEW'}
+              </button>
+              <span style={{ color: '#556677', fontSize: 9, letterSpacing: 1 }}>{desc}</span>
+            </div>
+          ))}
+
+          <button
+            style={backBtn}
+            onMouseEnter={(e) => { e.currentTarget.style.color = '#cce4ff'; e.currentTarget.style.borderColor = '#334455' }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = '#7799aa'; e.currentTarget.style.borderColor = '#1a2a35' }}
+            onClick={() => { stopMusic(); setPreviewing(null); setView('main') }}
+          >
+            ← Zurück zu Optionen
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Main options screen ──────────────────────────────────────────────────────
   return (
-    <div style={{
-      position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center', overflowY: 'auto',
-      background: 'radial-gradient(ellipse at center, #070720 0%, #020208 70%)',
-      fontFamily: "'Courier New', monospace", userSelect: 'none',
-    }}>
+    <div style={wrap}>
       <div style={{ color: '#00ccff', fontSize: 26, fontWeight: 'bold', letterSpacing: 6, marginBottom: 4, marginTop: 20, textShadow: '0 0 14px #00aaff88' }}>
         OPTIONEN
       </div>
@@ -129,52 +186,31 @@ export function OptionsScreen() {
           </div>
         </div>
 
-        {/* ── Music ── */}
+        {/* ── Music (compact) ── */}
         <div style={section}>
           <div style={labelStyle}>Musik</div>
-          <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+          <div style={{ display: 'flex', gap: 6, marginBottom: 4 }}>
             <button style={tog(musicEnabled, '#ffaa00')} onClick={() => setMusicEnabled(true)}>Ein</button>
             <button style={tog(!musicEnabled, '#667788')} onClick={() => setMusicEnabled(false)}>Aus</button>
           </div>
-
           {musicEnabled && (
-            <>
-              <div style={{ ...labelStyle, marginBottom: 8 }}>Kampf-Musik</div>
-
-              {/* AUTO option */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                <button style={tog(musicTrack === 'auto', '#ffaa00')} onClick={() => setMusicTrack('auto')}>
-                  AUTO
-                </button>
-                <span style={{ color: '#667788', fontSize: 9, letterSpacing: 1 }}>
-                  Jeder Level hat seinen eigenen Track
-                </span>
-              </div>
-
-              {/* Track rows with preview */}
-              {tracks.map(([val, lbl, col, desc]) => (
-                <div key={val} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                  <button style={tog(musicTrack === val, col)} onClick={() => setMusicTrack(val)}>
-                    {lbl}
-                  </button>
-                  <button
-                    onClick={() => handlePreview(val)}
-                    style={{
-                      background: previewing === val ? `${col}33` : 'transparent',
-                      border: `1px solid ${previewing === val ? col : '#223344'}`,
-                      color: previewing === val ? col : '#556677',
-                      fontSize: 10, letterSpacing: 1, padding: '6px 10px',
-                      cursor: 'pointer', fontFamily: 'inherit',
-                      transition: 'all 0.12s', flexShrink: 0,
-                      boxShadow: previewing === val ? `0 0 8px ${col}44` : 'none',
-                    }}
-                  >
-                    {previewing === val ? '■ STOP' : '▶ PREVIEW'}
-                  </button>
-                  <span style={{ color: '#556677', fontSize: 9, letterSpacing: 1 }}>{desc}</span>
-                </div>
-              ))}
-            </>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ color: trackColor, fontSize: 11, letterSpacing: 2, fontWeight: 'bold' }}>
+                {trackLabel}
+              </span>
+              <button
+                style={{
+                  background: 'transparent', border: '1px solid #223344', color: '#7799aa',
+                  fontSize: 10, letterSpacing: 2, padding: '6px 14px', cursor: 'pointer',
+                  fontFamily: "'Courier New', monospace", transition: 'all 0.12s',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = '#00ccff'; e.currentTarget.style.borderColor = '#00aaff' }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = '#7799aa'; e.currentTarget.style.borderColor = '#223344' }}
+                onClick={() => setView('music')}
+              >
+                TRACKS AUSWÄHLEN →
+              </button>
+            </div>
           )}
         </div>
 
@@ -224,11 +260,7 @@ export function OptionsScreen() {
         </div>
 
         <button
-          style={{
-            background: 'transparent', border: '1px solid #1a2a35', color: '#7799aa',
-            fontSize: 12, letterSpacing: 4, padding: '11px', cursor: 'pointer',
-            fontFamily: "'Courier New', monospace", textTransform: 'uppercase', transition: 'all 0.12s',
-          }}
+          style={backBtn}
           onMouseEnter={(e) => { e.currentTarget.style.color = '#cce4ff'; e.currentTarget.style.borderColor = '#334455' }}
           onMouseLeave={(e) => { e.currentTarget.style.color = '#7799aa'; e.currentTarget.style.borderColor = '#1a2a35' }}
           onClick={() => setPhase('menu')}

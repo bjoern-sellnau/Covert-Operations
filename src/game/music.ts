@@ -151,6 +151,23 @@ function timpani(when: number, vol = 0.45) {
   osc.start(when); osc.stop(when + 1.5)
 }
 
+function acidBass(freq: number, when: number, dur: number, vol: number) {
+  const c = ctx()
+  const osc  = c.createOscillator()
+  const filt = c.createBiquadFilter()
+  const env  = c.createGain()
+  osc.type = 'sawtooth'; osc.frequency.value = freq
+  filt.type = 'lowpass'; filt.Q.value = 10
+  filt.frequency.setValueAtTime(freq * 1.5, when)
+  filt.frequency.linearRampToValueAtTime(freq * 9, when + 0.03)
+  filt.frequency.exponentialRampToValueAtTime(freq * 1.8, when + dur * 0.7)
+  env.gain.setValueAtTime(0, when)
+  env.gain.linearRampToValueAtTime(vol, when + 0.008)
+  env.gain.exponentialRampToValueAtTime(0.001, when + dur + 0.04)
+  osc.connect(filt); filt.connect(env); env.connect(tgain())
+  osc.start(when); osc.stop(when + dur + 0.06)
+}
+
 function clearAudio() {
   if (_previewTimer) { clearTimeout(_previewTimer); _previewTimer = null }
   if (_scheduler) { clearInterval(_scheduler); _scheduler = null }
@@ -163,81 +180,82 @@ function clearAudio() {
   }
 }
 
-// ── Menu music (A minor, 100 BPM — EPIC cinematic orchestral) ────────────────
+// ── Menu music (E minor, 128 BPM — Agent Techno) ─────────────────────────────
 
-const MENU_BPM    = 100
-const MENU_BEAT   = 60 / MENU_BPM
-const MENU_EIGHTH = MENU_BEAT / 2
-const MENU_BAR    = MENU_BEAT * 4
+const MENU_BPM  = 128
+const MENU_BEAT = 60 / MENU_BPM   // 0.46875s
+const MENU_8TH  = MENU_BEAT / 2   // 0.234s
+const MENU_16TH = MENU_BEAT / 4   // 0.117s
+const MENU_BAR  = MENU_BEAT * 4   // 1.875s
 
-// 4-bar melody cycle — each phrase soars higher than the last
-const MENU_MEL_A = [440, 523.25, 659.26, 880,    659.26, 523.25, 659.26, 523.25]  // bar 1: A4→A5 sweep
-const MENU_MEL_B = [523.25, 659.26, 783.99, 880,  783.99, 659.26, 587.33, 523.25] // bar 2: C5→A5
-const MENU_MEL_C = [440, 587.33, 659.26, 783.99, 1046.5, 880, 783.99, 659.26]     // bar 3: A4→C6 peak!
-const MENU_MEL_D = [587.33, 523.25, 440, 392, 329.63, 440, 523.25, 440]           // bar 4: resolution
+// Acid bass (16 steps, 16th notes) — E2 groove with chromatic passing tones
+const MENU_BASS = [82.41, 0, 82.41, 98, 0, 82.41, 73.42, 0, 65.41, 61.74, 0, 98, 110, 0, 82.41, 0]
+//                 E2     -   E2    G2  -   E2     D2     -   C2     B1     -   G2  A2   -  E2     -
 
-// Inner string line (lower harmony)
-const MENU_STR_A = [220, 261.63, 329.63, 440, 329.63, 261.63, 329.63, 261.63]
-const MENU_STR_B = [261.63, 329.63, 392,   440, 392,   329.63, 293.66, 261.63]
-const MENU_STR_C = [220, 293.66, 329.63, 392, 523.25, 440, 392, 329.63]
-const MENU_STR_D = [293.66, 261.63, 220, 196, 164.81, 220, 261.63, 220]
+// Spy arp lead (8th notes, 4-bar cycle) — angular intervals, chromatic tension
+const MENU_ARP_A = [329.63, 0,      392,    0,      493.88, 440,    392,    369.99] // E4 - G4 - B4 A4 G4 F#4
+const MENU_ARP_B = [329.63, 349.23, 329.63, 0,      392,    415.3,  440,    0]      // E4 F4 E4 - G4 Ab4 A4 — spy hook
+const MENU_ARP_C = [493.88, 523.25, 0,      587.33, 0,      523.25, 493.88, 440]   // B4 C5 - D5 - C5 B4 A4 — climax
+const MENU_ARP_D = [440,    392,    349.23, 329.63, 0,      293.66, 329.63, 0]      // A4 G4 F4 E4 - D4 E4 — resolve
 
-// Bass pedal line
-const MENU_BASS  = [55, 55, 65.41, 55, 55, 49, 55, 55]   // A-G-A pattern
+// Counter melody (octave lower, triangle)
+const MENU_CTR_A = [164.81, 0,      196,    0,      246.94, 220,    196,    185]
+const MENU_CTR_B = [164.81, 174.61, 164.81, 0,      196,    207.65, 220,    0]
+const MENU_CTR_C = [246.94, 261.63, 0,      293.66, 0,      261.63, 246.94, 220]
+const MENU_CTR_D = [220,    196,    174.61, 164.81, 0,      146.83, 164.81, 0]
 
 let _menuMelBar = 0
 
 function scheduleMenuBar(t: number) {
   const phase = _menuMelBar % 4
-  const isDownbeat = phase === 0 // bar 1 of cycle: full orchestral hit
 
-  // ── Percussion ─────────────────────────────────────────────────────────────
-  timpani(t, 0.50)
-  kick(t, isDownbeat ? 0.65 : 0.52)
-  kick(t + MENU_BEAT * 2, 0.52)
-  snare(t + MENU_BEAT, isDownbeat ? 0.28 : 0.22)
-  snare(t + MENU_BEAT * 3, 0.22)
-  for (let i = 0; i < 8; i++)
-    hihat(t + MENU_EIGHTH * i, i % 2 === 0 ? 0.07 : 0.04, 0.030)
+  // ── 4/4 techno kick ────────────────────────────────────────────────────────
+  for (let b = 0; b < 4; b++) kick(t + MENU_BEAT * b, b === 0 ? 0.72 : 0.60)
 
-  // ── Bass ───────────────────────────────────────────────────────────────────
-  for (let i = 0; i < 8; i++)
-    note(MENU_BASS[i], t + MENU_EIGHTH * i, MENU_EIGHTH * 1.6, 0.38, 'sine', 180)
+  // ── Snare on 2+4 ──────────────────────────────────────────────────────────
+  snare(t + MENU_BEAT, 0.34)
+  snare(t + MENU_BEAT * 3, 0.28)
 
-  // ── Brass stab on bar 1 and 3 ─────────────────────────────────────────────
-  if (phase === 0 || phase === 2) {
-    const bFreqs = phase === 0 ? [220, 330, 440, 659.26] : [196, 293.66, 392, 587.33]
-    for (const f of bFreqs) brass(f, t, MENU_BEAT * 1.6, 0.16)
-    // Extra high horn on downbeat
-    if (phase === 0) brass(880, t, MENU_BEAT * 1.0, 0.09)
+  // ── 16th hi-hats: heavy on beats, medium on 8ths, ghost on 16ths ──────────
+  for (let i = 0; i < 16; i++) {
+    const vol = i % 4 === 0 ? 0.11 : (i % 2 === 0 ? 0.07 : 0.034)
+    hihat(t + MENU_16TH * i, vol, 0.022)
+  }
+  // Open hat on "and" of beat 2 — techno groove pocket
+  hihat(t + MENU_BEAT * 1.5, 0.15, 0.22)
+
+  // ── Acid bass (TB-303 style, filter sweep per note) ────────────────────────
+  for (let i = 0; i < 16; i++) {
+    if (MENU_BASS[i] > 0)
+      acidBass(MENU_BASS[i], t + MENU_16TH * i, MENU_16TH * 0.82, 0.42)
   }
 
-  // ── Brass call-response on bar 2 and 4 ────────────────────────────────────
-  if (phase === 1) {
-    brass(523.25, t + MENU_BEAT, MENU_BEAT * 1.2, 0.12)
-    brass(659.26, t + MENU_BEAT, MENU_BEAT * 1.2, 0.09)
-  }
-  if (phase === 3) {
-    brass(440, t + MENU_BEAT * 2, MENU_BEAT * 0.9, 0.11)
-    brass(329.63, t + MENU_BEAT * 3, MENU_BEAT * 0.8, 0.10)
-  }
-
-  // ── Soaring lead melody ────────────────────────────────────────────────────
-  const mels = [MENU_MEL_A, MENU_MEL_B, MENU_MEL_C, MENU_MEL_D]
-  const mel = mels[phase]
+  // ── Spy arp lead (square wave — cold, angular) ────────────────────────────
+  const arps = [MENU_ARP_A, MENU_ARP_B, MENU_ARP_C, MENU_ARP_D]
+  const arp = arps[phase]
   for (let i = 0; i < 8; i++) {
-    if (mel[i] > 0) {
-      note(mel[i], t + MENU_EIGHTH * i, MENU_BEAT * 0.9, 0.16, 'sine', 4000)
-      // Double at octave below for fullness on climax bar
-      if (phase === 2) note(mel[i] * 0.5, t + MENU_EIGHTH * i, MENU_BEAT * 0.7, 0.07, 'sine', 2000)
-    }
+    if (arp[i] > 0) note(arp[i], t + MENU_8TH * i, MENU_8TH * 0.62, 0.13, 'square', 2400)
   }
 
-  // ── Inner strings (harmony) ────────────────────────────────────────────────
-  const strs = [MENU_STR_A, MENU_STR_B, MENU_STR_C, MENU_STR_D]
-  const str = strs[phase]
-  for (let i = 0; i < 8; i++)
-    note(str[i], t + MENU_EIGHTH * i, MENU_BEAT * 1.2, 0.08, 'triangle', 2200)
+  // ── Counter melody (triangle — warm contrast to lead) ─────────────────────
+  const ctrs = [MENU_CTR_A, MENU_CTR_B, MENU_CTR_C, MENU_CTR_D]
+  const ctr = ctrs[phase]
+  for (let i = 0; i < 8; i++) {
+    if (ctr[i] > 0) note(ctr[i], t + MENU_8TH * i, MENU_8TH * 0.78, 0.07, 'triangle', 1100)
+  }
+
+  // ── Off-beat chord stabs (Em / Dm alternating, sawtooth) ─────────────────
+  if (phase % 2 === 0) {
+    for (const f of [164.81, 196, 246.94])  // Em: E3 G3 B3
+      note(f, t + MENU_8TH, MENU_16TH * 1.8, 0.065, 'sawtooth', 900)
+    for (const f of [164.81, 196, 246.94])
+      note(f, t + MENU_BEAT * 2 + MENU_8TH, MENU_16TH * 1.8, 0.055, 'sawtooth', 900)
+  } else {
+    for (const f of [146.83, 174.61, 220])  // Dm: D3 F3 A3 — tritone tension
+      note(f, t + MENU_BEAT + MENU_8TH, MENU_16TH * 2.2, 0.060, 'sawtooth', 800)
+    for (const f of [146.83, 174.61, 220])
+      note(f, t + MENU_BEAT * 3 + MENU_8TH, MENU_16TH * 2.2, 0.055, 'sawtooth', 800)
+  }
 
   _menuMelBar++
 }
@@ -311,8 +329,8 @@ export function startMenuMusic() {
   if (_track === 'menu') return
   _menuMelBar = 0
   startScheduler(MENU_BAR, scheduleMenuBar)
-  // Rich orchestral pad: Am chord + octave doublings
-  startPad([55, 110, 130.81, 164.81, 220, 261.63], 'sine', 2200, 0.014)
+  // Cold filtered sawtooth pad: Em voicing (E1 B1 E2 G2 B2)
+  startPad([41.2, 61.74, 82.41, 98, 123.47], 'sawtooth', 260, 0.009)
   _track = 'menu'
 }
 
