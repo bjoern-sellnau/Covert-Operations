@@ -20,6 +20,7 @@ import { mobileInput } from '../store/mobileStore'
 import { useLoadoutStore } from './loadoutStore'
 import { useEditorStore } from '../editor/editorStore'
 import { useSettingsStore, BLOOD_COUNTS, EXPL_COUNTS, SPARK_COUNTS, DIFFICULTY_MULTS } from '../store/settingsStore'
+import { hudData } from './hudData'
 import { useInput } from './useInput'
 import { spawnWave } from './spawnWave'
 import { GameLevelObjects, resolveCircleVsLevel, pointIntersectsLevel } from './GameLevelObjects'
@@ -267,6 +268,29 @@ function _spawnBotEnemy(types: EnemyType[], hpMult: number, instakill: boolean):
     shootCooldown: Math.random() / ENEMY_CONFIGS[type].shootRate,
   })
   return id
+}
+
+// Projects enemy world positions to screen space each frame so the HUD overlay
+// can render off-screen direction markers without touching the game loop.
+function EnemyProjector() {
+  const { camera, gl } = useThree()
+  const _v = new THREE.Vector3()
+  useFrame(() => {
+    const W = gl.domElement.clientWidth  || window.innerWidth
+    const H = gl.domElement.clientHeight || window.innerHeight
+    const markers = hudData.enemyMarkers
+    markers.length = 0
+    for (const [id, e] of entityStore.enemies) {
+      _v.set(e.position.x, 0.5, e.position.y).project(camera)
+      const sx = (_v.x + 1) / 2
+      const sy = (1 - _v.y) / 2
+      const inView = _v.z <= 1 && sx >= 0.03 && sx <= 0.97 && sy >= 0.03 && sy <= 0.97
+      markers.push({ id, screenX: sx, screenY: sy, inView, angle: Math.atan2(sy - 0.5, sx - 0.5) })
+    }
+    void H  // H available for future use
+    void W
+  })
+  return null
 }
 
 export function GameScene() {
@@ -2280,6 +2304,7 @@ export function GameScene() {
       <ambientLight ref={ambientRef} intensity={0.25} color="#4488ff" />
       <directionalLight ref={dirLightRef} position={[5, 15, 5]} intensity={1.2} color="#ffffff" castShadow />
       <pointLight position={[0, 8, 0]} intensity={0.6} color="#2244aa" distance={40} />
+      <EnemyProjector />
     </>
   )
 }

@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import { useGameStore } from '../store/gameStore'
 import { useLoadoutStore } from '../game/loadoutStore'
 import { entityStore } from '../game/entityStore'
-import { PLAYER_MAX_HEALTH, FOCUS_MAX, WEAPON_CONFIGS, AMMO_CONFIGS, DIVE_COOLDOWN, SPIN_COOLDOWN, WEAPON_SLOT_WEAPONS, type WeaponId } from '../game/types'
+import { useSettingsStore } from '../store/settingsStore'
+import { hudData } from '../game/hudData'
+import { ARENA_HALF, PLAYER_MAX_HEALTH, FOCUS_MAX, WEAPON_CONFIGS, AMMO_CONFIGS, DIVE_COOLDOWN, SPIN_COOLDOWN, WEAPON_SLOT_WEAPONS, type WeaponId } from '../game/types'
 
 function P2Panel() {
   const p2Active  = useGameStore((s) => s.p2Active)
@@ -102,6 +104,8 @@ export function HUD() {
   const cameraMode    = useGameStore((s) => s.cameraMode)
 
   const { selectedWeapon, selectedAmmo, isAkimbo, ownedWeapons, activeSlot } = useLoadoutStore()
+  const showEnemyMarkers = useSettingsStore((s) => s.showEnemyMarkers)
+  const showMinimap      = useSettingsStore((s) => s.showMinimap)
   const weaponCfg = WEAPON_CONFIGS[selectedWeapon]
   const ammoCfg   = AMMO_CONFIGS[selectedAmmo]
 
@@ -131,6 +135,77 @@ export function HUD() {
     id = requestAnimationFrame(loop)
     return () => cancelAnimationFrame(id)
   }, [])
+
+  // ── Enemy markers (off-screen arrows) ─────────────────────────────────────
+  type MarkerSnapshot = typeof hudData.enemyMarkers
+  const [enemyMarkers, setEnemyMarkers] = useState<MarkerSnapshot>([])
+  useEffect(() => {
+    if (!showEnemyMarkers) return
+    const id = setInterval(() => setEnemyMarkers([...hudData.enemyMarkers]), 50)
+    return () => clearInterval(id)
+  }, [showEnemyMarkers])
+
+  // ── Minimap canvas ─────────────────────────────────────────────────────────
+  const minimapRef = useRef<HTMLCanvasElement>(null)
+  useEffect(() => {
+    if (!showMinimap) return
+    const SIZE = 120
+    const HALF = ARENA_HALF
+    const toMap = (w: number) => ((w / HALF + 1) / 2) * SIZE
+
+    const id = setInterval(() => {
+      const canvas = minimapRef.current
+      if (!canvas) return
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
+      ctx.clearRect(0, 0, SIZE, SIZE)
+
+      // Background
+      ctx.fillStyle = 'rgba(4, 6, 16, 0.82)'
+      ctx.fillRect(0, 0, SIZE, SIZE)
+
+      // Arena border
+      ctx.strokeStyle = '#1a2a3a'
+      ctx.lineWidth = 1
+      ctx.strokeRect(1, 1, SIZE - 2, SIZE - 2)
+
+      // Enemies
+      ctx.fillStyle = '#ff3322'
+      for (const [, e] of entityStore.enemies) {
+        const mx = toMap(e.position.x)
+        const mz = toMap(e.position.y)
+        ctx.beginPath()
+        ctx.arc(mx, mz, 2.5, 0, Math.PI * 2)
+        ctx.fill()
+      }
+
+      // Player 2
+      if (entityStore.player2Active) {
+        const mx = toMap(entityStore.player2.position.x)
+        const mz = toMap(entityStore.player2.position.y)
+        ctx.fillStyle = '#ff8800'
+        ctx.beginPath()
+        ctx.arc(mx, mz, 3, 0, Math.PI * 2)
+        ctx.fill()
+      }
+
+      // Player (with facing direction)
+      const px = toMap(entityStore.player.position.x)
+      const pz = toMap(entityStore.player.position.y)
+      const ang = entityStore.player.angle
+      ctx.fillStyle = '#00ff88'
+      ctx.beginPath()
+      ctx.arc(px, pz, 3.5, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.strokeStyle = '#00ff88'
+      ctx.lineWidth = 1.5
+      ctx.beginPath()
+      ctx.moveTo(px, pz)
+      ctx.lineTo(px + Math.sin(ang) * 8, pz - Math.cos(ang) * 8)
+      ctx.stroke()
+    }, 50)
+    return () => clearInterval(id)
+  }, [showMinimap])
   useEffect(() => {
     const id = setInterval(() => {
       setDiveCd(Math.max(0, entityStore.diveCooldown))
@@ -391,6 +466,57 @@ export function HUD() {
       </div>
 
       <P2Panel />
+
+      {/* ── Enemy direction markers (off-screen) ────────────────────────────── */}
+      {showEnemyMarkers && enemyMarkers.filter(m => !m.inView).map(m => {
+        const EDGE = 0.07
+        const dx = m.screenX - 0.5
+        const dy = m.screenY - 0.5
+        const scale = Math.max(Math.abs(dx), Math.abs(dy))
+        if (scale < 0.001) return null
+        const ex = (0.5 + (dx / scale) * (0.5 - EDGE)) * 100
+        const ey = (0.5 + (dy / scale) * (0.5 - EDGE)) * 100
+        const rot = (m.angle * 180 / Math.PI) + 90
+        return (
+          <div
+            key={m.id}
+            style={{
+              position: 'absolute',
+              left: `${ex}%`,
+              top:  `${ey}%`,
+              transform: `translate(-50%, -50%) rotate(${rot}deg)`,
+              color: '#ff3322',
+              fontSize: 14,
+              lineHeight: 1,
+              textShadow: '0 0 6px #ff0000',
+              opacity: 0.85,
+              pointerEvents: 'none',
+            }}
+          >
+            ▲
+          </div>
+        )
+      })}
+
+      {/* ── Minimap ─────────────────────────────────────────────────────────── */}
+      {showMinimap && (
+        <canvas
+          ref={minimapRef}
+          width={120}
+          height={120}
+          style={{
+            position: 'absolute',
+            bottom: 70,
+            right: 20,
+            width: 120,
+            height: 120,
+            borderRadius: 4,
+            border: '1px solid #1a2a3a',
+            opacity: 0.88,
+            pointerEvents: 'none',
+          }}
+        />
+      )}
     </div>
   )
 }

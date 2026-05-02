@@ -37,6 +37,8 @@ interface SettingsStore {
   graphicsQuality: GraphicsQuality
   charScale: number          // 0.5 – 2.0, player and enemy visual scale
   showFPSWeapon: boolean     // show weapon arm in FPS mode
+  showEnemyMarkers: boolean  // show off-screen enemy direction arrows
+  showMinimap: boolean       // show minimap overlay
   setBloodIntensity: (v: 0 | 1 | 2 | 3) => void
   setMobileControls: (v: boolean) => void
   setMusicEnabled: (v: boolean) => void
@@ -47,6 +49,8 @@ interface SettingsStore {
   setGraphicsQuality: (v: GraphicsQuality) => void
   setCharScale: (v: number) => void
   setShowFPSWeapon: (v: boolean) => void
+  setShowEnemyMarkers: (v: boolean) => void
+  setShowMinimap: (v: boolean) => void
 }
 
 export const useSettingsStore = create<SettingsStore>()(
@@ -60,8 +64,10 @@ export const useSettingsStore = create<SettingsStore>()(
       cameraFollow:    false,
       difficulty:      'normal',
       graphicsQuality: 'medium',
-      charScale:       1.0,
-      showFPSWeapon:   true,
+      charScale:           1.0,
+      showFPSWeapon:       true,
+      showEnemyMarkers:    true,
+      showMinimap:         false,
       setBloodIntensity:  (bloodIntensity)  => set({ bloodIntensity }),
       setMobileControls:  (mobileControls)  => set({ mobileControls }),
       setMusicEnabled:    (musicEnabled)    => set({ musicEnabled }),
@@ -71,7 +77,9 @@ export const useSettingsStore = create<SettingsStore>()(
       setDifficulty:      (difficulty)      => set({ difficulty }),
       setGraphicsQuality: (graphicsQuality) => set({ graphicsQuality }),
       setCharScale:       (charScale)       => set({ charScale: Math.round(charScale * 10) / 10 }),
-      setShowFPSWeapon:   (showFPSWeapon)   => set({ showFPSWeapon }),
+      setShowFPSWeapon:        (showFPSWeapon)        => set({ showFPSWeapon }),
+      setShowEnemyMarkers:     (showEnemyMarkers)     => set({ showEnemyMarkers }),
+      setShowMinimap:          (showMinimap)          => set({ showMinimap }),
     }),
     { name: 'covert-ops-settings-v2' },
   ),

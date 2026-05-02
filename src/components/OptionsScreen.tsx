@@ -48,7 +48,9 @@ export function OptionsScreen() {
           difficulty, setDifficulty,
           graphicsQuality, setGraphicsQuality,
           charScale, setCharScale,
-          showFPSWeapon, setShowFPSWeapon } = useSettingsStore()
+          showFPSWeapon, setShowFPSWeapon,
+          showEnemyMarkers, setShowEnemyMarkers,
+          showMinimap, setShowMinimap } = useSettingsStore()
   const { credits, setCredits } = useLoadoutStore()
 
   const [view, setView]           = useState<'main' | 'music'>('main')
@@ -277,6 +279,30 @@ export function OptionsScreen() {
           </div>
           <div style={{ color: '#667788', fontSize: 9, letterSpacing: 1 }}>
             Zeigt den Waffenarm in der Ego-Perspektive (Taste F)
+          </div>
+        </div>
+
+        {/* ── Enemy markers ── */}
+        <div style={section}>
+          <div style={labelStyle}>Feind-Marker (außerhalb Sicht)</div>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button style={tog(showEnemyMarkers, '#ff4422')} onClick={() => setShowEnemyMarkers(true)}>Ein</button>
+            <button style={tog(!showEnemyMarkers, '#667788')} onClick={() => setShowEnemyMarkers(false)}>Aus</button>
+          </div>
+          <div style={{ color: '#667788', fontSize: 9, letterSpacing: 1 }}>
+            Pfeil am Bildschirmrand zeigt Richtung nicht sichtbarer Feinde
+          </div>
+        </div>
+
+        {/* ── Minimap ── */}
+        <div style={section}>
+          <div style={labelStyle}>Minikarte</div>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button style={tog(showMinimap, '#00ccaa')} onClick={() => setShowMinimap(true)}>Ein</button>
+            <button style={tog(!showMinimap, '#667788')} onClick={() => setShowMinimap(false)}>Aus</button>
+          </div>
+          <div style={{ color: '#667788', fontSize: 9, letterSpacing: 1 }}>
+            Kleine Übersichtskarte mit Spieler- und Feinddots (unten rechts)
           </div>
         </div>
 
