@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useGameStore } from '../store/gameStore'
 import { useLoadoutStore } from '../game/loadoutStore'
 import { entityStore } from '../game/entityStore'
@@ -114,6 +114,23 @@ export function HUD() {
   const [chaosWpnId,  setChaosWpnId]  = useState<WeaponId | null>(null)
   const [quadTimer,   setQuadTimer]   = useState(0)
   const [bersTimer,   setBersTimer]   = useState(0)
+  const [fps,         setFps]         = useState(0)
+  const fpsFrames = useRef(0)
+  const fpsLast   = useRef(performance.now())
+  useEffect(() => {
+    let id: number
+    const loop = (now: number) => {
+      fpsFrames.current++
+      if (now - fpsLast.current >= 1000) {
+        setFps(fpsFrames.current)
+        fpsFrames.current = 0
+        fpsLast.current = now
+      }
+      id = requestAnimationFrame(loop)
+    }
+    id = requestAnimationFrame(loop)
+    return () => cancelAnimationFrame(id)
+  }, [])
   useEffect(() => {
     const id = setInterval(() => {
       setDiveCd(Math.max(0, entityStore.diveCooldown))
@@ -283,6 +300,7 @@ export function HUD() {
               <div style={{ color: '#ffaa00', fontSize: 13, fontWeight: 'bold' }}>+{creditsEarned}</div>
             </div>
           )}
+          <div style={{ color: '#223333', fontSize: 9, letterSpacing: 1 }}>{fps} FPS</div>
         </div>
       </div>
 

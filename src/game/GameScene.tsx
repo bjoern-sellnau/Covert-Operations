@@ -10,7 +10,7 @@ import {
   WEAPON_SOUNDS,
   playExplosionSmall, playExplosionLarge,
   playFlakBounce, playBananaBounce, playRicochet,
-  playHit, playDeath,
+  playHit, playDeath, playKillMulti, playEnemyFire,
 } from './sounds'
 import { useGameStore } from '../store/gameStore'
 import { useNetStore } from '../net/netStore'
@@ -1268,14 +1268,16 @@ export function GameScene() {
           })
           es.ammo = Math.max(0, es.ammo - 1)
         } else if (weaponCfg.isProjectile) {
-          // Plasma / Bazooka: single slow projectile
-          es.weaponProjectile = {
-            x:  es.player.position.x + _toMouse.x * (PLAYER_RADIUS + 0.4),
-            z:  es.player.position.y + _toMouse.y * (PLAYER_RADIUS + 0.4),
-            vx: _toMouse.x * (weaponCfg.projectileSpeed ?? 8),
-            vz: _toMouse.y * (weaponCfg.projectileSpeed ?? 8),
+          // Plasma / Bazooka: single slow projectile — don't overwrite an in-flight one
+          if (es.weaponProjectile === null) {
+            es.weaponProjectile = {
+              x:  es.player.position.x + _toMouse.x * (PLAYER_RADIUS + 0.4),
+              z:  es.player.position.y + _toMouse.y * (PLAYER_RADIUS + 0.4),
+              vx: _toMouse.x * (weaponCfg.projectileSpeed ?? 8),
+              vz: _toMouse.y * (weaponCfg.projectileSpeed ?? 8),
+            }
+            es.ammo = Math.max(0, es.ammo - 1)
           }
-          es.ammo = Math.max(0, es.ammo - 1)
         } else if (weaponCfg.isBanana) {
           // Banana grenade
           const ang = baseAngle + (Math.random() - 0.5) * 2 * weaponCfg.spread
@@ -1901,6 +1903,7 @@ export function GameScene() {
           damage: Math.round(cfg.damage * diffDmgMult),
         })
         setEnemyBulletIds(Array.from(es.enemyBullets.keys()))
+        playEnemyFire()
       }
     }
 
@@ -1981,7 +1984,7 @@ export function GameScene() {
           : es.killStreak === 5  ? '⚡ KILLING SPREE'
           : null
         const msg = streakMsg ?? comboMsg
-        if (msg) { setWaveMessage(msg); setTimeout(() => setWaveMessage(''), 1800) }
+        if (msg) { playKillMulti(); setWaveMessage(msg); setTimeout(() => setWaveMessage(''), 1800) }
       }
 
       if (isHardlineMode) {
@@ -2141,7 +2144,9 @@ export function GameScene() {
 
   return (
     <>
-      <Arena />
+      <group scale={charScale}>
+        <Arena />
+      </group>
       {gameModeLive === 'shooting_range' && <ShootingRangeLayout />}
       {activeLevelRef.current && <GameLevelObjects level={activeLevelRef.current} />}
       <group ref={playerGroupRef} scale={charScale}>

@@ -475,6 +475,116 @@ export function playDeath(volume = 1) {
   o.start(t); o.stop(t + 0.55)
 }
 
+// ── Armor pickup (metallic clink) ─────────────────────────────────────────────
+export function playArmorPickup(volume = 1) {
+  const ac = ctx()
+  const out = masterGain(volume * 0.35)
+  const t = ac.currentTime
+  const ping = osc(1400, 'sine')
+  const pg = ac.createGain()
+  ping.connect(pg); pg.connect(out)
+  pg.gain.setValueAtTime(0.5, t); pg.gain.exponentialRampToValueAtTime(0.001, t + 0.18)
+  ping.frequency.setValueAtTime(1400, t); ping.frequency.linearRampToValueAtTime(900, t + 0.18)
+  ping.start(t); ping.stop(t + 0.2)
+  const ping2 = osc(2100, 'sine')
+  const pg2 = ac.createGain()
+  ping2.connect(pg2); pg2.connect(out)
+  pg2.gain.setValueAtTime(0.25, t + 0.04); pg2.gain.exponentialRampToValueAtTime(0.001, t + 0.18)
+  ping2.start(t + 0.04); ping2.stop(t + 0.2)
+}
+
+// ── Focus pickup (crystalline ascending) ──────────────────────────────────────
+export function playFocusPickup(volume = 1) {
+  const ac = ctx()
+  const out = masterGain(volume * 0.35)
+  const t = ac.currentTime
+  const freqs = [880, 1100, 1320, 1760]
+  freqs.forEach((freq, i) => {
+    const o = osc(freq, 'sine')
+    const g = ac.createGain()
+    o.connect(g); g.connect(out)
+    const s = t + i * 0.055
+    g.gain.setValueAtTime(0.4, s); g.gain.exponentialRampToValueAtTime(0.001, s + 0.15)
+    o.start(s); o.stop(s + 0.17)
+  })
+}
+
+// ── Quad Damage pickup (epic ascending choir) ─────────────────────────────────
+export function playQuadDamagePickup(volume = 1) {
+  const ac = ctx()
+  const out = masterGain(volume * 0.5)
+  const t = ac.currentTime
+  // Rising power chord
+  const freqs = [110, 165, 220, 330, 440]
+  freqs.forEach((freq, i) => {
+    const o = osc(freq, 'sawtooth')
+    const g = ac.createGain()
+    o.connect(g); g.connect(out)
+    const s = t + i * 0.04
+    g.gain.setValueAtTime(0, s); g.gain.linearRampToValueAtTime(0.3, s + 0.08)
+    g.gain.exponentialRampToValueAtTime(0.001, s + 0.6)
+    o.frequency.setValueAtTime(freq, s); o.frequency.exponentialRampToValueAtTime(freq * 2, s + 0.5)
+    o.start(s); o.stop(s + 0.65)
+  })
+  // Flash noise burst
+  const n = noise(0.06)
+  const nf = ac.createBiquadFilter(); nf.type = 'highpass'; nf.frequency.value = 3000
+  n.connect(nf)
+  const ng = ac.createGain(); nf.connect(ng); ng.connect(out)
+  ng.gain.setValueAtTime(0.5, t + 0.18); ng.gain.exponentialRampToValueAtTime(0.001, t + 0.25)
+  n.start(t + 0.18); n.stop(t + 0.26)
+}
+
+// ── Berserker pickup (growling power surge) ────────────────────────────────────
+export function playBerserkerPickup(volume = 1) {
+  const ac = ctx()
+  const out = masterGain(volume * 0.5)
+  const t = ac.currentTime
+  // Low growl sweep
+  const growl = osc(55, 'sawtooth')
+  const gg = ac.createGain()
+  growl.connect(gg); gg.connect(out)
+  growl.frequency.setValueAtTime(55, t); growl.frequency.exponentialRampToValueAtTime(220, t + 0.35)
+  gg.gain.setValueAtTime(0.6, t); gg.gain.exponentialRampToValueAtTime(0.001, t + 0.5)
+  growl.start(t); growl.stop(t + 0.55)
+  // High snap
+  const snap = noise(0.05)
+  const sf = ac.createBiquadFilter(); sf.type = 'bandpass'; sf.frequency.value = 2200; sf.Q.value = 2
+  snap.connect(sf)
+  const sg = ac.createGain(); sf.connect(sg); sg.connect(out)
+  sg.gain.setValueAtTime(0.8, t + 0.3); sg.gain.exponentialRampToValueAtTime(0.001, t + 0.38)
+  snap.start(t + 0.3); snap.stop(t + 0.4)
+}
+
+// ── Kill multiplier jingle (quick ascending notes) ────────────────────────────
+export function playKillMulti(volume = 1) {
+  const ac = ctx()
+  const out = masterGain(volume * 0.4)
+  const t = ac.currentTime
+  const notes = [523, 659, 784, 1047, 1319]
+  notes.forEach((freq, i) => {
+    const o = osc(freq, 'square')
+    const g = ac.createGain()
+    o.connect(g); g.connect(out)
+    const s = t + i * 0.045
+    g.gain.setValueAtTime(0.3, s); g.gain.exponentialRampToValueAtTime(0.001, s + 0.09)
+    o.start(s); o.stop(s + 0.1)
+  })
+}
+
+// ── Enemy fire (small short zap for enemy shooting) ───────────────────────────
+export function playEnemyFire(volume = 1) {
+  const ac = ctx()
+  const out = masterGain(volume * 0.18)
+  const t = ac.currentTime
+  const n = noise(0.07)
+  const filt = ac.createBiquadFilter(); filt.type = 'bandpass'; filt.frequency.value = 2800; filt.Q.value = 1.2
+  n.connect(filt)
+  const g = ac.createGain(); filt.connect(g); g.connect(out)
+  g.gain.setValueAtTime(1, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.07)
+  n.start(t); n.stop(t + 0.08)
+}
+
 // ── Map: weaponId → fire sound function ──────────────────────────────────────
 type FireFn = (volume?: number) => void
 export const WEAPON_SOUNDS: Record<string, FireFn> = {

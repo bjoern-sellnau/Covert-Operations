@@ -77,6 +77,6 @@ export const useSettingsStore = create<SettingsStore>()(
   ),
 )
 
-export const BLOOD_COUNTS  = [0,  5, 15, 45] as const
+export const BLOOD_COUNTS  = [0,  5, 15, 80] as const
 export const EXPL_COUNTS   = [0,  8, 25, 60] as const
 export const SPARK_COUNTS  = [0,  3,  6, 12] as const

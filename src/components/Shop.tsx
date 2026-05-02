@@ -1,11 +1,13 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useGameStore } from '../store/gameStore'
 import { useLoadoutStore } from '../game/loadoutStore'
 import { useMutatorsStore } from '../store/mutatorsStore'
 import {
   WEAPON_CONFIGS, EQUIPMENT_CONFIGS, AMMO_CONFIGS, AKIMBO_PRICE, VERNICHTER_AMMO_PRICE, LASER_AMMO_PRICE, ION_AMMO_PRICE,
+  WEAPON_SLOT_WEAPONS, WEAPON_TO_SLOT,
   type WeaponId, type EquipmentId, type AmmoId,
 } from '../game/types'
+import { entityStore } from '../game/entityStore'
 
 const BOT_GAME_TYPES = new Set(['instakill', 'deathmatch', 'hardline_solo', 'hardline', 'instakill_wave'])
 
@@ -342,7 +344,13 @@ function CharacterPanel() {
   const hasChest = ownedEquipment.includes('chest_pouch')
   const hasLegs = ownedEquipment.includes('leg_pouch')
 
-  const slotStyle = (equipped: boolean, color = '#00ff88'): React.CSSProperties => ({
+  const [weaponAmmo, setWeaponAmmo] = useState<Map<string, number>>(new Map())
+  useEffect(() => {
+    const id = setInterval(() => setWeaponAmmo(new Map(entityStore.weaponAmmo)), 100)
+    return () => clearInterval(id)
+  }, [])
+
+  const equipStyle = (equipped: boolean, color = '#00ff88'): React.CSSProperties => ({
     padding: '7px 10px',
     border: `1px solid ${equipped ? color : '#1a1a2e'}`,
     borderRadius: 3,
@@ -353,54 +361,86 @@ function CharacterPanel() {
     display: 'flex',
     alignItems: 'center',
     gap: 6,
-    transition: 'all 0.2s',
   })
 
+  // Group owned weapons by slot number, preserving slot order
+  const SLOT_ORDER = [1, 2, 3, 4, 5, 6, 7, 0]
+  const ownedBySlot = new Map<number, WeaponId[]>()
+  for (const wid of ownedWeapons) {
+    const slot = WEAPON_TO_SLOT[wid] ?? 8
+    if (!ownedBySlot.has(slot)) ownedBySlot.set(slot, [])
+    ownedBySlot.get(slot)!.push(wid)
+  }
+  const usedSlots = SLOT_ORDER.filter(s => ownedBySlot.has(s))
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       <div style={{ color: '#445566', fontSize: 10, letterSpacing: 3, marginBottom: 2 }}>
         WAFFEN ({ownedWeapons.length})
       </div>
-      {ownedWeapons.map((wid) => {
-        const wCfg = WEAPON_CONFIGS[wid]
-        const isActive = selectedWeapon === wid
-        return (
-          <div
-            key={wid}
-            style={{ ...slotStyle(isActive, '#00aaff'), cursor: 'pointer' }}
-            onClick={() => selectWeapon(wid)}
-          >
-            <span style={{ color: isActive ? '#0066aa' : '#334455', fontSize: 9 }}>▶</span>
-            <span style={{ flex: 1 }}>{wCfg.shortName}</span>
-            {isActive && <span style={{ color: '#00ffaa', fontSize: 9, letterSpacing: 1 }}>AKTIV</span>}
+
+      {usedSlots.map(slot => (
+        <div key={slot}>
+          <div style={{ color: '#223344', fontSize: 9, letterSpacing: 2, marginBottom: 2 }}>
+            [{slot === 0 ? '0' : slot}] {Object.entries(WEAPON_SLOT_WEAPONS).find(([k]) => Number(k) === slot)?.[1].map(w => WEAPON_CONFIGS[w]?.shortName).filter(Boolean).join(' / ')}
           </div>
-        )
-      })}
+          {ownedBySlot.get(slot)!.map(wid => {
+            const wCfg = WEAPON_CONFIGS[wid]
+            const isActive = selectedWeapon === wid
+            const ammoCount = isActive ? entityStore.ammo : (weaponAmmo.get(wid) ?? wCfg.baseAmmo)
+            const ammoMax = wCfg.baseAmmo
+            const ammoPct = wCfg.isMelee ? 100 : Math.min(100, (ammoCount / ammoMax) * 100)
+            const ammoColor = ammoPct > 40 ? '#00ccff' : ammoPct > 15 ? '#ffaa00' : '#ff3300'
+            return (
+              <div
+                key={wid}
+                style={{
+                  padding: '5px 10px',
+                  border: `1px solid ${isActive ? '#00aaff88' : '#1a1a2e'}`,
+                  borderRadius: 3,
+                  background: isActive ? '#00aaff11' : '#08080f',
+                  color: isActive ? '#00aaff' : '#556677',
+                  fontSize: 11,
+                  letterSpacing: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  cursor: 'pointer',
+                  marginBottom: 3,
+                }}
+                onClick={() => selectWeapon(wid)}
+              >
+                <span style={{ fontSize: 9, color: isActive ? '#00aaff' : '#334455' }}>{isActive ? '▶' : '·'}</span>
+                <span style={{ flex: 1 }}>{wCfg.shortName}</span>
+                {!wCfg.isMelee && (
+                  <span style={{ color: ammoColor, fontSize: 10, fontWeight: 'bold' }}>{ammoCount}</span>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      ))}
 
       <div style={{ color: '#445566', fontSize: 10, letterSpacing: 3, marginTop: 4, marginBottom: 2 }}>AUSRÜSTUNG</div>
 
-      <div style={slotStyle(hasChest)}>
+      <div style={equipStyle(hasChest)}>
         <span style={{ color: '#445566', minWidth: 36 }}>BRUST</span>
         <span>{hasChest ? 'Brusttasche' : 'Leer'}</span>
       </div>
-
-      <div style={slotStyle(hasBackpack)}>
+      <div style={equipStyle(hasBackpack)}>
         <span style={{ color: '#445566', minWidth: 36 }}>RÜCKEN</span>
         <span>{hasBackpack ? 'Taktikrucksack' : 'Leer'}</span>
       </div>
-
-      <div style={slotStyle(hasLegs)}>
+      <div style={equipStyle(hasLegs)}>
         <span style={{ color: '#445566', minWidth: 36 }}>BEINE</span>
         <span>{hasLegs ? 'Beintasche' : 'Leer'}</span>
       </div>
-
-      <div style={{ ...slotStyle(selectedAmmo !== 'standard', ammoCfg.color), marginTop: 4 }}>
+      <div style={{ ...equipStyle(selectedAmmo !== 'standard', ammoCfg.color), marginTop: 4 }}>
         <div style={{ width: 8, height: 8, borderRadius: '50%', background: ammoCfg.color, flexShrink: 0 }} />
         <span style={{ color: '#445566' }}>MUN.</span>
         <span style={{ color: ammoCfg.color }}>{ammoCfg.shortName}</span>
       </div>
 
-      {/* Ammo capacity preview */}
       <div style={{ marginTop: 8, padding: '10px 12px', background: '#08080f', border: '1px solid #1a1a2e', borderRadius: 3 }}>
         <div style={{ color: '#445566', fontSize: 10, letterSpacing: 2, marginBottom: 6 }}>MAGAZIN-KAPAZITÄT</div>
         <div style={{ height: 6, background: '#111122', borderRadius: 3, overflow: 'hidden', marginBottom: 4 }}>

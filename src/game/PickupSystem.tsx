@@ -7,6 +7,7 @@ import { useMutatorsStore } from '../store/mutatorsStore'
 import { useGameStore } from '../store/gameStore'
 import { useLoadoutStore } from './loadoutStore'
 import { WEAPON_CONFIGS, ARENA_HALF, EQUIPMENT_CONFIGS, FOCUS_MAX } from './types'
+import { playPickup, playArmorPickup, playFocusPickup, playQuadDamagePickup, playBerserkerPickup } from './sounds'
 import type { WeaponId } from './types'
 
 const POOL          = 28
@@ -268,6 +269,7 @@ function _applyPickup(p: PickupData, setMsg: (m: string) => void) {
   if (p.kind === 'ammo') {
     es.ammo = Math.min(es.maxAmmo, es.ammo + p.amount)
     es.weaponAmmo.set(loadout.selectedWeapon, es.ammo)
+    playPickup()
     setMsg('+MUNITION')
     setTimeout(() => setMsg(''), 1400)
 
@@ -285,21 +287,25 @@ function _applyPickup(p: PickupData, setMsg: (m: string) => void) {
       es.weaponAmmo.set(wid, Math.min(max, cur + Math.round(max * 0.6)))
       setMsg(`+${WEAPON_CONFIGS[wid].shortName}`)
     }
+    playPickup()
     setTimeout(() => setMsg(''), 1600)
 
   } else if (p.kind === 'health') {
     es.player.health = Math.min(100, es.player.health + p.amount)
+    playPickup()
     setMsg(`+${p.amount} HP`)
     setTimeout(() => setMsg(''), 1200)
 
   } else if (p.kind === 'credits') {
     es.creditsEarned += p.amount
+    playPickup()
     setMsg(`+${p.amount} CR`)
     setTimeout(() => setMsg(''), 1200)
 
   } else if (p.kind === 'bad_package') {
     if (p.fuseTimer < 0) {
       es.ammo = Math.min(es.maxAmmo, es.ammo + 8)
+      playPickup()
       setMsg('BLINDGÄNGER ✓')
     }
     setTimeout(() => setMsg(''), 1500)
@@ -308,23 +314,27 @@ function _applyPickup(p: PickupData, setMsg: (m: string) => void) {
     const maxArmor = loadout.ownedEquipment.includes('palantir_suit')
       ? EQUIPMENT_CONFIGS.palantir_suit.maxArmor : 50
     es.player.armor = Math.min(maxArmor, es.player.armor + p.amount)
+    playArmorPickup()
     setMsg(`+${p.amount} RÜSTUNG`)
     setTimeout(() => setMsg(''), 1400)
 
   } else if (p.kind === 'focus') {
     es.focus = Math.min(FOCUS_MAX, es.focus + p.amount)
+    playFocusPickup()
     setMsg('+FOCUS')
     setTimeout(() => setMsg(''), 1200)
 
   } else if (p.kind === 'quad_damage') {
     const dur = useMutatorsStore.getState().quadDamageDuration
     es.player.quadDamageTimer = dur
+    playQuadDamagePickup()
     setMsg('★ QUAD DAMAGE!')
     setTimeout(() => setMsg(''), 2200)
 
   } else if (p.kind === 'berserker') {
     const dur = useMutatorsStore.getState().berserkerDuration
     es.player.berserkerTimer = dur
+    playBerserkerPickup()
     setMsg('⚡ BERSERKER!')
     setTimeout(() => setMsg(''), 2200)
   }
