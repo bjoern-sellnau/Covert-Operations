@@ -315,7 +315,9 @@ export function GameScene() {
   const enemyIds        = useGameStore((s) => s.enemyIds)
   const bulletIds       = useGameStore((s) => s.bulletIds)
   const activePlayLevel = useEditorStore((s) => s.activePlayLevel)
-  const charScale       = useSettingsStore((s) => s.charScale)
+  const charScale        = useSettingsStore((s) => s.charScale)
+  const graphicsQuality  = useSettingsStore((s) => s.graphicsQuality)
+  const isLowQuality     = graphicsQuality === 'low'
 
   const playerGroupRef    = useRef<THREE.Group>(null)
   const player2GroupRef   = useRef<THREE.Group>(null)
@@ -814,7 +816,11 @@ export function GameScene() {
     // ── Lighting ──────────────────────────────────────────────────────────────
     if (ambientRef.current) {
       ambientRef.current.color.lerp(es.isBulletTime ? _btAmbientColor : _normalAmbientColor, 0.07)
-      ambientRef.current.intensity = THREE.MathUtils.lerp(ambientRef.current.intensity, es.isBulletTime ? 0.7 : 0.25, 0.07)
+      // Low quality uses higher ambient intensity to compensate for absent directional light
+      const targetIntensity = isLowQuality
+        ? (es.isBulletTime ? 1.4 : 1.6)
+        : (es.isBulletTime ? 0.7 : 0.25)
+      ambientRef.current.intensity = THREE.MathUtils.lerp(ambientRef.current.intensity, targetIntensity, 0.07)
     }
     if (dirLightRef.current) {
       dirLightRef.current.color.lerp(es.isBulletTime ? _btDirColor : _normalDirColor, 0.07)
@@ -2226,7 +2232,7 @@ export function GameScene() {
           opacity={0.9}
         />
       </mesh>
-      <pointLight ref={weaponProjLightRef} visible={false} color="#00aaff" intensity={5} distance={10} decay={2} />
+      {!isLowQuality && <pointLight ref={weaponProjLightRef} visible={false} color="#00aaff" intensity={5} distance={10} decay={2} />}
 
       {/* Banana meshes */}
       {Array.from({ length: MAX_BANANAS }, (_, i) => (
@@ -2301,9 +2307,9 @@ export function GameScene() {
       {activePlayLevel && <ScriptEngine level={activePlayLevel} />}
       {activePlayLevel?.fogOfWar && <FogOfWar />}
 
-      <ambientLight ref={ambientRef} intensity={0.25} color="#4488ff" />
-      <directionalLight ref={dirLightRef} position={[5, 15, 5]} intensity={1.2} color="#ffffff" castShadow />
-      <pointLight position={[0, 8, 0]} intensity={0.6} color="#2244aa" distance={40} />
+      <ambientLight ref={ambientRef} intensity={isLowQuality ? 1.6 : 0.25} color="#4488ff" />
+      {!isLowQuality && <directionalLight ref={dirLightRef} position={[5, 15, 5]} intensity={1.2} color="#ffffff" castShadow />}
+      {graphicsQuality === 'high' && <pointLight position={[0, 8, 0]} intensity={0.6} color="#2244aa" distance={40} />}
       <EnemyProjector />
     </>
   )

@@ -20,6 +20,7 @@ import { OptionsScreen } from './components/OptionsScreen'
 import { MissionsMenu } from './components/MissionsMenu'
 import { MissionBriefing } from './components/MissionBriefing'
 import { MutatorsScreen } from './components/MutatorsScreen'
+import { HelpScreen } from './components/HelpScreen'
 
 export function App() {
   const phase          = useGameStore((s) => s.phase)
@@ -188,6 +189,7 @@ export function App() {
       {phase === 'missions'                    && <MissionsMenu />}
       {phase === 'briefing'                    && <MissionBriefing />}
       {phase === 'mutators'                    && <MutatorsScreen />}
+      {phase === 'help'                        && <HelpScreen />}
       {phase === 'options'                     && <OptionsScreen />}
       {phase === 'lobby'                       && <Lobby />}
       {phase === 'shop'                        && <Shop />}
