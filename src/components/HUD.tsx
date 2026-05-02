@@ -6,6 +6,7 @@ import { useSettingsStore } from '../store/settingsStore'
 import { hudData } from '../game/hudData'
 import { ARENA_HALF, PLAYER_MAX_HEALTH, FOCUS_MAX, WEAPON_CONFIGS, AMMO_CONFIGS, DIVE_COOLDOWN, SPIN_COOLDOWN, WEAPON_SLOT_WEAPONS, type WeaponId } from '../game/types'
 import { useDemoStore } from '../store/demoStore'
+import { startAudioRecording, stopAudioRecording } from '../game/audioCore'
 
 function P2Panel() {
   const p2Active  = useGameStore((s) => s.p2Active)
@@ -117,6 +118,56 @@ function RecButton() {
       }} />
       <span style={{ color: isRecording ? '#ff4422' : '#334455', fontSize: 9, letterSpacing: 2 }}>
         {isRecording ? 'REC' : 'REC'}
+      </span>
+    </div>
+  )
+}
+
+function AudioRecButton() {
+  const [recording, setRecording] = useState(false)
+  const [pulse, setPulse] = useState(false)
+  useEffect(() => {
+    if (!recording) { setPulse(false); return }
+    const id = setInterval(() => setPulse(p => !p), 600)
+    return () => clearInterval(id)
+  }, [recording])
+  const toggle = async () => {
+    if (!recording) {
+      const ok = startAudioRecording()
+      if (ok) setRecording(true)
+    } else {
+      setRecording(false)
+      const blob = await stopAudioRecording()
+      if (blob.size > 0) {
+        const ext = blob.type.includes('ogg') ? 'ogg' : 'webm'
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `covert-ops-${Date.now()}.${ext}`
+        a.click()
+        URL.revokeObjectURL(url)
+      }
+    }
+  }
+  return (
+    <div
+      onClick={toggle}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 4,
+        cursor: 'pointer', userSelect: 'none',
+        opacity: recording ? 1 : 0.45,
+        transition: 'opacity 0.15s',
+      }}
+      title={recording ? 'Audio-Aufnahme stoppen & herunterladen' : 'Audio aufnehmen'}
+    >
+      <div style={{
+        width: 8, height: 8, borderRadius: 2,
+        background: recording ? (pulse ? '#ff8800' : '#aa5500') : '#334455',
+        boxShadow: recording ? `0 0 6px ${pulse ? '#ff8800' : '#663300'}` : 'none',
+        transition: 'all 0.3s',
+      }} />
+      <span style={{ color: recording ? '#ff9933' : '#334455', fontSize: 9, letterSpacing: 2 }}>
+        AUD
       </span>
     </div>
   )
@@ -412,6 +463,7 @@ export function HUD() {
             </div>
           )}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
+            <AudioRecButton />
             <RecButton />
             <div style={{ color: '#223333', fontSize: 9, letterSpacing: 1 }}>{fps} FPS</div>
           </div>

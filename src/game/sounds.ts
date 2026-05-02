@@ -1,17 +1,13 @@
 // Web Audio API procedural sound synthesis
 
-let _ctx: AudioContext | null = null
+import { getCtx, getBus } from './audioCore'
 
-function ctx(): AudioContext {
-  if (!_ctx) _ctx = new AudioContext()
-  if (_ctx.state === 'suspended') _ctx.resume()
-  return _ctx
-}
+const ctx = getCtx
 
 function masterGain(volume = 1.0): GainNode {
   const g = ctx().createGain()
   g.gain.value = volume
-  g.connect(ctx().destination)
+  g.connect(getBus())
   return g
 }
 

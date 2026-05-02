@@ -1,6 +1,9 @@
 // Procedural Web Audio music — no audio files
 
-let _ctx: AudioContext | null = null
+import { getCtx, getBus } from './audioCore'
+
+const ctx = getCtx
+
 let _master: GainNode | null = null
 let _trackGain: GainNode | null = null
 let _scheduler: ReturnType<typeof setInterval> | null = null
@@ -9,18 +12,11 @@ let _nextBar = 0
 let _track: 'menu' | 'game' | 'game2' | 'game3' | 'game4' | 'skydive' | 'game5' | 'game6' | 'game7' | 'game8' | 'game9' | 'game10' | 'game11' | 'game12' | 'game13' | 'game14' | 'game15' | 'game16' | 'game17' | 'game18' | 'game19' | 'game20' | 'game21' | 'game22' | 'game23' | 'game24' | 'game25' | 'game26' | 'game27' | 'game28' | 'game29' | 'game30' | 'game31' | null = null
 let _previewTimer: ReturnType<typeof setTimeout> | null = null
 
-function ctx(): AudioContext {
-  if (!_ctx) _ctx = new AudioContext()
-  if (_ctx.state === 'suspended') void _ctx.resume()
-  return _ctx
-}
-
 function master(): GainNode {
   if (!_master) {
-    const c = ctx()
-    _master = c.createGain()
+    _master = ctx().createGain()
     _master.gain.value = 0
-    _master.connect(c.destination)
+    _master.connect(getBus())
   }
   return _master
 }
