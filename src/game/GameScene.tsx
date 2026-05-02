@@ -37,6 +37,7 @@ import {
   VERNICHTER_SPEED, VERNICHTER_RADIUS, VERNICHTER_DAMAGE,
   LASER_RANGE, LASER_WIDTH,
   ION_DELAY, ION_BEAM_DURATION, ION_RADIUS,
+  WEAPON_SLOT_WEAPONS,
 } from './types'
 import type { EnemyType } from './types'
 import { Arena } from './Arena'
@@ -295,14 +296,12 @@ export function GameScene() {
   useEffect(() => { if (phase === 'playing') gameOverFiredRef.current = false }, [phase])
 
   // Edge-detection refs — P1
-  const spacePrev = useRef(false)
-  const qPrev     = useRef(false)
-  const ePrev     = useRef(false)
-  const gPrev     = useRef(false)
-  const rPrev     = useRef(false)
-  const vPrev     = useRef(false)
-  const lPrev     = useRef(false)
-  const iPrev     = useRef(false)
+  const spacePrev  = useRef(false)
+  const qPrev      = useRef(false)
+  const ePrev      = useRef(false)
+  const rPrev      = useRef(false)
+  const digitPrev  = useRef<Set<number>>(new Set())
+  const firePrev   = useRef(false)
   // Edge-detection refs — P2
   const p2GrenPrev   = useRef(false)
   const p2GpShootPrev = useRef(false)
@@ -342,10 +341,15 @@ export function GameScene() {
     entityStore.creditsEarned  = 0
     entityStore.isAkimbo       = loadout.isAkimbo &&
       (loadout.selectedWeapon === 'pistol' || loadout.selectedWeapon === 'smg')
-    entityStore.grenadeCount   = isRange ? 99 : 3
+    entityStore.grenadeCount   = isRange ? 99 : 3  // P2 only
     entityStore.vernichterAmmo = loadout.vernichterStock
     entityStore.laserAmmo      = loadout.laserStock
     entityStore.ionAmmo        = loadout.ionStock
+    // Override special weapon ammo pools (getMaxAmmoFor returns 0 for these)
+    entityStore.weaponAmmo.set('vernichter', loadout.vernichterStock)
+    entityStore.weaponAmmo.set('deathlas',   loadout.laserStock)
+    entityStore.weaponAmmo.set('ioncan',     loadout.ionStock)
+    entityStore.weaponAmmo.set('grenade',    isRange ? 99 : 3)
     entityStore.ammo2          = isRange ? 9999 : loadout.getMaxAmmo()
     entityStore.maxAmmo2       = entityStore.ammo2
     entityStore.grenadeCount2  = isRange ? 99 : 3
@@ -400,6 +404,39 @@ export function GameScene() {
     }
     window.addEventListener('mousemove', handler)
     return () => window.removeEventListener('mousemove', handler)
+  }, [])
+
+  // ── Mousewheel: cycle weapon slots ───────────────────────────────────────
+  useEffect(() => {
+    const handler = (e: WheelEvent) => {
+      if (phaseRef.current !== 'playing') return
+      e.preventDefault()
+      const dir = e.deltaY > 0 ? 1 : -1
+      const loadoutNow = useLoadoutStore.getState()
+      const slotOrder = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0]
+      const occupied  = slotOrder.filter(s => (WEAPON_SLOT_WEAPONS[s] ?? []).some(w => loadoutNow.ownedWeapons.includes(w)))
+      if (occupied.length < 2) return
+      const cur  = occupied.indexOf(loadoutNow.activeSlot)
+      const next = occupied[(cur + dir + occupied.length) % occupied.length]
+      const prev = loadoutNow.selectedWeapon
+      const weapon = loadoutNow.switchToSlot(next)
+      if (weapon && weapon !== prev) {
+        const es = entityStore
+        if (!WEAPON_CONFIGS[prev].isVernichter && !WEAPON_CONFIGS[prev].isLaser && !WEAPON_CONFIGS[prev].isIon)
+          es.weaponAmmo.set(prev, es.ammo)
+        if (WEAPON_CONFIGS[weapon].isVernichter)     { es.ammo = es.vernichterAmmo; es.maxAmmo = 5 }
+        else if (WEAPON_CONFIGS[weapon].isLaser)     { es.ammo = es.laserAmmo;      es.maxAmmo = 3 }
+        else if (WEAPON_CONFIGS[weapon].isIon)       { es.ammo = es.ionAmmo;        es.maxAmmo = 3 }
+        else {
+          const nm = loadoutNow.getMaxAmmoFor(weapon)
+          es.ammo = es.weaponAmmo.get(weapon) ?? nm
+          es.maxAmmo = nm
+        }
+        es.reloadTimer = 0
+      }
+    }
+    window.addEventListener('wheel', handler, { passive: false })
+    return () => window.removeEventListener('wheel', handler)
   }, [])
 
   // ── Net mode: socket listeners active during gameplay ─────────────────────
@@ -457,7 +494,7 @@ export function GameScene() {
     const [diffHpMult, diffDmgMult, diffSpeedMult, diffPlayerHpMult] = DIFFICULTY_MULTS[useSettingsStore.getState().difficulty]
 
     // Consume one-shot mobile flags at the top of the frame
-    const mobileGrenJust = mobileInput.grenadeJust;    mobileInput.grenadeJust    = false
+    mobileInput.grenadeJust = false  // grenade now fired via slot 7 weapon
     const mobileDiveJust = mobileInput.diveJust;       mobileInput.diveJust       = false
     const mobileWpnPrev  = mobileInput.weaponPrevJust; mobileInput.weaponPrevJust = false
     const mobileWpnNext  = mobileInput.weaponNextJust; mobileInput.weaponNextJust = false
@@ -558,60 +595,78 @@ export function GameScene() {
     const spaceDown = keys.has('Space')
     const qDown     = keys.has('KeyQ')
     const eDown     = keys.has('KeyE')
-    const gDown     = keys.has('KeyG')
     const rDown     = keys.has('KeyR')
-    const vDown     = keys.has('KeyV')
-    const lDown     = keys.has('KeyL')
-    const iDown     = keys.has('KeyI')
     const spaceJust = (spaceDown && !spacePrev.current) || mobileDiveJust
-    const qJust     = qDown     && !qPrev.current
-    const eJust     = eDown     && !ePrev.current
-    const gJust     = (gDown && !gPrev.current) || mobileGrenJust
-    const rJust     = rDown     && !rPrev.current   // reload
-    const vJust     = vDown     && !vPrev.current   // vernichter
-    const lJust     = lDown     && !lPrev.current   // death laser
-    const iJust     = iDown     && !iPrev.current   // ion cannon
+    const qJust     = qDown && !qPrev.current
+    const eJust     = eDown && !ePrev.current
+    const rJust     = rDown && !rPrev.current
     spacePrev.current = spaceDown
     qPrev.current     = qDown
     ePrev.current     = eDown
-    gPrev.current     = gDown
     rPrev.current     = rDown
-    vPrev.current     = vDown
-    lPrev.current     = lDown
-    iPrev.current     = iDown
 
-    // ── Number keys 1-5: weapon switching ────────────────────────────────────
+    // ── Number keys 1-0: slot-based weapon switching (with cycling) ──────────
     {
       const loadoutNow = useLoadoutStore.getState()
-      for (let slot = 1; slot <= 5; slot++) {
-        const target = loadoutNow.ownedWeapons[slot - 1]
-        if (target && keys.has(`Digit${slot}`) && target !== loadoutNow.selectedWeapon) {
-          es.weaponAmmo.set(loadoutNow.selectedWeapon, es.ammo)
-          const newMax = loadoutNow.getMaxAmmoFor(target)
-          es.ammo      = es.weaponAmmo.get(target) ?? newMax
-          es.maxAmmo   = newMax
-          es.reloadTimer = 0
-          loadoutNow.selectWeapon(target)
+      const slotOrder  = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0]
+      for (const slot of slotOrder) {
+        const keyCode = slot === 0 ? 'Digit0' : `Digit${slot}`
+        const isDown  = keys.has(keyCode)
+        const wasDown = digitPrev.current.has(slot)
+        if (isDown && !wasDown) {
+          const prevWeapon = loadoutNow.selectedWeapon
+          const weapon     = loadoutNow.switchToSlot(slot)
+          if (weapon && weapon !== prevWeapon) {
+            const prevCfg = WEAPON_CONFIGS[prevWeapon]
+            if (!prevCfg.isVernichter && !prevCfg.isLaser && !prevCfg.isIon)
+              es.weaponAmmo.set(prevWeapon, es.ammo)
+            const wcfg = WEAPON_CONFIGS[weapon]
+            if (wcfg.isVernichter)     { es.ammo = es.vernichterAmmo; es.maxAmmo = 5 }
+            else if (wcfg.isLaser)     { es.ammo = es.laserAmmo;      es.maxAmmo = 3 }
+            else if (wcfg.isIon)       { es.ammo = es.ionAmmo;        es.maxAmmo = 3 }
+            else {
+              const nm = loadoutNow.getMaxAmmoFor(weapon)
+              es.ammo    = es.weaponAmmo.get(weapon) ?? nm
+              es.maxAmmo = nm
+            }
+            es.reloadTimer = 0
+          }
           break
         }
       }
+      // Update digit edge-detection set
+      const next = new Set<number>()
+      for (const slot of slotOrder) {
+        if (keys.has(slot === 0 ? 'Digit0' : `Digit${slot}`)) next.add(slot)
+      }
+      digitPrev.current = next
     }
 
-    // ── Mobile: prev/next weapon ─────────────────────────────────────────────
+    // ── Mobile: prev/next slot ────────────────────────────────────────────────
     if (mobileWpnPrev || mobileWpnNext) {
       const loadoutNow = useLoadoutStore.getState()
-      const weapons    = loadoutNow.ownedWeapons
-      if (weapons.length > 1) {
-        const idx    = weapons.indexOf(loadoutNow.selectedWeapon)
-        const delta  = mobileWpnNext ? 1 : weapons.length - 1
-        const target = weapons[(idx + delta) % weapons.length]
-        if (target !== loadoutNow.selectedWeapon) {
-          es.weaponAmmo.set(loadoutNow.selectedWeapon, es.ammo)
-          const newMax = loadoutNow.getMaxAmmoFor(target)
-          es.ammo      = es.weaponAmmo.get(target) ?? newMax
-          es.maxAmmo   = newMax
+      const slotOrder  = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0]
+      const occupied   = slotOrder.filter(s => (WEAPON_SLOT_WEAPONS[s] ?? []).some(w => loadoutNow.ownedWeapons.includes(w)))
+      if (occupied.length > 1) {
+        const dir     = mobileWpnNext ? 1 : occupied.length - 1
+        const cur     = occupied.indexOf(loadoutNow.activeSlot)
+        const next    = occupied[(cur + dir) % occupied.length]
+        const prevWeapon = loadoutNow.selectedWeapon
+        const weapon     = loadoutNow.switchToSlot(next)
+        if (weapon && weapon !== prevWeapon) {
+          const prevCfg = WEAPON_CONFIGS[prevWeapon]
+          if (!prevCfg.isVernichter && !prevCfg.isLaser && !prevCfg.isIon)
+            es.weaponAmmo.set(prevWeapon, es.ammo)
+          const wcfg = WEAPON_CONFIGS[weapon]
+          if (wcfg.isVernichter)     { es.ammo = es.vernichterAmmo; es.maxAmmo = 5 }
+          else if (wcfg.isLaser)     { es.ammo = es.laserAmmo;      es.maxAmmo = 3 }
+          else if (wcfg.isIon)       { es.ammo = es.ionAmmo;        es.maxAmmo = 3 }
+          else {
+            const nm = loadoutNow.getMaxAmmoFor(weapon)
+            es.ammo    = es.weaponAmmo.get(weapon) ?? nm
+            es.maxAmmo = nm
+          }
           es.reloadTimer = 0
-          loadoutNow.selectWeapon(target)
         }
       }
     }
@@ -974,8 +1029,10 @@ export function GameScene() {
     // In chaos mode: block shooting unless a chaos weapon is held
     const chaosModeActive = mutators.chaosMode && useGameStore.getState().gameMode !== 'shooting_range'
     const canShootChaos   = !chaosModeActive || (es.chaosWeaponId !== null && es.chaosAmmo > 0)
-    const isShooting = (input.current.mouseButtons.has(0) || (mobileControls && mobileInput.fire))
-      && es.reloadTimer <= 0 && (canShootChaos || weaponCfg.isMelee)
+    const rawFire    = input.current.mouseButtons.has(0) || (mobileControls && mobileInput.fire)
+    const isShooting = rawFire && es.reloadTimer <= 0 && (canShootChaos || weaponCfg.isMelee)
+    const fireJust   = rawFire && !firePrev.current
+    firePrev.current = rawFire
 
     // Helper: spawn one regular bullet
     const spawnBullet = (angle: number, lateralOff = 0) => {
@@ -1076,7 +1133,8 @@ export function GameScene() {
         WEAPON_SOUNDS[loadout.selectedWeapon]?.()
         setBulletIds(Array.from(es.bullets.keys()))
       }
-    } else if (isShooting && es.player.shootCooldown <= 0 && es.ammo > 0 && es.maneuver !== 'spin' && es.burstRemaining === 0) {
+    } else if (isShooting && es.player.shootCooldown <= 0 && es.ammo > 0 && es.maneuver !== 'spin' && es.burstRemaining === 0
+        && !weaponCfg.isVernichter && !weaponCfg.isLaser && !weaponCfg.isIon) {
       es.player.shootCooldown = weaponCfg.shootCooldown
       const baseAngle = Math.atan2(_toMouse.x, _toMouse.y)
       const offsets   = es.isAkimbo ? [-0.1, 0.1] : [0]
@@ -1085,7 +1143,21 @@ export function GameScene() {
       if (es.ammo >= ammoCost) {
         WEAPON_SOUNDS[loadout.selectedWeapon]?.()
 
-        if (weaponCfg.isProjectile) {
+        if (weaponCfg.isGrenade) {
+          // Grenade weapon: throw into grenades pool
+          const ang  = baseAngle + (Math.random() - 0.5) * 2 * weaponCfg.spread
+          const bDir = new THREE.Vector2(Math.sin(ang), Math.cos(ang))
+          es.grenades.push({
+            id:      `grenade-${++es.grenadeIdCounter}`,
+            x:       es.player.position.x + bDir.x * (PLAYER_RADIUS + 0.3),
+            z:       es.player.position.y + bDir.y * (PLAYER_RADIUS + 0.3),
+            vx:      bDir.x * (weaponCfg.bulletSpeed ?? GRENADE_SPEED),
+            vz:      bDir.y * (weaponCfg.bulletSpeed ?? GRENADE_SPEED),
+            timer:   GRENADE_FUSE,
+            bounces: 0,
+          })
+          es.ammo = Math.max(0, es.ammo - 1)
+        } else if (weaponCfg.isProjectile) {
           // Plasma / Bazooka: single slow projectile
           es.weaponProjectile = {
             x:  es.player.position.x + _toMouse.x * (PLAYER_RADIUS + 0.4),
@@ -1190,20 +1262,6 @@ export function GameScene() {
     // ── Declare removal/score accumulators ───────────────────────────────────
     const enemiesToRemove: string[] = []
     let scoreGained = 0, creditsGained = 0
-
-    // ── Grenade throw (G) ─────────────────────────────────────────────────────
-    if (gJust && es.grenadeCount > 0) {
-      es.grenadeCount--
-      es.grenades.push({
-        id:      `grenade-${++es.grenadeIdCounter}`,
-        x:       es.player.position.x + _toMouse.x * (PLAYER_RADIUS + 0.3),
-        z:       es.player.position.y + _toMouse.y * (PLAYER_RADIUS + 0.3),
-        vx:      _toMouse.x * GRENADE_SPEED,
-        vz:      _toMouse.y * GRENADE_SPEED,
-        timer:   GRENADE_FUSE,
-        bounces: 0,
-      })
-    }
 
     // ── Update grenades ───────────────────────────────────────────────────────
     const grenadeIdxToRemove: number[] = []
@@ -1327,8 +1385,8 @@ export function GameScene() {
       const mesh = bananaMeshRefs.current[mi]; if (mesh) mesh.visible = false
     }
 
-    // ── Vernichter fire (V) ───────────────────────────────────────────────────
-    if (vJust && es.vernichterAmmo > 0 && !es.vernichterProjectile) {
+    // ── Vernichter fire (slot 0) ──────────────────────────────────────────────
+    if (fireJust && weaponCfg.isVernichter && es.vernichterAmmo > 0 && !es.vernichterProjectile) {
       es.vernichterAmmo--
       es.vernichterProjectile = {
         x:  es.player.position.x + _toMouse.x * (PLAYER_RADIUS + 0.6),
@@ -1410,8 +1468,8 @@ export function GameScene() {
       if (vernichterLightRef.current) vernichterLightRef.current.visible = false
     }
 
-    // ── Death Laser (L) ──────────────────────────────────────────────────────
-    if (lJust && es.laserAmmo > 0 && !es.laserBeam) {
+    // ── Death Laser (slot 0) ──────────────────────────────────────────────────
+    if (fireJust && weaponCfg.isLaser && es.laserAmmo > 0 && !es.laserBeam) {
       es.laserAmmo--
       const px = es.player.position.x, pz = es.player.position.y
       const dx = _toMouse.x, dz = _toMouse.y
@@ -1476,7 +1534,7 @@ export function GameScene() {
     }
 
     // ── Ion Cannon (I) ───────────────────────────────────────────────────────
-    if (iJust && es.ionAmmo > 0 && !es.ionTarget) {
+    if (fireJust && weaponCfg.isIon && es.ionAmmo > 0 && !es.ionTarget) {
       es.ionAmmo--
       es.ionTarget = { x: es.mouseWorld.x, z: es.mouseWorld.z, delay: ION_DELAY, beamTimer: 0 }
     }

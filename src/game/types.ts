@@ -1,7 +1,7 @@
 export type GamePhase = 'menu' | 'missions' | 'briefing' | 'mutators' | 'lobby' | 'options' | 'shop' | 'playing' | 'gameover' | 'editor' | 'skydive' | 'skydive_win'
 
 export type EnemyType = 'basic' | 'fast' | 'tank' | 'berserker' | 'flanker' | 'juggernaut'
-export type WeaponId = 'pistol' | 'smg' | 'shotgun' | 'rifle' | 'uzi' | 'mp5' | 'm16' | 'blaster' | 'plasma' | 'bazooka' | 'flak' | 'banana' | 'knife' | 'bat' | 'stick' | 'bfg'
+export type WeaponId = 'pistol' | 'smg' | 'shotgun' | 'rifle' | 'uzi' | 'mp5' | 'm16' | 'blaster' | 'plasma' | 'bazooka' | 'flak' | 'banana' | 'knife' | 'bat' | 'stick' | 'bfg' | 'grenade' | 'vernichter' | 'deathlas' | 'ioncan'
 export type EquipmentId = 'backpack' | 'chest_pouch' | 'leg_pouch'
 export type AmmoId = 'standard' | 'hollow_point' | 'ap'
 
@@ -65,6 +65,11 @@ export interface WeaponConfig {
   meleeRange?: number        // hit radius in world units
   meleeArc?: number          // total arc angle in radians
   stackable?: boolean        // can buy multiple (adds baseAmmo to durability pool)
+  // Special weapons
+  isGrenade?: boolean        // throw into grenade pool (uses GRENADE constants)
+  isVernichter?: boolean     // triggers vernichter projectile on fire
+  isLaser?: boolean          // triggers death laser on fire
+  isIon?: boolean            // triggers ion cannon on fire
 }
 
 export const WEAPON_CONFIGS: Record<WeaponId, WeaponConfig> = {
@@ -83,7 +88,15 @@ export const WEAPON_CONFIGS: Record<WeaponId, WeaponConfig> = {
   bazooka: { name: 'Panzerfaust RPG',      shortName: 'RPG',   price: 380, baseDamage: 20,  pellets: 1, spread: 0,    shootCooldown: 1.2,   bulletSpeed: 11, baseAmmo: 8,   statDamage: 5, statRate: 1, statRange: 4, reloadTime: 3.5, description: 'Schwere Rakete. Massiver Splash-Schaden (Radius 4.5m).', isProjectile: true, projectileSpeed: 11, projectileRadius: 4.5, projectileDamage: 70 },
   banana:  { name: 'Bananenwerfer',        shortName: 'BNNA',  price: 280, baseDamage: 15,  pellets: 1, spread: 0.05, shootCooldown: 0.9,   bulletSpeed: 10, baseAmmo: 12,  statDamage: 4, statRate: 2, statRange: 3, reloadTime: 2.5, description: 'Springende Granate. Explodiert nach 3s oder 5 Abprallern.', isBanana: true, maxBounces: 5, projectileRadius: 3.5, projectileDamage: 55 },
 
-  bfg:     { name: 'BFG-9000',              shortName: 'BFG',   price: 500, baseDamage: 999, pellets: 1, spread: 0, shootCooldown: 2.5, bulletSpeed: 4,  baseAmmo: 3,   statDamage: 5, statRate: 1, statRange: 5, reloadTime: 4.5, description: 'Massive grüne Plasmakugel. Vernichtet alle Gegner im Umkreis (Radius 12m). Spieler ist immun.', isProjectile: true, projectileSpeed: 4, projectileRadius: 12, projectileDamage: 999 },
+  bfg:       { name: 'BFG-9000',         shortName: 'BFG',  price: 500, baseDamage: 999, pellets: 1, spread: 0, shootCooldown: 2.5, bulletSpeed: 4,  baseAmmo: 3,   statDamage: 5, statRate: 1, statRange: 5, reloadTime: 4.5, description: 'Massive grüne Plasmakugel. Vernichtet alle Gegner im Umkreis (Radius 12m). Spieler ist immun.', isProjectile: true, projectileSpeed: 4, projectileRadius: 12, projectileDamage: 999 },
+
+  // ── Slot-0 Superwaffen (Ammo via Shop) ───────────────────────────────────
+  vernichter: { name: 'Vernichter',      shortName: 'VERN', price: 0, baseDamage: 999, pellets: 1, spread: 0, shootCooldown: 3.0, bulletSpeed: 6,  baseAmmo: 0, statDamage: 5, statRate: 1, statRange: 5, reloadTime: 0, description: 'Langsames Plasmaprojektil. Explodiert auf Aufprall. Radius 9m.', isVernichter: true },
+  deathlas:   { name: 'Todeslaser',      shortName: 'LASR', price: 0, baseDamage: 999, pellets: 1, spread: 0, shootCooldown: 1.0, bulletSpeed: 0,  baseAmmo: 0, statDamage: 5, statRate: 3, statRange: 5, reloadTime: 0, description: 'Sofortiger Strahl in Zielrichtung. Vernichtet alle Gegner im Pfad.', isLaser: true },
+  ioncan:     { name: 'Ionen-Kanone',    shortName: 'ION',  price: 0, baseDamage: 999, pellets: 1, spread: 0, shootCooldown: 1.5, bulletSpeed: 0,  baseAmmo: 0, statDamage: 5, statRate: 2, statRange: 4, reloadTime: 0, description: 'Orbital-Angriff. 4 Ionenstrahlen konvergieren nach 1.5s. Radius 8m.', isIon: true },
+
+  // ── Slot 7: Handgranate ──────────────────────────────────────────────────
+  grenade:   { name: 'Handgranate',       shortName: 'GREN', price: 0, baseDamage: 65, pellets: 1, spread: 0.06, shootCooldown: 0.9, bulletSpeed: 12, baseAmmo: 3, statDamage: 5, statRate: 1, statRange: 3, reloadTime: 0, description: 'Klassische Splittergranate. 3 pro Runde. Rollt und explodiert nach 2.2s.', isGrenade: true, projectileRadius: 3.5, projectileDamage: 65 },
 
   // ── Nahkampf ─────────────────────────────────────────────────────────────
   knife: { name: 'Messer',             shortName: 'MESSER', price: 60,  baseDamage: 28,  pellets: 1, spread: 0, shootCooldown: 0.38, bulletSpeed: 0, baseAmmo: 20,   statDamage: 3, statRate: 4, statRange: 1, reloadTime: 0, description: 'Schnelle Stiche. 20 Treffer, dann kaputt. Schaden nimmt ab.', isMelee: true, stackable: true, meleeRange: 1.6, meleeArc: Math.PI * 0.55 },
@@ -182,3 +195,29 @@ export const ION_DELAY        = 1.5  // seconds between mark and impact
 export const ION_BEAM_DURATION = 0.6 // seconds beams are visible
 export const ION_RADIUS       = 8    // explosion radius
 export const ION_AMMO_PRICE   = 400
+
+// ── Weapon slot system ──────────────────────────────────────────────────────
+// Keys 1-9 and 0; each slot holds multiple weapons cycled by repeated key press
+export const WEAPON_SLOT_WEAPONS: Record<number, WeaponId[]> = {
+  1: ['knife', 'bat', 'stick'],
+  2: ['pistol', 'uzi', 'smg'],
+  3: ['shotgun', 'flak'],
+  4: ['m16', 'rifle', 'mp5'],
+  5: ['plasma', 'blaster'],
+  6: ['bazooka'],
+  7: ['banana', 'grenade'],
+  8: [],
+  9: [],
+  0: ['vernichter', 'deathlas', 'ioncan', 'bfg'],
+}
+
+export const WEAPON_TO_SLOT: Partial<Record<WeaponId, number>> = {
+  knife: 1, bat: 1, stick: 1,
+  pistol: 2, uzi: 2, smg: 2,
+  shotgun: 3, flak: 3,
+  m16: 4, rifle: 4, mp5: 4,
+  plasma: 5, blaster: 5,
+  bazooka: 6,
+  banana: 7, grenade: 7,
+  vernichter: 0, deathlas: 0, ioncan: 0, bfg: 0,
+}

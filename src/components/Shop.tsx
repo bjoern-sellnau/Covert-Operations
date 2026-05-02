@@ -332,8 +332,7 @@ function MeleeCard({ id }: { id: WeaponId }) {
 // ── Character loadout panel ──────────────────────────────────────────────────
 
 function CharacterPanel() {
-  const { selectedWeapon, ownedEquipment, selectedAmmo, getMaxAmmo } = useLoadoutStore()
-  const weaponCfg = WEAPON_CONFIGS[selectedWeapon]
+  const { selectedWeapon, ownedWeapons, ownedEquipment, selectedAmmo, getMaxAmmo, selectWeapon } = useLoadoutStore()
   const ammoCfg = AMMO_CONFIGS[selectedAmmo]
   const maxAmmo = getMaxAmmo()
   const hasBackpack = ownedEquipment.includes('backpack')
@@ -341,7 +340,7 @@ function CharacterPanel() {
   const hasLegs = ownedEquipment.includes('leg_pouch')
 
   const slotStyle = (equipped: boolean, color = '#00ff88'): React.CSSProperties => ({
-    padding: '8px 10px',
+    padding: '7px 10px',
     border: `1px solid ${equipped ? color : '#1a1a2e'}`,
     borderRadius: 3,
     background: equipped ? `${color}11` : '#08080f',
@@ -356,50 +355,26 @@ function CharacterPanel() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <div style={{ color: '#445566', fontSize: 10, letterSpacing: 3, marginBottom: 4 }}>LADUNG</div>
-
-      {/* Body silhouette */}
-      <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', margin: '8px 0' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-          {/* Head */}
-          <div style={{ width: 30, height: 30, borderRadius: '50%', background: '#0a1a2e', border: '1px solid #00aaff44' }} />
-          {/* Torso */}
-          <div style={{
-            width: 52, height: 44, background: '#0a1a2e', border: '1px solid #00aaff44',
-            borderRadius: 3, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            {hasChest && <div style={{ width: 20, height: 20, borderRadius: 2, background: '#00ff8833', border: '1px solid #00ff88' }} />}
-            {/* Backpack badge */}
-            {hasBackpack && (
-              <div style={{
-                position: 'absolute', right: -18, top: 4,
-                width: 14, height: 22, background: '#00ff8822', border: '1px solid #00ff88', borderRadius: 2,
-              }} />
-            )}
-          </div>
-          {/* Arms */}
-          <div style={{ display: 'flex', gap: 4, marginTop: -4 }}>
-            <div style={{ width: 14, height: 32, background: '#0a1a2e', border: '1px solid #00aaff33', borderRadius: 2, marginTop: 0 }} />
-            <div style={{ width: 14, height: 32, background: '#0a1a2e', border: '1px solid #00aaff33', borderRadius: 2 }} />
-          </div>
-          {/* Legs */}
-          <div style={{ display: 'flex', gap: 4 }}>
-            <div style={{
-              width: 22, height: 36, background: '#0a1a2e', border: `1px solid ${hasLegs ? '#00ff88' : '#00aaff33'}`, borderRadius: 2,
-              display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: 4,
-            }}>
-              {hasLegs && <div style={{ width: 14, height: 14, background: '#00ff8833', border: '1px solid #00ff8866', borderRadius: 1 }} />}
-            </div>
-            <div style={{ width: 22, height: 36, background: '#0a1a2e', border: '1px solid #00aaff33', borderRadius: 2 }} />
-          </div>
-        </div>
+      <div style={{ color: '#445566', fontSize: 10, letterSpacing: 3, marginBottom: 2 }}>
+        WAFFEN ({ownedWeapons.length})
       </div>
+      {ownedWeapons.map((wid) => {
+        const wCfg = WEAPON_CONFIGS[wid]
+        const isActive = selectedWeapon === wid
+        return (
+          <div
+            key={wid}
+            style={{ ...slotStyle(isActive, '#00aaff'), cursor: 'pointer' }}
+            onClick={() => selectWeapon(wid)}
+          >
+            <span style={{ color: isActive ? '#0066aa' : '#334455', fontSize: 9 }}>▶</span>
+            <span style={{ flex: 1 }}>{wCfg.shortName}</span>
+            {isActive && <span style={{ color: '#00ffaa', fontSize: 9, letterSpacing: 1 }}>AKTIV</span>}
+          </div>
+        )
+      })}
 
-      {/* Slot list */}
-      <div style={slotStyle(true, '#00aaff')}>
-        <span style={{ color: '#445566' }}>WAFFE</span>
-        <span>{weaponCfg.shortName} — {weaponCfg.name.split(' ')[0]}</span>
-      </div>
+      <div style={{ color: '#445566', fontSize: 10, letterSpacing: 3, marginTop: 4, marginBottom: 2 }}>AUSRÜSTUNG</div>
 
       <div style={slotStyle(hasChest)}>
         <span style={{ color: '#445566', minWidth: 36 }}>BRUST</span>

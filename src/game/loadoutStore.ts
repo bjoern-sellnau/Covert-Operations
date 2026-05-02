@@ -3,8 +3,12 @@ import { persist } from 'zustand/middleware'
 import {
   WEAPON_CONFIGS, EQUIPMENT_CONFIGS, AMMO_CONFIGS,
   STARTING_CREDITS, AKIMBO_PRICE, VERNICHTER_AMMO_PRICE, LASER_AMMO_PRICE, ION_AMMO_PRICE,
+  WEAPON_SLOT_WEAPONS, WEAPON_TO_SLOT,
   type WeaponId, type EquipmentId, type AmmoId,
 } from './types'
+
+// Always-owned weapons (no purchase required)
+const ALWAYS_OWNED: WeaponId[] = ['pistol', 'grenade', 'vernichter', 'deathlas', 'ioncan']
 
 interface LoadoutStore {
   credits: number
@@ -18,11 +22,14 @@ interface LoadoutStore {
   laserStock: number
   ionStock: number
   meleeStacks: Partial<Record<WeaponId, number>>
+  activeSlot: number
+  slotIndices: Partial<Record<number, number>>
 
   addCredits: (n: number) => void
   setCredits: (n: number) => void
   buyWeapon: (id: WeaponId) => boolean
   selectWeapon: (id: WeaponId) => void
+  switchToSlot: (slot: number) => WeaponId | null
   buyEquipment: (id: EquipmentId) => boolean
   buyAmmo: (id: AmmoId) => boolean
   selectAmmo: (id: AmmoId) => void
@@ -41,7 +48,7 @@ export const useLoadoutStore = create<LoadoutStore>()(
     (set, get) => ({
       credits: STARTING_CREDITS,
       selectedWeapon: 'pistol',
-      ownedWeapons: ['pistol'],
+      ownedWeapons: [...ALWAYS_OWNED],
       ownedEquipment: [],
       selectedAmmo: 'standard',
       ownedAmmo: ['standard'],
@@ -50,6 +57,8 @@ export const useLoadoutStore = create<LoadoutStore>()(
       laserStock: 0,
       ionStock: 0,
       meleeStacks: {},
+      activeSlot: 2,
+      slotIndices: {},
 
       addCredits: (n) => set((s) => ({ credits: s.credits + n })),
       setCredits: (n) => set({ credits: Math.max(0, n) }),
@@ -59,38 +68,68 @@ export const useLoadoutStore = create<LoadoutStore>()(
         const cfg = WEAPON_CONFIGS[id]
         if (s.ownedWeapons.includes(id)) {
           if (cfg.stackable) {
-            // Buy another copy: deduct credits, add a stack (increases max durability)
             if ((s.meleeStacks[id] ?? 1) >= 5) return false
             if (s.credits < cfg.price) return false
             set((st) => ({
               credits:     st.credits - cfg.price,
               selectedWeapon: id,
+              activeSlot: WEAPON_TO_SLOT[id] ?? st.activeSlot,
               meleeStacks: { ...st.meleeStacks, [id]: (st.meleeStacks[id] ?? 1) + 1 },
             }))
             return true
           }
-          // Akimbo: buying a 2nd copy of pistol/smg unlocks dual-wield
           if ((id === 'pistol' || id === 'smg') && !s.isAkimbo) {
             if (s.credits < AKIMBO_PRICE) return false
-            set((st) => ({ credits: st.credits - AKIMBO_PRICE, isAkimbo: true, selectedWeapon: id }))
+            set((st) => ({ credits: st.credits - AKIMBO_PRICE, isAkimbo: true, selectedWeapon: id, activeSlot: WEAPON_TO_SLOT[id] ?? st.activeSlot }))
             return true
           }
-          set({ selectedWeapon: id })
+          set({ selectedWeapon: id, activeSlot: WEAPON_TO_SLOT[id] ?? s.activeSlot })
           return true
         }
         const price = cfg.price
         if (s.credits < price) return false
         set((s) => ({
-          credits:     s.credits - price,
+          credits:      s.credits - price,
           ownedWeapons: [...s.ownedWeapons, id],
           selectedWeapon: id,
+          activeSlot: WEAPON_TO_SLOT[id] ?? s.activeSlot,
           meleeStacks: cfg.stackable ? { ...s.meleeStacks, [id]: 1 } : s.meleeStacks,
         }))
         return true
       },
 
       selectWeapon: (id) => {
-        if (get().ownedWeapons.includes(id)) set({ selectedWeapon: id })
+        const s = get()
+        if (!s.ownedWeapons.includes(id)) return
+        const slot = WEAPON_TO_SLOT[id] ?? s.activeSlot
+        const slotWeapons = WEAPON_SLOT_WEAPONS[slot] ?? []
+        const owned = slotWeapons.filter(w => s.ownedWeapons.includes(w))
+        const idx = owned.indexOf(id)
+        set({
+          selectedWeapon: id,
+          activeSlot: slot,
+          slotIndices: idx >= 0 ? { ...s.slotIndices, [slot]: idx } : s.slotIndices,
+        })
+      },
+
+      switchToSlot: (slot) => {
+        const s = get()
+        const slotWeapons = WEAPON_SLOT_WEAPONS[slot] ?? []
+        const owned = slotWeapons.filter(w => s.ownedWeapons.includes(w))
+        if (owned.length === 0) return null
+
+        let targetIdx: number
+        if (s.activeSlot === slot) {
+          // Already on this slot — cycle to next weapon
+          const curIdx = owned.indexOf(s.selectedWeapon)
+          targetIdx = (curIdx + 1) % owned.length
+        } else {
+          // Switch to last-used weapon in this slot
+          targetIdx = Math.min(s.slotIndices[slot] ?? 0, owned.length - 1)
+        }
+        const target = owned[targetIdx]
+        set({ selectedWeapon: target, activeSlot: slot, slotIndices: { ...s.slotIndices, [slot]: targetIdx } })
+        return target
       },
 
       buyEquipment: (id) => {
@@ -172,7 +211,11 @@ export const useLoadoutStore = create<LoadoutStore>()(
 
       getMaxAmmo: () => {
         const s = get()
-        const base = WEAPON_CONFIGS[s.selectedWeapon].baseAmmo
+        const cfg = WEAPON_CONFIGS[s.selectedWeapon]
+        if (cfg.isVernichter) return s.vernichterStock
+        if (cfg.isLaser)      return s.laserStock
+        if (cfg.isIon)        return s.ionStock
+        const base = cfg.baseAmmo
         let mult = 1.0
         for (const eq of s.ownedEquipment) mult += EQUIPMENT_CONFIGS[eq].ammoMultBonus
         return Math.round(base * mult)
@@ -181,8 +224,10 @@ export const useLoadoutStore = create<LoadoutStore>()(
       getMaxAmmoFor: (id) => {
         const s   = get()
         const cfg = WEAPON_CONFIGS[id]
+        if (cfg.isVernichter) return s.vernichterStock
+        if (cfg.isLaser)      return s.laserStock
+        if (cfg.isIon)        return s.ionStock
         if (cfg.stackable) {
-          // Melee durability scales with number of copies bought; no equipment bonus
           return cfg.baseAmmo * (s.meleeStacks[id] ?? 1)
         }
         const base = cfg.baseAmmo
@@ -193,6 +238,6 @@ export const useLoadoutStore = create<LoadoutStore>()(
 
       getDamageBonus: () => AMMO_CONFIGS[get().selectedAmmo].damageBonus,
     }),
-    { name: 'covert-ops-loadout-v1' },
+    { name: 'covert-ops-loadout-v2' },
   ),
 )
