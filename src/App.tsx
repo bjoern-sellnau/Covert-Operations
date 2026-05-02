@@ -21,6 +21,7 @@ import { MissionsMenu } from './components/MissionsMenu'
 import { MissionBriefing } from './components/MissionBriefing'
 import { MutatorsScreen } from './components/MutatorsScreen'
 import { HelpScreen } from './components/HelpScreen'
+import { DemoViewer } from './components/DemoViewer'
 
 export function App() {
   const phase          = useGameStore((s) => s.phase)
@@ -190,6 +191,7 @@ export function App() {
       {phase === 'briefing'                    && <MissionBriefing />}
       {phase === 'mutators'                    && <MutatorsScreen />}
       {phase === 'help'                        && <HelpScreen />}
+      {phase === 'demo_viewer'                 && <DemoViewer />}
       {phase === 'options'                     && <OptionsScreen />}
       {phase === 'lobby'                       && <Lobby />}
       {phase === 'shop'                        && <Shop />}

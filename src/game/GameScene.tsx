@@ -47,6 +47,7 @@ import { EnemyMesh } from './EnemyMesh'
 import { BulletMesh } from './BulletMesh'
 import { EnemyBulletMesh } from './EnemyBulletMesh'
 import { ParticleSystem } from './ParticleSystem'
+import { DemoRecorder } from './DemoRecorder'
 import { ScriptEngine, resetScriptRuntime } from './ScriptEngine'
 import { FogOfWar } from './FogOfWar'
 
@@ -2311,6 +2312,7 @@ export function GameScene() {
       {!isLowQuality && <directionalLight ref={dirLightRef} position={[5, 15, 5]} intensity={1.2} color="#ffffff" castShadow />}
       {graphicsQuality === 'high' && <pointLight position={[0, 8, 0]} intensity={0.6} color="#2244aa" distance={40} />}
       <EnemyProjector />
+      <DemoRecorder />
     </>
   )
 }

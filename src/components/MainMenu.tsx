@@ -158,6 +158,7 @@ export function MainMenu() {
             { label: 'Direkt spielen', onClick: () => { setGameMode('arena'); setPhase('briefing') } },
             { label: '⚙ Optionen',     onClick: () => setPhase('options') },
             { label: '? Hilfe',         onClick: () => setPhase('help') },
+            { label: '▶ Demos',         onClick: () => setPhase('demo_viewer') },
           ].map(({ label, onClick }) => (
             <button
               key={label}

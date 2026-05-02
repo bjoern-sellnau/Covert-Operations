@@ -5,6 +5,7 @@ import { entityStore } from '../game/entityStore'
 import { useSettingsStore } from '../store/settingsStore'
 import { hudData } from '../game/hudData'
 import { ARENA_HALF, PLAYER_MAX_HEALTH, FOCUS_MAX, WEAPON_CONFIGS, AMMO_CONFIGS, DIVE_COOLDOWN, SPIN_COOLDOWN, WEAPON_SLOT_WEAPONS, type WeaponId } from '../game/types'
+import { useDemoStore } from '../store/demoStore'
 
 function P2Panel() {
   const p2Active  = useGameStore((s) => s.p2Active)
@@ -82,6 +83,41 @@ function ManeuverBar({ label, cooldown, maxCooldown, color, active }: {
           transition: 'width 0.08s',
         }} />
       </div>
+    </div>
+  )
+}
+
+function RecButton() {
+  const isRecording    = useDemoStore((s) => s.isRecording)
+  const startRecording = useDemoStore((s) => s.startRecording)
+  // Stop: just set isRecording=false; DemoRecorder.useFrame detects the transition and saves frames
+  const stopRecording  = () => useDemoStore.setState({ isRecording: false })
+  const [pulse, setPulse] = useState(false)
+  useEffect(() => {
+    if (!isRecording) { setPulse(false); return }
+    const id = setInterval(() => setPulse(p => !p), 600)
+    return () => clearInterval(id)
+  }, [isRecording])
+  return (
+    <div
+      onClick={() => isRecording ? stopRecording() : startRecording()}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 4,
+        cursor: 'pointer', userSelect: 'none',
+        opacity: isRecording ? 1 : 0.45,
+        transition: 'opacity 0.15s',
+      }}
+      title={isRecording ? 'Aufnahme stoppen' : 'Demo aufnehmen'}
+    >
+      <div style={{
+        width: 8, height: 8, borderRadius: '50%',
+        background: isRecording ? (pulse ? '#ff2200' : '#aa1100') : '#334455',
+        boxShadow: isRecording ? `0 0 6px ${pulse ? '#ff2200' : '#660000'}` : 'none',
+        transition: 'all 0.3s',
+      }} />
+      <span style={{ color: isRecording ? '#ff4422' : '#334455', fontSize: 9, letterSpacing: 2 }}>
+        {isRecording ? 'REC' : 'REC'}
+      </span>
     </div>
   )
 }
@@ -375,7 +411,10 @@ export function HUD() {
               <div style={{ color: '#ffaa00', fontSize: 13, fontWeight: 'bold' }}>+{creditsEarned}</div>
             </div>
           )}
-          <div style={{ color: '#223333', fontSize: 9, letterSpacing: 1 }}>{fps} FPS</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
+            <RecButton />
+            <div style={{ color: '#223333', fontSize: 9, letterSpacing: 1 }}>{fps} FPS</div>
+          </div>
         </div>
       </div>
 
