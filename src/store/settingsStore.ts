@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware'
 
 export type MusicTrack = 'auto' | 'game1' | 'game2' | 'game3' | 'game4' | 'game5' | 'game6' | 'game7' | 'game8' | 'game9' | 'game10' | 'game11' | 'game12' | 'game13' | 'game14' | 'game15' | 'game16' | 'game17' | 'game18' | 'game19' | 'game20' | 'game21' | 'game22' | 'game23' | 'game24' | 'game25' | 'game26' | 'game27' | 'game28' | 'game29' | 'game30' | 'game31'
 export type Difficulty = 'ultra_easy' | 'very_easy' | 'easy' | 'normal' | 'hard' | 'hardcore' | 'nightmare'
+export type GraphicsQuality = 'low' | 'medium' | 'high'
 
 export const DIFFICULTY_LABELS: Record<Difficulty, string> = {
   ultra_easy: 'Ultra Leicht',
@@ -33,6 +34,9 @@ interface SettingsStore {
   musicTrack: MusicTrack
   cameraFollow: boolean
   difficulty: Difficulty
+  graphicsQuality: GraphicsQuality
+  charScale: number          // 0.5 – 2.0, player and enemy visual scale
+  showFPSWeapon: boolean     // show weapon arm in FPS mode
   setBloodIntensity: (v: 0 | 1 | 2 | 3) => void
   setMobileControls: (v: boolean) => void
   setMusicEnabled: (v: boolean) => void
@@ -40,27 +44,36 @@ interface SettingsStore {
   setMusicTrack: (v: MusicTrack) => void
   setCameraFollow: (v: boolean) => void
   setDifficulty: (v: Difficulty) => void
+  setGraphicsQuality: (v: GraphicsQuality) => void
+  setCharScale: (v: number) => void
+  setShowFPSWeapon: (v: boolean) => void
 }
 
 export const useSettingsStore = create<SettingsStore>()(
   persist(
     (set) => ({
-      bloodIntensity: 2,
-      mobileControls: false,
-      musicEnabled: true,
-      skyFPV: false,
-      musicTrack: 'auto',
-      cameraFollow: false,
-      difficulty: 'normal',
-      setBloodIntensity: (bloodIntensity) => set({ bloodIntensity }),
-      setMobileControls: (mobileControls) => set({ mobileControls }),
-      setMusicEnabled: (musicEnabled) => set({ musicEnabled }),
-      setSkyFPV: (skyFPV) => set({ skyFPV }),
-      setMusicTrack: (musicTrack) => set({ musicTrack }),
-      setCameraFollow: (cameraFollow) => set({ cameraFollow }),
-      setDifficulty: (difficulty) => set({ difficulty }),
+      bloodIntensity:  2,
+      mobileControls:  false,
+      musicEnabled:    true,
+      skyFPV:          false,
+      musicTrack:      'auto',
+      cameraFollow:    false,
+      difficulty:      'normal',
+      graphicsQuality: 'medium',
+      charScale:       1.0,
+      showFPSWeapon:   true,
+      setBloodIntensity:  (bloodIntensity)  => set({ bloodIntensity }),
+      setMobileControls:  (mobileControls)  => set({ mobileControls }),
+      setMusicEnabled:    (musicEnabled)    => set({ musicEnabled }),
+      setSkyFPV:          (skyFPV)          => set({ skyFPV }),
+      setMusicTrack:      (musicTrack)      => set({ musicTrack }),
+      setCameraFollow:    (cameraFollow)    => set({ cameraFollow }),
+      setDifficulty:      (difficulty)      => set({ difficulty }),
+      setGraphicsQuality: (graphicsQuality) => set({ graphicsQuality }),
+      setCharScale:       (charScale)       => set({ charScale: Math.round(charScale * 10) / 10 }),
+      setShowFPSWeapon:   (showFPSWeapon)   => set({ showFPSWeapon }),
     }),
-    { name: 'covert-ops-settings-v1' },
+    { name: 'covert-ops-settings-v2' },
   ),
 )
 

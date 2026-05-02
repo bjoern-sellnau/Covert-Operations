@@ -262,6 +262,7 @@ export function GameScene() {
   const enemyIds        = useGameStore((s) => s.enemyIds)
   const bulletIds       = useGameStore((s) => s.bulletIds)
   const activePlayLevel = useEditorStore((s) => s.activePlayLevel)
+  const charScale       = useSettingsStore((s) => s.charScale)
 
   const playerGroupRef    = useRef<THREE.Group>(null)
   const player2GroupRef   = useRef<THREE.Group>(null)
@@ -275,6 +276,7 @@ export function GameScene() {
   const ionBeamMeshRefs      = [useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null)]
   const weaponProjMeshRef    = useRef<THREE.Mesh>(null)
   const weaponProjLightRef   = useRef<THREE.PointLight>(null)
+  const fpsWeaponRef         = useRef<THREE.Group>(null)
   const MAX_BANANAS = 6
   const bananaMeshRefs       = useRef<(THREE.Mesh | null)[]>(Array(MAX_BANANAS).fill(null))
 
@@ -856,16 +858,31 @@ export function GameScene() {
       camera.position.lerp(new THREE.Vector3(tx, 20, tz), 0.08)
       camera.lookAt(es.player.position.x, 0, es.player.position.y)
     } else {
-      // topdown — optionally follow player
-      const cameraFollow = useSettingsStore.getState().cameraFollow
-      if (cameraFollow) {
-        const px = es.player.position.x
-        const pz = es.player.position.y
-        camera.position.lerp(new THREE.Vector3(px, 22, pz + 9), 0.1)
-        camera.lookAt(px, 0, pz - 1)
-      } else if (Math.abs(camera.position.y - 22) > 0.5) {
-        camera.position.set(0, 22, 9)
-        camera.lookAt(0, 0, -1)
+      // topdown — always follow player with smooth lerp
+      const px = es.player.position.x
+      const pz = es.player.position.y
+      camera.position.lerp(new THREE.Vector3(px, 22, pz + 9), 0.1)
+      camera.lookAt(px, 0, pz - 1)
+    }
+
+    // ── FPS weapon arm ────────────────────────────────────────────────────────
+    if (fpsWeaponRef.current) {
+      const showFPS = camMode === 'fps' && useSettingsStore.getState().showFPSWeapon
+      if (showFPS) {
+        const angle  = es.player.angle
+        const fwdX   = Math.sin(angle)
+        const fwdZ   = -Math.cos(angle)
+        const rX     = Math.cos(angle)
+        const rZ     = Math.sin(angle)
+        fpsWeaponRef.current.position.set(
+          es.player.position.x + fwdX * 0.32 + rX * 0.18,
+          0.52,
+          es.player.position.y + fwdZ * 0.32 + rZ * 0.18,
+        )
+        fpsWeaponRef.current.rotation.y = angle
+        fpsWeaponRef.current.visible = true
+      } else {
+        fpsWeaponRef.current.visible = false
       }
     }
 
@@ -1956,13 +1973,25 @@ export function GameScene() {
       <Arena />
       {gameModeLive === 'shooting_range' && <ShootingRangeLayout />}
       {activeLevelRef.current && <GameLevelObjects level={activeLevelRef.current} />}
-      <group ref={playerGroupRef}>
+      <group ref={playerGroupRef} scale={charScale}>
         <PlayerMesh />
       </group>
-      <group ref={player2GroupRef} visible={false}>
+      <group ref={player2GroupRef} visible={false} scale={charScale}>
         <PlayerMesh player2 />
       </group>
       {enemyIds.map((id) => <EnemyMesh key={id} id={id} />)}
+
+      {/* FPS weapon arm — positioned each frame in useFrame */}
+      <group ref={fpsWeaponRef} visible={false}>
+        <mesh position={[0, -0.04, 0.1]} rotation={[0.15, 0, 0]}>
+          <boxGeometry args={[0.09, 0.09, 0.26]} />
+          <meshStandardMaterial color="#1a3a6e" roughness={0.55} metalness={0.2} />
+        </mesh>
+        <mesh position={[0, -0.01, -0.1]}>
+          <boxGeometry args={[0.11, 0.08, 0.42]} />
+          <meshStandardMaterial color="#1a1a1a" emissive="#111111" emissiveIntensity={0.2} roughness={0.2} metalness={0.9} />
+        </mesh>
+      </group>
       {bulletIds.map((id) => <BulletMesh key={id} id={id} />)}
       {enemyBulletIds.map((id) => <EnemyBulletMesh key={id} id={id} />)}
 

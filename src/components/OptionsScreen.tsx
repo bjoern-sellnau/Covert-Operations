@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useGameStore } from '../store/gameStore'
 import { useSettingsStore, DIFFICULTY_LABELS, DIFFICULTY_MULTS } from '../store/settingsStore'
-import type { Difficulty } from '../store/settingsStore'
+import type { Difficulty, GraphicsQuality } from '../store/settingsStore'
 import { useLoadoutStore } from '../game/loadoutStore'
 import { previewTrack, stopMusic } from '../game/music'
 
@@ -45,7 +45,10 @@ export function OptionsScreen() {
   const setPhase = useGameStore((s) => s.setPhase)
   const { bloodIntensity, setBloodIntensity, mobileControls, setMobileControls,
           musicEnabled, setMusicEnabled, musicTrack, setMusicTrack,
-          difficulty, setDifficulty } = useSettingsStore()
+          difficulty, setDifficulty,
+          graphicsQuality, setGraphicsQuality,
+          charScale, setCharScale,
+          showFPSWeapon, setShowFPSWeapon } = useSettingsStore()
   const { credits, setCredits } = useLoadoutStore()
 
   const [view, setView]           = useState<'main' | 'music'>('main')
@@ -228,6 +231,53 @@ export function OptionsScreen() {
               Automatisches Zielen auf nächsten Gegner
             </div>
           )}
+        </div>
+
+        {/* ── Graphics quality ── */}
+        <div style={section}>
+          <div style={labelStyle}>Grafikqualität</div>
+          <div style={{ display: 'flex', gap: 6 }}>
+            {(['low', 'medium', 'high'] as GraphicsQuality[]).map((q) => {
+              const labels = { low: 'NIEDRIG', medium: 'MITTEL', high: 'HOCH' }
+              const colors = { low: '#ff8800', medium: '#ffee00', high: '#00ff88' }
+              return (
+                <button key={q} style={tog(graphicsQuality === q, colors[q])} onClick={() => setGraphicsQuality(q)}>
+                  {labels[q]}
+                </button>
+              )
+            })}
+          </div>
+          <div style={{ color: '#667788', fontSize: 9, letterSpacing: 1 }}>
+            Niedrig: bessere Performance · Hoch: volle Auflösung + Schatten
+          </div>
+        </div>
+
+        {/* ── Character size ── */}
+        <div style={section}>
+          <div style={labelStyle}>Figurgröße</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <input
+              type="range" min={0.5} max={2.0} step={0.1}
+              value={charScale}
+              onChange={(e) => setCharScale(parseFloat(e.target.value))}
+              style={{ flex: 1, accentColor: '#00aaff' }}
+            />
+            <span style={{ color: '#00aaff', fontSize: 13, fontWeight: 'bold', letterSpacing: 2, minWidth: 36, textAlign: 'right' }}>
+              {charScale.toFixed(1)}×
+            </span>
+          </div>
+        </div>
+
+        {/* ── FPS weapon display ── */}
+        <div style={section}>
+          <div style={labelStyle}>Ego-Perspektive: Waffe anzeigen</div>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button style={tog(showFPSWeapon, '#00aaff')} onClick={() => setShowFPSWeapon(true)}>Ein</button>
+            <button style={tog(!showFPSWeapon, '#667788')} onClick={() => setShowFPSWeapon(false)}>Aus</button>
+          </div>
+          <div style={{ color: '#667788', fontSize: 9, letterSpacing: 1 }}>
+            Zeigt den Waffenarm in der Ego-Perspektive (Taste F)
+          </div>
         </div>
 
         {/* ── Credits (dev) ── */}

@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { mobileInput } from '../store/mobileStore'
 import { useGameStore } from '../store/gameStore'
 import { useSettingsStore } from '../store/settingsStore'
@@ -76,9 +76,17 @@ export function MobileControls() {
   const originRef = useRef({ x: 0, y: 0 })
   const activeRef = useRef(false)
 
-  const cameraMode   = useGameStore((s) => s.cameraMode)
-  const cameraFollow = useSettingsStore((s) => s.cameraFollow)
+  const [btActive, setBtActive] = useState(false)
+
+  const cameraMode      = useGameStore((s) => s.cameraMode)
+  const cameraFollow    = useSettingsStore((s) => s.cameraFollow)
   const setCameraFollow = useSettingsStore((s) => s.setCameraFollow)
+
+  function toggleBT() {
+    const next = !btActive
+    setBtActive(next)
+    mobileInput.btDown = next
+  }
 
   function onJoyDown(e: React.PointerEvent) {
     e.currentTarget.setPointerCapture(e.pointerId)
@@ -203,12 +211,15 @@ export function MobileControls() {
         display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 12,
         pointerEvents: 'none',
       }}>
-        {/* Row 1: BT + DIVE */}
+        {/* Row 1: BT (toggle) + DIVE */}
         <div style={{ display: 'flex', gap: 12, pointerEvents: 'none' }}>
           <ActionBtn
-            label="BT" sub="SHIFT" color="#00aaff" bg="rgba(0,60,120,0.7)" size={58}
-            onDown={() => { mobileInput.btDown = true }}
-            onUp={() => { mobileInput.btDown = false }}
+            label={btActive ? 'BT ●' : 'BT'} sub="SLOW-MO"
+            color={btActive ? '#00ffff' : '#00aaff'}
+            bg={btActive ? 'rgba(0,120,180,0.85)' : 'rgba(0,60,120,0.7)'}
+            size={58}
+            onDown={toggleBT}
+            onUp={() => {}}
           />
           <ActionBtn
             label="DIVE" sub="SPC" color="#00ddff" bg="rgba(0,80,100,0.7)" size={58}

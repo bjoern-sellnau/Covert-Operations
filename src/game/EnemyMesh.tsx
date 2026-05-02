@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { entityStore } from './entityStore'
 import { ENEMY_CONFIGS } from './types'
+import { useSettingsStore } from '../store/settingsStore'
 
 interface Props { id: string }
 
@@ -39,8 +40,8 @@ export function EnemyMesh({ id }: Props) {
     const pz = entityStore.player.position.y - enemy.position.y
     if (px !== 0 || pz !== 0) groupRef.current.rotation.y = Math.atan2(px, -pz)
 
-    // Scale by enemy size
-    const scale = cfg.size / 0.45
+    // Scale by enemy size × charScale setting
+    const scale = (cfg.size / 0.45) * useSettingsStore.getState().charScale
     groupRef.current.scale.setScalar(scale)
 
     // Hit flash

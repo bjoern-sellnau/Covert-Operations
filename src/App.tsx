@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useGameStore } from './store/gameStore'
 import { useNetStore } from './net/netStore'
 import { useSettingsStore } from './store/settingsStore'
@@ -28,6 +28,22 @@ export function App() {
   const netRole        = useNetStore((s) => s.role)
   const mobileControls = useSettingsStore((s) => s.mobileControls)
   const musicEnabled   = useSettingsStore((s) => s.musicEnabled)
+
+  const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement)
+
+  useEffect(() => {
+    const onFSChange = () => setIsFullscreen(!!document.fullscreenElement)
+    document.addEventListener('fullscreenchange', onFSChange)
+    return () => document.removeEventListener('fullscreenchange', onFSChange)
+  }, [])
+
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {})
+    } else {
+      document.exitFullscreen().catch(() => {})
+    }
+  }, [])
   const musicTrack     = useSettingsStore((s) => s.musicTrack)
 
   // ── Music ─────────────────────────────────────────────────────────────────
@@ -176,6 +192,23 @@ export function App() {
       {phase === 'skydive_win'                 && <SkydiveWin />}
       {phase === 'skydive'                     && <Skydive />}
       {phase === 'editor'                      && <Editor />}
+
+      {/* Fullscreen toggle — always visible top-right */}
+      <div
+        onClick={toggleFullscreen}
+        title={isFullscreen ? 'Vollbild beenden (Esc)' : 'Vollbild'}
+        style={{
+          position: 'absolute', top: 8, right: 8,
+          width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer', zIndex: 200, opacity: 0.45, fontSize: 16,
+          color: '#aaccff', userSelect: 'none', pointerEvents: 'auto',
+          transition: 'opacity 0.15s',
+        }}
+        onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.opacity = '0.9' }}
+        onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.opacity = '0.45' }}
+      >
+        {isFullscreen ? '✕' : '⛶'}
+      </div>
     </div>
   )
 }
