@@ -1,10 +1,13 @@
 import { useState } from 'react'
 import { useGameStore } from '../store/gameStore'
 import { useLoadoutStore } from '../game/loadoutStore'
+import { useMutatorsStore } from '../store/mutatorsStore'
 import {
   WEAPON_CONFIGS, EQUIPMENT_CONFIGS, AMMO_CONFIGS, AKIMBO_PRICE, VERNICHTER_AMMO_PRICE, LASER_AMMO_PRICE, ION_AMMO_PRICE,
   type WeaponId, type EquipmentId, type AmmoId,
 } from '../game/types'
+
+const BOT_GAME_TYPES = new Set(['instakill', 'deathmatch', 'hardline_solo', 'hardline', 'instakill_wave'])
 
 type Category = 'waffen' | 'nahkampf' | 'ausruestung' | 'munition' | 'ladung'
 
@@ -575,6 +578,8 @@ export function Shop() {
   const setGameMode = useGameStore((s) => s.setGameMode)
   const gameMode    = useGameStore((s) => s.gameMode)
   const { credits } = useLoadoutStore()
+  const gameType    = useMutatorsStore((s) => s.gameType)
+  const isBlockedMode = BOT_GAME_TYPES.has(gameType)
 
   const mob = typeof window !== 'undefined' && window.innerWidth < 640
 
@@ -603,6 +608,17 @@ export function Shop() {
       display: 'flex',
       flexDirection: 'column',
     }}>
+      {/* Bot mode block banner */}
+      {isBlockedMode && (
+        <div style={{
+          background: '#1a0000', borderBottom: '1px solid #cc220044',
+          padding: '10px 20px', textAlign: 'center',
+          color: '#cc2200', fontSize: 10, letterSpacing: 4,
+        }}>
+          ⛔ KEIN SHOP IN DIESEM MODUS — Loadout aus vorherigem Spiel wird verwendet
+        </div>
+      )}
+
       {/* Header */}
       <div style={{
         display: 'flex',
@@ -612,6 +628,8 @@ export function Shop() {
         padding: mob ? '10px 14px 8px' : '16px 28px',
         borderBottom: '1px solid #111122',
         gap: mob ? 4 : 0,
+        opacity: isBlockedMode ? 0.4 : 1,
+        pointerEvents: isBlockedMode ? 'none' : 'auto',
       }}>
         <div>
           <div style={{ color: '#00aaff', fontSize: mob ? 15 : 20, fontWeight: 'bold', letterSpacing: mob ? 3 : 6, textShadow: '0 0 12px #00aaff' }}>
@@ -632,6 +650,7 @@ export function Shop() {
         <div style={{
           display: 'flex', gap: 6, padding: '8px 12px',
           borderBottom: '1px solid #111122', overflowX: 'auto',
+          opacity: isBlockedMode ? 0.3 : 1, pointerEvents: isBlockedMode ? 'none' : 'auto',
         }}>
           <button style={tabStyle(category === 'waffen')}      onClick={() => setCategory('waffen')}>Waffen</button>
           <button style={tabStyle(category === 'nahkampf')}    onClick={() => setCategory('nahkampf')}>Nahkampf</button>
@@ -642,7 +661,7 @@ export function Shop() {
       )}
 
       {/* Body */}
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', opacity: isBlockedMode ? 0.3 : 1, pointerEvents: isBlockedMode ? 'none' : 'auto' }}>
         {/* Desktop: Left sidebar */}
         {!mob && (
           <div style={{

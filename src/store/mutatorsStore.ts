@@ -1,7 +1,8 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import type { EnemyType } from '../game/types'
 
-export type GameType    = 'waves' | 'roundtime'
+export type GameType    = 'waves' | 'roundtime' | 'instakill' | 'instakill_wave' | 'hardline_solo' | 'hardline' | 'deathmatch'
 export type PickupMode  = 'none' | 'ammo' | 'weapons' | 'both' | 'chaos'
 export type EnemyDrop   = 'credits' | 'ammo' | 'weapons' | 'health' | 'armor' | 'focus'
 export type BtChargeMode = 'time' | 'kills' | 'start' | 'crate' | 'enemy'
@@ -30,6 +31,10 @@ interface MutatorsState {
   // Power-up durations (seconds)
   quadDamageDuration: number
   berserkerDuration:  number
+  // Bot modes
+  botCount:        number
+  botEnemyTypes:   EnemyType[]
+  killMultipliers: boolean
 
   setGameType:          (v: GameType) => void
   setRoundTimeSec:      (v: number) => void
@@ -48,6 +53,9 @@ interface MutatorsState {
   toggleCrateExtra:     (v: CrateExtra) => void
   setQuadDamageDuration:(v: number) => void
   setBerserkerDuration: (v: number) => void
+  setBotCount:          (v: number) => void
+  toggleBotEnemyType:   (v: EnemyType) => void
+  setKillMultipliers:   (v: boolean) => void
 }
 
 export const useMutatorsStore = create<MutatorsState>()(
@@ -70,6 +78,9 @@ export const useMutatorsStore = create<MutatorsState>()(
       crateExtras:     [],
       quadDamageDuration: 90,
       berserkerDuration:  60,
+      botCount:        6,
+      botEnemyTypes:   ['basic', 'fast'],
+      killMultipliers: true,
 
       setGameType:          (gameType)       => set({ gameType }),
       setRoundTimeSec:      (roundTimeSec)   => set({ roundTimeSec }),
@@ -97,7 +108,13 @@ export const useMutatorsStore = create<MutatorsState>()(
       },
       setQuadDamageDuration: (quadDamageDuration) => set({ quadDamageDuration }),
       setBerserkerDuration:  (berserkerDuration)  => set({ berserkerDuration }),
+      setBotCount:           (botCount)           => set({ botCount }),
+      toggleBotEnemyType: (v) => {
+        const types = get().botEnemyTypes
+        set({ botEnemyTypes: types.includes(v) ? types.filter(t => t !== v) : [...types, v] })
+      },
+      setKillMultipliers:    (killMultipliers)    => set({ killMultipliers }),
     }),
-    { name: 'covert-ops-mutators-v2' }
+    { name: 'covert-ops-mutators-v3' }
   )
 )

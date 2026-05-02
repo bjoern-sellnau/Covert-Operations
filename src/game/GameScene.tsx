@@ -39,7 +39,7 @@ import {
   ION_DELAY, ION_BEAM_DURATION, ION_RADIUS,
   WEAPON_SLOT_WEAPONS,
 } from './types'
-import type { EnemyType } from './types'
+import type { EnemyType, WeaponId } from './types'
 import { Arena } from './Arena'
 import { PlayerMesh } from './PlayerMesh'
 import { EnemyMesh } from './EnemyMesh'
@@ -65,6 +65,11 @@ const _normalDirColor     = new THREE.Color(0xffffff)
 
 const FPS_SENS   = 0.0025
 const MAX_GRENADES = 6
+
+const HARDLINE_WEAPONS: WeaponId[] = [
+  'knife', 'pistol', 'smg', 'uzi', 'shotgun', 'rifle', 'mp5', 'm16', 'blaster', 'flak', 'plasma', 'bazooka', 'bfg',
+]
+const BOT_GAME_TYPES = new Set(['instakill', 'deathmatch', 'hardline_solo', 'hardline'])
 
 const RANGE_TARGET_X = [-10, -5, 0, 5, 10]
 
@@ -240,6 +245,30 @@ function ShootingRangeLayout() {
   )
 }
 
+function _spawnBotEnemy(types: EnemyType[], hpMult: number, instakill: boolean): string {
+  const type = types[Math.floor(Math.random() * types.length)]
+  const side = Math.floor(Math.random() * 4)
+  const edge = ARENA_HALF - 1.5
+  const off  = (Math.random() * 2 - 1) * (ARENA_HALF - 2)
+  const pos  = side === 0 ? new THREE.Vector2(-edge, off)
+             : side === 1 ? new THREE.Vector2(edge, off)
+             : side === 2 ? new THREE.Vector2(off, -edge)
+             :              new THREE.Vector2(off, edge)
+  const id = `enemy-${++entityStore.enemyIdCounter}`
+  entityStore.enemies.set(id, {
+    id,
+    position: pos,
+    health: instakill ? 0.001 : Math.ceil(ENEMY_CONFIGS[type].health * hpMult),
+    type,
+    hitTime: -999,
+    lastDamageTime: -999,
+    aiTimer: 0,
+    aiState: Math.random() > 0.5 ? 0 : 1,
+    shootCooldown: Math.random() / ENEMY_CONFIGS[type].shootRate,
+  })
+  return id
+}
+
 export function GameScene() {
   const { camera, gl } = useThree()
   const input          = useInput()
@@ -372,10 +401,30 @@ export function GameScene() {
     // BT start charge mode
     if (mutators.btChargeModes.includes('start')) entityStore.focus = FOCUS_MAX
 
-    const ids = spawnWave(1, DIFFICULTY_MULTS[useSettingsStore.getState().difficulty][0])
-    setEnemyIds(ids)
-    setWaveMessage(isRange ? 'SCHIESSTAND — Unbegrenzte Munition' : 'Wave 1')
-    setTimeout(() => setWaveMessage(''), 2500)
+    const diffMult = DIFFICULTY_MULTS[useSettingsStore.getState().difficulty][0]
+    if (BOT_GAME_TYPES.has(mutators.gameType) && !isRange) {
+      const botTypes = (mutators.botEnemyTypes.length > 0 ? mutators.botEnemyTypes : ['basic']) as EnemyType[]
+      const isInstakill = mutators.gameType === 'instakill'
+      const ids: string[] = []
+      for (let i = 0; i < mutators.botCount; i++) ids.push(_spawnBotEnemy(botTypes, diffMult, isInstakill))
+      setEnemyIds(ids)
+      const modeMsg = (mutators.gameType === 'hardline_solo' || mutators.gameType === 'hardline')
+        ? 'HARDLINE — MESSER' : 'DEATHMATCH'
+      setWaveMessage(modeMsg)
+      setTimeout(() => setWaveMessage(''), 2500)
+      if (mutators.gameType === 'hardline_solo' || mutators.gameType === 'hardline') {
+        entityStore.ammo = 999
+        entityStore.maxAmmo = 999
+      }
+    } else {
+      const ids = spawnWave(1, diffMult)
+      if (mutators.gameType === 'instakill_wave') {
+        for (const e of entityStore.enemies.values()) e.health = 0.001
+      }
+      setEnemyIds(ids)
+      setWaveMessage(isRange ? 'SCHIESSTAND — Unbegrenzte Munition' : 'Wave 1')
+      setTimeout(() => setWaveMessage(''), 2500)
+    }
   }, [phase, setEnemyIds, setWaveMessage])
 
   // ── Camera default ────────────────────────────────────────────────────────
@@ -507,8 +556,15 @@ export function GameScene() {
     const mobileWpnNext  = mobileInput.weaponNextJust; mobileInput.weaponNextJust = false
     const mobileCamJust  = mobileInput.cameraModeJust; mobileInput.cameraModeJust = false
 
+    // ── Kill combo timer ──────────────────────────────────────────────────────
+    if (es.killComboTimer > 0) {
+      es.killComboTimer = Math.max(0, es.killComboTimer - rawDt)
+      if (es.killComboTimer === 0) es.killComboCount = 0
+    }
+
     // ── Mutators: round timer & sudden death ──────────────────────────────────
     const mutators = useMutatorsStore.getState()
+    const isBotMode = BOT_GAME_TYPES.has(mutators.gameType)
     if (es.roundTimerActive && es.roundTimer > 0) {
       es.roundTimer = Math.max(0, es.roundTimer - rawDt)
       if (es.roundTimer <= 0) {
@@ -778,6 +834,14 @@ export function GameScene() {
       if (keys.has('KeyA') || keys.has('ArrowLeft'))  ddx -= 1
       if (keys.has('KeyD') || keys.has('ArrowRight')) ddx += 1
       if (ddx === 0 && ddz === 0) { ddx = _toMouse.x; ddz = _toMouse.y }
+      // FPS mode: transform screen-space WASD into camera-relative world direction
+      if (cameraModeRef.current === 'fps' && (ddx !== 0 || ddz !== 0)) {
+        const fwdX = Math.sin(es.player.angle), fwdZ = -Math.cos(es.player.angle)
+        const rtX  = Math.cos(es.player.angle), rtZ  =  Math.sin(es.player.angle)
+        const mx = fwdX * (-ddz) + rtX * ddx
+        const mz = fwdZ * (-ddz) + rtZ * ddx
+        ddx = mx; ddz = mz
+      }
       const dlen = Math.sqrt(ddx * ddx + ddz * ddz)
       es.maneuverDx    = ddx / dlen
       es.maneuverDz    = ddz / dlen
@@ -906,12 +970,16 @@ export function GameScene() {
 
     // ── Weapon config (used by both P1 and P2 shooting) ──────────────────────
     const loadout          = useLoadoutStore.getState()
-    const weaponCfg        = WEAPON_CONFIGS[loadout.selectedWeapon]
+    const isHardlineMode   = mutators.gameType === 'hardline_solo' || mutators.gameType === 'hardline'
+    const activeWeaponId   = isHardlineMode
+      ? HARDLINE_WEAPONS[Math.min(es.hardlineProgress, HARDLINE_WEAPONS.length - 1)]
+      : loadout.selectedWeapon
+    const weaponCfg        = WEAPON_CONFIGS[activeWeaponId]
     const quadActive       = es.player.quadDamageTimer > 0
     const quadMult         = quadActive ? 4 : 1
     const finalDamage      = (weaponCfg.baseDamage + AMMO_CONFIGS[loadout.selectedAmmo].damageBonus) * quadMult
-    const isEnergy         = loadout.selectedWeapon === 'blaster' || loadout.selectedWeapon === 'plasma'
-    const isFlakWep        = loadout.selectedWeapon === 'flak'
+    const isEnergy         = activeWeaponId === 'blaster' || activeWeaponId === 'plasma'
+    const isFlakWep        = activeWeaponId === 'flak'
     const shootMuts        = useMutatorsStore.getState()
     const mutBounceCount   = shootMuts.bulletBounce
       ? (shootMuts.bulletBounceCount === 0 ? 999 : shootMuts.bulletBounceCount)
@@ -1141,7 +1209,7 @@ export function GameScene() {
         es.burstTimer = weaponCfg.burstDelay ?? 0.05
         const bAngle = Math.atan2(_toMouse.x, _toMouse.y)
         spawnBullet(bAngle)
-        WEAPON_SOUNDS[loadout.selectedWeapon]?.()
+        WEAPON_SOUNDS[activeWeaponId]?.()
         es.ammo = Math.max(0, es.ammo - 1)
         setBulletIds(Array.from(es.bullets.keys()))
       }
@@ -1172,7 +1240,7 @@ export function GameScene() {
           })
         }
         es.ammo = Math.max(0, es.ammo - 2)
-        WEAPON_SOUNDS[loadout.selectedWeapon]?.()
+        WEAPON_SOUNDS[activeWeaponId]?.()
         setBulletIds(Array.from(es.bullets.keys()))
       }
     } else if (isShooting && es.player.shootCooldown <= 0 && es.ammo > 0 && es.maneuver !== 'spin' && es.burstRemaining === 0
@@ -1183,7 +1251,7 @@ export function GameScene() {
       const ammoCost  = es.isAkimbo ? 2 : 1
 
       if (es.ammo >= ammoCost) {
-        WEAPON_SOUNDS[loadout.selectedWeapon]?.()
+        WEAPON_SOUNDS[activeWeaponId]?.()
 
         if (weaponCfg.isGrenade) {
           // Grenade weapon: throw into grenades pool
@@ -1894,19 +1962,68 @@ export function GameScene() {
       es.focus = Math.min(FOCUS_MAX, es.focus + enemiesToRemove.length * 8)
     }
 
+    // ── Kill multipliers & hardline progression ────────────────────────────────
+    if (enemiesToRemove.length > 0) {
+      es.killStreak      += enemiesToRemove.length
+      es.killComboCount  += enemiesToRemove.length
+      es.killComboTimer   = 3.5
+
+      if (mutators.killMultipliers) {
+        const comboMsg = es.killComboCount >= 5 ? '★ MONSTER KILL'
+          : es.killComboCount === 4 ? '★ ULTRA KILL'
+          : es.killComboCount === 3 ? '★ MULTI KILL'
+          : es.killComboCount === 2 ? '★ DOUBLE KILL'
+          : null
+        const streakMsg = es.killStreak === 25 ? '⚡ GODLIKE'
+          : es.killStreak === 20 ? '⚡ UNSTOPPABLE'
+          : es.killStreak === 15 ? '⚡ DOMINATING'
+          : es.killStreak === 10 ? '⚡ RAMPAGE'
+          : es.killStreak === 5  ? '⚡ KILLING SPREE'
+          : null
+        const msg = streakMsg ?? comboMsg
+        if (msg) { setWaveMessage(msg); setTimeout(() => setWaveMessage(''), 1800) }
+      }
+
+      if (isHardlineMode) {
+        es.hardlineProgress += enemiesToRemove.length
+        const newWeapon = HARDLINE_WEAPONS[Math.min(es.hardlineProgress, HARDLINE_WEAPONS.length - 1)]
+        const prevWeapon = HARDLINE_WEAPONS[Math.min(es.hardlineProgress - enemiesToRemove.length, HARDLINE_WEAPONS.length - 1)]
+        if (newWeapon !== prevWeapon) {
+          const wName = WEAPON_CONFIGS[newWeapon].shortName
+          setWaveMessage(`► ${wName}`)
+          setTimeout(() => setWaveMessage(''), 1500)
+          es.ammo = 999
+          es.maxAmmo = 999
+        }
+      }
+    }
+
     es.score         += scoreGained
     es.creditsEarned += creditsGained
 
     // ── Wave management ───────────────────────────────────────────────────────
-    if (es.enemies.size === 0 && !es.inWaveBreak) { es.inWaveBreak = true; es.waveBreakTimer = WAVE_BREAK_DURATION }
-    if (es.inWaveBreak) {
-      es.waveBreakTimer -= dt
-      if (es.waveBreakTimer <= 0) {
-        es.inWaveBreak = false; es.wave++
-        const ids = spawnWave(es.wave, diffHpMult)
-        setEnemyIds(ids)
-        setWaveMessage(`Wave ${es.wave}`)
-        setTimeout(() => setWaveMessage(''), 2000)
+    if (isBotMode) {
+      if (enemiesToRemove.length > 0 && es.enemies.size < mutators.botCount) {
+        const botTypes = (mutators.botEnemyTypes.length > 0 ? mutators.botEnemyTypes : ['basic']) as EnemyType[]
+        const isInstakill = mutators.gameType === 'instakill'
+        const deficit = mutators.botCount - es.enemies.size
+        for (let i = 0; i < deficit; i++) _spawnBotEnemy(botTypes, diffHpMult, isInstakill)
+        setEnemyIds(Array.from(es.enemies.keys()))
+      }
+    } else {
+      if (es.enemies.size === 0 && !es.inWaveBreak) { es.inWaveBreak = true; es.waveBreakTimer = WAVE_BREAK_DURATION }
+      if (es.inWaveBreak) {
+        es.waveBreakTimer -= dt
+        if (es.waveBreakTimer <= 0) {
+          es.inWaveBreak = false; es.wave++
+          const ids = spawnWave(es.wave, diffHpMult)
+          if (mutators.gameType === 'instakill_wave') {
+            for (const e of entityStore.enemies.values()) e.health = 0.001
+          }
+          setEnemyIds(ids)
+          setWaveMessage(`Wave ${es.wave}`)
+          setTimeout(() => setWaveMessage(''), 2000)
+        }
       }
     }
 
@@ -1916,15 +2033,20 @@ export function GameScene() {
     const isRange = useGameStore.getState().gameMode === 'shooting_range'
 
     const maxPlayerHp = Math.round(100 * diffPlayerHpMult)
-    if (p1Dead && isRange) {
+    if (p1Dead && (isRange || isBotMode)) {
       es.player.health = maxPlayerHp
+      if (isBotMode) {
+        es.player.position.set(0, 0)
+        es.player.invincibleUntil = now + 2.2
+        es.killStreak = 0
+      }
     } else if (p1Dead && mutators.gameType === 'roundtime' && es.playerLives > 0) {
       // Lives-based respawn
       es.playerLives--
       es.player.health = maxPlayerHp
       es.player.position.set(0, 0)
       es.player.invincibleUntil = now + 2.2
-    } else if (p1Dead && p2Dead && !isRange && !gameOverFiredRef.current) {
+    } else if (p1Dead && p2Dead && !isRange && !isBotMode && !gameOverFiredRef.current) {
       gameOverFiredRef.current = true
       useLoadoutStore.getState().addCredits(es.creditsEarned)
       useGameStore.getState().updateHUD(0, es.score, es.wave, es.ammo, es.maxAmmo, es.creditsEarned, Math.round(es.player.armor))

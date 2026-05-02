@@ -229,6 +229,11 @@ function makeEntityStore() {
     ammo2: 48,
     maxAmmo2: 48,
     grenadeCount2: 3,
+    // Kill tracking
+    hardlineProgress: 0,
+    killStreak: 0,
+    killComboCount: 0,
+    killComboTimer: 0,
     // Particles & decals
     particles: makeParticlePool(),
     decals: makeDecalPool(),
@@ -308,6 +313,10 @@ export function resetEntityStore() {
   s.ammo2 = 48
   s.maxAmmo2 = 48
   s.grenadeCount2 = 3
+  s.hardlineProgress = 0
+  s.killStreak = 0
+  s.killComboCount = 0
+  s.killComboTimer = 0
   for (const p of s.particles) p.active = false
   for (const d of s.decals) d.active = false
 }

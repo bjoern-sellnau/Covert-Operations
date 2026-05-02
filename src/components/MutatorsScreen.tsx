@@ -1,6 +1,7 @@
 import { useGameStore } from '../store/gameStore'
 import { useMutatorsStore } from '../store/mutatorsStore'
 import type { PickupMode, EnemyDrop, BtChargeMode, CrateExtra } from '../store/mutatorsStore'
+import type { EnemyType } from '../game/types'
 
 export function MutatorsScreen() {
   const setPhase = useGameStore((s) => s.setPhase)
@@ -11,11 +12,13 @@ export function MutatorsScreen() {
     bulletBounce, bulletBounceCount,
     btChargeModes, btDuration, btVisualEffect,
     godMode, crateExtras, quadDamageDuration, berserkerDuration,
+    botCount, botEnemyTypes, killMultipliers,
     setGameType, setRoundTimeSec, setWeaponPickups, toggleEnemyDrop,
     setSuddenDeath, setSuddenDeathSec, setLives, setChaosMode,
     setBulletBounce, setBulletBounceCount,
     toggleBtChargeMode, setBtDuration, setBtVisualEffect,
     setGodMode, toggleCrateExtra, setQuadDamageDuration, setBerserkerDuration,
+    setBotCount, toggleBotEnemyType, setKillMultipliers,
   } = useMutatorsStore()
 
   function startGame() {
@@ -115,9 +118,20 @@ export function MutatorsScreen() {
         {/* Spielmodus */}
         <div style={card}>
           <div style={secLabel}>Spielmodus</div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button style={tog(gameType === 'waves')}     onClick={() => setGameType('waves')}>WAVES</button>
-            <button style={tog(gameType === 'roundtime')} onClick={() => setGameType('roundtime')}>RUNDENZEIT</button>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {([
+              ['waves',         'WAVES',          '#cc2200'],
+              ['roundtime',     'RUNDENZEIT',      '#ff6600'],
+              ['instakill',     'INSTAKILL',       '#ff0044'],
+              ['instakill_wave','INSTAKILL WELLE', '#cc0044'],
+              ['hardline_solo', 'HARDLINE SOLO',   '#ffcc00'],
+              ['hardline',      'HARDLINE',        '#ffaa00'],
+              ['deathmatch',    'DEATHMATCH',      '#cc44ff'],
+            ] as [string, string, string][]).map(([val, label, color]) => (
+              <button key={val} style={tog(gameType === val, color)} onClick={() => setGameType(val as never)}>
+                {label}
+              </button>
+            ))}
           </div>
           {gameType === 'roundtime' && (
             <>
@@ -132,11 +146,48 @@ export function MutatorsScreen() {
             </>
           )}
           <div style={{ color: '#2a1a1a', fontSize: 9, letterSpacing: 1, lineHeight: 1.7 }}>
-            {gameType === 'waves'
-              ? 'Endlose Wellen — überlebe so lange wie möglich.'
-              : 'Rundenzeit läuft ab — dann Sudden Death oder Ende.'}
+            {gameType === 'waves'         && 'Endlose Wellen — überlebe so lange wie möglich.'}
+            {gameType === 'roundtime'     && 'Rundenzeit läuft ab — dann Sudden Death oder Ende.'}
+            {gameType === 'instakill'     && 'Ein Schuss, ein Kill. Bots spawnen sofort nach. Kein Shop.'}
+            {gameType === 'instakill_wave'&& 'Instakill + klassische Wellen. Kein Shop.'}
+            {gameType === 'hardline_solo' && 'Starte mit Messer. Jeder Kill = nächste Waffe. Nur Spieler. Kein Shop.'}
+            {gameType === 'hardline'      && 'Starte mit Messer. Jeder Kill = nächste Waffe. Spieler & Bots. Kein Shop.'}
+            {gameType === 'deathmatch'    && 'Bots spawnen sofort nach. Unbegrenzt. Kein Shop.'}
           </div>
         </div>
+
+        {/* Bot-Konfiguration (nur Bot-Modi) */}
+        {['instakill', 'deathmatch', 'hardline_solo', 'hardline'].includes(gameType) && (
+          <div style={card}>
+            <div style={secLabel}>Bot-Konfiguration</div>
+            <div style={{ color: '#556677', fontSize: 9, letterSpacing: 2 }}>ANZAHL BOTS</div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {[2, 4, 6, 8, 10, 16].map((v) => (
+                <button key={v} style={tog(botCount === v, '#cc44ff')} onClick={() => setBotCount(v)}>
+                  {v}
+                </button>
+              ))}
+            </div>
+            <div style={{ color: '#556677', fontSize: 9, letterSpacing: 2, marginTop: 6 }}>BOT-TYPEN</div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {([
+                ['basic',      'BASIS',      '#cc2222'],
+                ['fast',       'SCHNELL',    '#cc6600'],
+                ['tank',       'TANK',       '#6600cc'],
+                ['berserker',  'BERSERKER',  '#cc0066'],
+                ['flanker',    'FLANKER',    '#cc8800'],
+                ['juggernaut', 'JUGGERNAUT', '#334455'],
+              ] as [EnemyType, string, string][]).map(([val, label, color]) => (
+                <button key={val} style={tog(botEnemyTypes.includes(val), color)} onClick={() => toggleBotEnemyType(val)}>
+                  {label}
+                </button>
+              ))}
+            </div>
+            <div style={{ color: '#2a1a2a', fontSize: 9, letterSpacing: 1 }}>
+              {botEnemyTypes.length === 0 ? 'Kein Typ → BASIS wird verwendet.' : `Aktiv: ${botEnemyTypes.join(', ')}`}
+            </div>
+          </div>
+        )}
 
         {/* Waffen-Pickups */}
         <div style={card}>
@@ -249,6 +300,17 @@ export function MutatorsScreen() {
             label="GOD MODE"
             sub="Spieler nimmt keinerlei Schaden"
             onClick={() => setGodMode(!godMode)}
+          />
+        </div>
+
+        {/* Kill Multipliers */}
+        <div style={card}>
+          <div style={secLabel}>Kill-Multiplikatoren</div>
+          <Toggle
+            on={killMultipliers} color="#ff6600"
+            label="MULTIPLIKATOREN"
+            sub="Double Kill · Multi Kill · Killing Spree · Godlike …"
+            onClick={() => setKillMultipliers(!killMultipliers)}
           />
         </div>
 
