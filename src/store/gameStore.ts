@@ -17,6 +17,7 @@ interface GameStore {
   ammo: number
   maxAmmo: number
   creditsEarned: number
+  armor: number
   cameraMode: CameraMode
   isPlaytesting: boolean
   gameMode: 'arena' | 'skydive' | 'shooting_range'
@@ -36,7 +37,7 @@ interface GameStore {
   setPhase: (phase: GamePhase) => void
   setGameMode: (m: 'arena' | 'skydive' | 'shooting_range') => void
   setBigExplosion: (v: boolean) => void
-  updateHUD: (health: number, score: number, wave: number, ammo: number, maxAmmo: number, credits: number) => void
+  updateHUD: (health: number, score: number, wave: number, ammo: number, maxAmmo: number, credits: number, armor: number) => void
   updateP2HUD: (active: boolean, health: number, ammo: number, maxAmmo: number) => void
   setBulletTime: (focus: number, active: boolean) => void
   setEnemyIds: (ids: string[]) => void
@@ -63,6 +64,7 @@ export const useGameStore = create<GameStore>((set) => ({
   ammo: 48,
   maxAmmo: 48,
   creditsEarned: 0,
+  armor: 0,
   cameraMode: 'topdown',
   isPlaytesting: false,
   gameMode: 'arena',
@@ -80,8 +82,8 @@ export const useGameStore = create<GameStore>((set) => ({
   setPhase:        (phase)      => set({ phase }),
   setGameMode:     (gameMode)   => set({ gameMode }),
   setBigExplosion: (bigExplosion) => set({ bigExplosion }),
-  updateHUD: (health, score, wave, ammo, maxAmmo, creditsEarned) =>
-    set({ health, score, wave, ammo, maxAmmo, creditsEarned }),
+  updateHUD: (health, score, wave, ammo, maxAmmo, creditsEarned, armor) =>
+    set({ health, score, wave, ammo, maxAmmo, creditsEarned, armor }),
   updateP2HUD: (p2Active, p2Health, p2Ammo, p2MaxAmmo) =>
     set({ p2Active, p2Health, p2Ammo, p2MaxAmmo }),
   setBulletTime: (focus, isBulletTime) => set({ focus, isBulletTime }),
@@ -98,7 +100,7 @@ export const useGameStore = create<GameStore>((set) => ({
       health: 100, score: 0, wave: 1,
       enemyIds: [], bulletIds: [], enemyBulletIds: [], waveMessage: '',
       focus: 100, isBulletTime: false,
-      ammo: 48, maxAmmo: 48, creditsEarned: 0, cameraMode: 'topdown',
+      ammo: 48, maxAmmo: 48, creditsEarned: 0, armor: 0, cameraMode: 'topdown',
       gameMode: 'arena',
       p2Active: false, p2Health: 100, p2Ammo: 48, p2MaxAmmo: 48,
       roundTimer: 0, playerLives: 3, p2Lives: 3, inSuddenDeath: false, chaosActive: false,

@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useGameStore } from './store/gameStore'
 import { useNetStore } from './net/netStore'
 import { useSettingsStore } from './store/settingsStore'
+import { useMutatorsStore } from './store/mutatorsStore'
 import { socket } from './net/socket'
 import { startMenuMusic, startGameMusic, startGameMusic2, startGameMusic3, startGameMusic4, startGameMusic5, startGameMusic6, startGameMusic7, startGameMusic8, startGameMusic9, startGameMusic10, startGameMusic11, startGameMusic12, startGameMusic13, startGameMusic14, startGameMusic15, startGameMusic16, startGameMusic17, startGameMusic18, startGameMusic19, startGameMusic20, startGameMusic21, startGameMusic22, startGameMusic23, startGameMusic24, startGameMusic25, startGameMusic26, startGameMusic27, startGameMusic28, startGameMusic29, startGameMusic30, startGameMusic31, startSkydiveMusic, stopMusic } from './game/music'
 import { Game } from './game/Game'
@@ -26,8 +27,10 @@ export function App() {
   const cameraMode     = useGameStore((s) => s.cameraMode)
   const bigExplosion   = useGameStore((s) => s.bigExplosion)
   const netRole        = useNetStore((s) => s.role)
-  const mobileControls = useSettingsStore((s) => s.mobileControls)
-  const musicEnabled   = useSettingsStore((s) => s.musicEnabled)
+  const mobileControls  = useSettingsStore((s) => s.mobileControls)
+  const musicEnabled    = useSettingsStore((s) => s.musicEnabled)
+  const btVisualEffect  = useMutatorsStore((s) => s.btVisualEffect)
+  const visualBT        = isBulletTime && btVisualEffect
 
   const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement)
 
@@ -128,7 +131,7 @@ export function App() {
       {(phase === 'playing' || phase === 'gameover') && (
         <div style={{
           position: 'absolute', top: 0, right: 0, bottom: 0, left: 0,
-          filter: isBulletTime ? 'saturate(0.25) brightness(0.85)' : 'none',
+          filter: visualBT ? 'saturate(0.25) brightness(0.85)' : 'none',
           transition: 'filter 0.15s ease-out',
         }}>
           <Game />
@@ -139,7 +142,7 @@ export function App() {
       {phase === 'playing' && (
         <div style={{
           position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, pointerEvents: 'none',
-          background: isBulletTime
+          background: visualBT
             ? 'radial-gradient(ellipse at center, transparent 38%, rgba(0,60,160,0.45) 100%)'
             : 'radial-gradient(ellipse at center, transparent 60%, rgba(0,0,20,0.5) 100%)',
           transition: 'background 0.2s ease-out',
@@ -147,7 +150,7 @@ export function App() {
       )}
 
       {/* Bullet-time scanlines */}
-      {isBulletTime && (
+      {visualBT && (
         <div style={{
           position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, pointerEvents: 'none',
           backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,100,220,0.04) 3px, rgba(0,100,220,0.04) 4px)',

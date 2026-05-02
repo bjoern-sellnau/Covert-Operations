@@ -94,6 +94,7 @@ export function HUD() {
   const ammo          = useGameStore((s) => s.ammo)
   const maxAmmo       = useGameStore((s) => s.maxAmmo)
   const creditsEarned = useGameStore((s) => s.creditsEarned)
+  const armor         = useGameStore((s) => s.armor)
   const roundTimer    = useGameStore((s) => s.roundTimer)
   const playerLives   = useGameStore((s) => s.playerLives)
   const inSuddenDeath = useGameStore((s) => s.inSuddenDeath)
@@ -111,6 +112,8 @@ export function HUD() {
   const [weaponAmmo,  setWeaponAmmo]  = useState<Map<string, number>>(new Map())
   const [chaosAmmo,   setChaosAmmo]   = useState(0)
   const [chaosWpnId,  setChaosWpnId]  = useState<WeaponId | null>(null)
+  const [quadTimer,   setQuadTimer]   = useState(0)
+  const [bersTimer,   setBersTimer]   = useState(0)
   useEffect(() => {
     const id = setInterval(() => {
       setDiveCd(Math.max(0, entityStore.diveCooldown))
@@ -120,6 +123,8 @@ export function HUD() {
       setWeaponAmmo(new Map(entityStore.weaponAmmo))
       setChaosAmmo(entityStore.chaosAmmo)
       setChaosWpnId(entityStore.chaosWeaponId)
+      setQuadTimer(entityStore.player.quadDamageTimer)
+      setBersTimer(entityStore.player.berserkerTimer)
     }, 50)
     return () => clearInterval(id)
   }, [])
@@ -154,6 +159,31 @@ export function HUD() {
             </div>
             <div style={{ color: hpColor, fontSize: 11, fontWeight: 'bold' }}>{health} / {PLAYER_MAX_HEALTH}</div>
           </div>
+
+          {armor > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              <div style={{ color: '#4488ff', fontSize: 10, letterSpacing: 2 }}>RÜSTUNG</div>
+              <div style={{ height: 6, background: '#111122', border: '1px solid #224', borderRadius: 2, overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${armor}%`, background: '#4488ff', transition: 'width 0.1s', boxShadow: '0 0 5px #4488ff' }} />
+              </div>
+              <div style={{ color: '#4488ff', fontSize: 10, fontWeight: 'bold' }}>{armor} / 100</div>
+            </div>
+          )}
+
+          {(quadTimer > 0 || bersTimer > 0) && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {quadTimer > 0 && (
+                <div style={{ color: '#ffcc00', fontSize: 10, fontWeight: 'bold', letterSpacing: 2, textShadow: '0 0 8px #ffcc00' }}>
+                  ★ QUAD {Math.ceil(quadTimer)}s
+                </div>
+              )}
+              {bersTimer > 0 && (
+                <div style={{ color: '#ff6600', fontSize: 10, fontWeight: 'bold', letterSpacing: 2, textShadow: '0 0 8px #ff6600', animation: 'btPulse 0.4s ease-in-out infinite alternate' }}>
+                  ⚡ BERSERKER {Math.ceil(bersTimer)}s
+                </div>
+              )}
+            </div>
+          )}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: isBulletTime ? '#00ccff' : '#aaaacc', fontSize: 10, letterSpacing: 2 }}>

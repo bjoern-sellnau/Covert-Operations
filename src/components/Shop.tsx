@@ -132,7 +132,7 @@ function EquipmentCard({ id }: { id: EquipmentId }) {
   const { ownedEquipment, credits, buyEquipment } = useLoadoutStore()
   const owned = ownedEquipment.includes(id)
   const canAfford = credits >= cfg.price
-  const slotLabel = { back: 'RÜCKEN', chest: 'BRUST', legs: 'BEINE' }[cfg.slot]
+  const slotLabel = { back: 'RÜCKEN', chest: 'BRUST', legs: 'BEINE', body: 'KÖRPER' }[cfg.slot]
 
   return (
     <div
@@ -713,7 +713,7 @@ export function Shop() {
           {category === 'ausruestung' && (
             <>
               <div style={{ color: '#334455', fontSize: 10, letterSpacing: 3, marginBottom: 4 }}>AUSRÜSTUNG</div>
-              {(['backpack', 'chest_pouch', 'leg_pouch'] as EquipmentId[]).map((id) => (
+              {(['palantir_suit', 'backpack', 'chest_pouch', 'leg_pouch'] as EquipmentId[]).map((id) => (
                 <EquipmentCard key={id} id={id} />
               ))}
             </>

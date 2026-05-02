@@ -1,6 +1,6 @@
 import { useGameStore } from '../store/gameStore'
 import { useMutatorsStore } from '../store/mutatorsStore'
-import type { PickupMode, EnemyDrop } from '../store/mutatorsStore'
+import type { PickupMode, EnemyDrop, BtChargeMode, CrateExtra } from '../store/mutatorsStore'
 
 export function MutatorsScreen() {
   const setPhase = useGameStore((s) => s.setPhase)
@@ -8,8 +8,14 @@ export function MutatorsScreen() {
   const {
     gameType, roundTimeSec, weaponPickups, enemyDrops,
     suddenDeath, suddenDeathSec, lives, chaosMode,
+    bulletBounce, bulletBounceCount,
+    btChargeModes, btDuration, btVisualEffect,
+    godMode, crateExtras, quadDamageDuration, berserkerDuration,
     setGameType, setRoundTimeSec, setWeaponPickups, toggleEnemyDrop,
     setSuddenDeath, setSuddenDeathSec, setLives, setChaosMode,
+    setBulletBounce, setBulletBounceCount,
+    toggleBtChargeMode, setBtDuration, setBtVisualEffect,
+    setGodMode, toggleCrateExtra, setQuadDamageDuration, setBerserkerDuration,
   } = useMutatorsStore()
 
   function startGame() {
@@ -166,6 +172,8 @@ export function MutatorsScreen() {
               ['ammo',    'MUNITION',   '#00aaff'],
               ['weapons', 'WAFFEN',     '#ff6600'],
               ['health',  'GESUNDHEIT', '#00ff88'],
+              ['armor',   'RÜSTUNG',   '#4488ff'],
+              ['focus',   'FOCUS',      '#00ffcc'],
             ] as [EnemyDrop, string, string][]).map(([val, label, color]) => (
               <button key={val} style={tog(enemyDrops.includes(val), color)} onClick={() => toggleEnemyDrop(val)}>
                 {label}
@@ -176,6 +184,125 @@ export function MutatorsScreen() {
             {enemyDrops.length === 0 ? 'Gegner lassen nichts fallen.' : `Aktiv: ${enemyDrops.join(', ')}`}
           </div>
         </div>
+
+        {/* Bullet Ricochet */}
+        <div style={card}>
+          <div style={secLabel}>Patronen-Abpraller</div>
+          <Toggle
+            on={bulletBounce} color="#00aaff"
+            label="ABPRALLER"
+            sub="Patronen prallen von Wänden ab"
+            onClick={() => setBulletBounce(!bulletBounce)}
+          />
+          {bulletBounce && (
+            <>
+              <div style={{ color: '#556677', fontSize: 9, letterSpacing: 2 }}>MAX. ABPRALLER</div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {[1, 2, 3, 5, 0].map((v) => (
+                  <button key={v} style={tog(bulletBounceCount === v, '#00aaff')} onClick={() => setBulletBounceCount(v)}>
+                    {v === 0 ? '∞' : `${v}×`}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Bullet Time */}
+        <div style={card}>
+          <div style={secLabel}>Bullet Time</div>
+          <div style={{ color: '#556677', fontSize: 9, letterSpacing: 2, marginBottom: 4 }}>AUFLADEN DURCH</div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {([
+              ['time',   'ZEIT',       '#00ccff'],
+              ['kills',  'ABSCHÜSSE',  '#ff6600'],
+              ['start',  'VOLLSTART',  '#00ff88'],
+              ['crate',  'KISTEN',     '#ffcc00'],
+              ['enemy',  'GEGNER',     '#cc44ff'],
+            ] as [BtChargeMode, string, string][]).map(([val, label, color]) => (
+              <button key={val} style={tog(btChargeModes.includes(val), color)} onClick={() => toggleBtChargeMode(val)}>
+                {label}
+              </button>
+            ))}
+          </div>
+          <div style={{ color: '#556677', fontSize: 9, letterSpacing: 2, marginTop: 6 }}>DAUER (SEK.)</div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {[2, 3, 4, 6, 10, 20].map((v) => (
+              <button key={v} style={tog(btDuration === v, '#00ccff')} onClick={() => setBtDuration(v)}>
+                {v}s
+              </button>
+            ))}
+          </div>
+          <Toggle
+            on={btVisualEffect} color="#00aaff"
+            label="VISUELLER EFFEKT"
+            sub="Farbfilter und Scanlines bei Bullet Time"
+            onClick={() => setBtVisualEffect(!btVisualEffect)}
+          />
+        </div>
+
+        {/* God Mode */}
+        <div style={card}>
+          <div style={secLabel}>Spieler-Schutz</div>
+          <Toggle
+            on={godMode} color="#ffee00"
+            label="GOD MODE"
+            sub="Spieler nimmt keinerlei Schaden"
+            onClick={() => setGodMode(!godMode)}
+          />
+        </div>
+
+        {/* Crate extras */}
+        <div style={card}>
+          <div style={secLabel}>Extras in Waffenkisten</div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {([
+              ['health',      'HEALTH',       '#00ff88'],
+              ['armor',       'RÜSTUNG',      '#4488ff'],
+              ['focus',       'FOCUS',        '#00ffcc'],
+              ['quad_damage', 'QUAD DAMAGE',  '#ffcc00'],
+              ['berserker',   'BERSERKER',    '#ff6600'],
+            ] as [CrateExtra, string, string][]).map(([val, label, color]) => (
+              <button key={val} style={tog(crateExtras.includes(val), color)} onClick={() => toggleCrateExtra(val)}>
+                {label}
+              </button>
+            ))}
+          </div>
+          <div style={{ color: '#2a1a1a', fontSize: 9, letterSpacing: 1 }}>
+            {crateExtras.length === 0 ? 'Keine Extras in Kisten.' : `20% Chance auf: ${crateExtras.join(', ')}`}
+          </div>
+        </div>
+
+        {/* Power-up durations */}
+        {(crateExtras.includes('quad_damage') || crateExtras.includes('berserker')) && (
+          <div style={card}>
+            <div style={secLabel}>Power-Up Dauer</div>
+            {crateExtras.includes('quad_damage') && (
+              <>
+                <div style={{ color: '#ffcc00', fontSize: 9, letterSpacing: 2 }}>★ QUAD DAMAGE (SEK.)</div>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {[30, 60, 90, 120, 180].map((v) => (
+                    <button key={v} style={tog(quadDamageDuration === v, '#ffcc00')} onClick={() => setQuadDamageDuration(v)}>
+                      {v}s
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+            {crateExtras.includes('berserker') && (
+              <>
+                <div style={{ color: '#ff6600', fontSize: 9, letterSpacing: 2, marginTop: 6 }}>⚡ BERSERKER (SEK.)</div>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {[15, 30, 60, 90, 120].map((v) => (
+                    <button key={v} style={tog(berserkerDuration === v, '#ff6600')} onClick={() => setBerserkerDuration(v)}>
+                      {v}s
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
 
         {/* Chaos Modus */}
         <div style={card}>

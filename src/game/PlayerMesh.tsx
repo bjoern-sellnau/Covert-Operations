@@ -124,10 +124,32 @@ export function PlayerMesh({ player2 = false }: Props) {
       if (rightArmRef.current) rightArmRef.current.rotation.x = 0.55 + swing * 0.38
     }
 
-    // Low-health pulse
-    if (p.health < 30) {
+    // Power-up glow: quad damage = rainbow, berserker = orange pulse
+    if (p.quadDamageTimer > 0) {
+      const hue = (now * 120) % 360
+      uniformMat.color.setHSL(hue / 360, 1, 0.55)
+      helmetMat.color.setHSL(((hue + 60) % 360) / 360, 1, 0.55)
+      uniformMat.emissiveIntensity = 0.9
+      helmetMat.emissiveIntensity = 0.9
+    } else if (p.berserkerTimer > 0) {
+      const pulse = (Math.sin(now * 10) + 1) * 0.5
+      uniformMat.color.setHex(player2 ? 0xcc3300 : 0x1a3a6e)
+      uniformMat.emissive.setRGB(1, 0.35, 0)
+      uniformMat.emissiveIntensity = 0.6 + pulse * 1.2
+      helmetMat.emissive.setRGB(1, 0.4, 0)
+      helmetMat.emissiveIntensity = 0.8 + pulse
+    } else if (p.health < 30) {
+      // restore original colors
+      uniformMat.color.setHex(player2 ? 0xcc3300 : 0x1a3a6e)
+      helmetMat.color.setHex(player2 ? 0xff6600 : 0x00aaff)
+      helmetMat.emissive.setHex(player2 ? 0xff6600 : 0x00aaff)
+      helmetMat.emissiveIntensity = 0.55
       uniformMat.emissiveIntensity = 0.3 + ((Math.sin(now * 8) + 1) * 0.5) * 0.7
     } else {
+      uniformMat.color.setHex(player2 ? 0xcc3300 : 0x1a3a6e)
+      helmetMat.color.setHex(player2 ? 0xff6600 : 0x00aaff)
+      helmetMat.emissive.setHex(player2 ? 0xff6600 : 0x00aaff)
+      helmetMat.emissiveIntensity = 0.55
       uniformMat.emissiveIntensity = 0.3
     }
 

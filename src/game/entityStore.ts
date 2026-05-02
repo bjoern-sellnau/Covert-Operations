@@ -3,7 +3,7 @@ import type { EnemyType, WeaponId } from './types'
 import { FOCUS_MAX } from './types'
 
 // ── Pickup system ─────────────────────────────────────────────────────────────
-export type PickupKind     = 'ammo' | 'weapon' | 'health' | 'credits' | 'bad_package'
+export type PickupKind     = 'ammo' | 'weapon' | 'health' | 'credits' | 'bad_package' | 'armor' | 'focus' | 'quad_damage' | 'berserker'
 export type ChaosModifier  = 'normal' | 'explosive' | 'jammed'
 
 export interface PickupData {
@@ -57,8 +57,11 @@ export interface PlayerData {
   position: THREE.Vector2
   angle: number
   health: number
+  armor: number
   shootCooldown: number
   invincibleUntil: number
+  quadDamageTimer: number  // seconds remaining; 0 = inactive
+  berserkerTimer: number   // seconds remaining; 0 = inactive
 }
 
 export interface GrenadeData {
@@ -137,8 +140,11 @@ function makeEntityStore() {
       position: new THREE.Vector2(0, 0),
       angle: 0,
       health: 100,
+      armor: 0,
       shootCooldown: 0,
       invincibleUntil: 0,
+      quadDamageTimer: 0,
+      berserkerTimer: 0,
     } as PlayerData,
     enemies: new Map<string, EnemyData>(),
     bullets: new Map<string, BulletData>(),
@@ -213,8 +219,11 @@ function makeEntityStore() {
       position: new THREE.Vector2(2, 0),
       angle: 0,
       health: 100,
+      armor: 0,
       shootCooldown: 0,
       invincibleUntil: 0,
+      quadDamageTimer: 0,
+      berserkerTimer: 0,
     } as PlayerData,
     player2Active: false,
     ammo2: 48,
@@ -233,8 +242,11 @@ export function resetEntityStore() {
   s.player.position.set(0, 0)
   s.player.angle = 0
   s.player.health = 100
+  s.player.armor = 0
   s.player.shootCooldown = 0
   s.player.invincibleUntil = 0
+  s.player.quadDamageTimer = 0
+  s.player.berserkerTimer = 0
   s.enemies.clear()
   s.bullets.clear()
   s.enemyBullets.clear()
@@ -287,8 +299,11 @@ export function resetEntityStore() {
   s.player2.position.set(2, 0)
   s.player2.angle = 0
   s.player2.health = 100
+  s.player2.armor = 0
   s.player2.shootCooldown = 0
   s.player2.invincibleUntil = 0
+  s.player2.quadDamageTimer = 0
+  s.player2.berserkerTimer = 0
   s.player2Active = false
   s.ammo2 = 48
   s.maxAmmo2 = 48

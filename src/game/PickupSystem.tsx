@@ -6,7 +6,7 @@ import type { PickupData, PickupKind, ChaosModifier } from './entityStore'
 import { useMutatorsStore } from '../store/mutatorsStore'
 import { useGameStore } from '../store/gameStore'
 import { useLoadoutStore } from './loadoutStore'
-import { WEAPON_CONFIGS, ARENA_HALF } from './types'
+import { WEAPON_CONFIGS, ARENA_HALF, EQUIPMENT_CONFIGS, FOCUS_MAX } from './types'
 import type { WeaponId } from './types'
 
 const POOL          = 28
@@ -20,6 +20,10 @@ const KIND_COLOR: Record<PickupKind, string> = {
   health:      '#00ff66',
   credits:     '#ffee00',
   bad_package: '#8800cc',
+  armor:       '#4488ff',
+  focus:       '#00ffcc',
+  quad_damage: '#ffcc00',
+  berserker:   '#ff6600',
 }
 const KIND_EMISSIVE: Record<PickupKind, string> = {
   ammo:        '#002244',
@@ -27,6 +31,10 @@ const KIND_EMISSIVE: Record<PickupKind, string> = {
   health:      '#003322',
   credits:     '#332200',
   bad_package: '#220033',
+  armor:       '#001133',
+  focus:       '#003322',
+  quad_damage: '#332200',
+  berserker:   '#331100',
 }
 
 // Module-level pool of pre-built materials (one per slot)
@@ -46,6 +54,8 @@ export function spawnEnemyDrop(x: number, z: number, drops: string[]) {
     const kind: PickupKind = drop === 'health' ? 'health'
       : drop === 'credits' ? 'credits'
       : drop === 'weapons' ? 'weapon'
+      : drop === 'armor'   ? 'armor'
+      : drop === 'focus'   ? 'focus'
       : 'ammo'
     _push(slot, {
       id: `drop-${++entityStore.pickupIdCounter}`,
@@ -53,7 +63,7 @@ export function spawnEnemyDrop(x: number, z: number, drops: string[]) {
       z: z + (Math.random() - 0.5) * 1.2,
       kind,
       weaponId:      'pistol',
-      amount:        kind === 'health' ? 20 : kind === 'credits' ? 15 : kind === 'ammo' ? 16 : 0,
+      amount:        kind === 'health' ? 20 : kind === 'credits' ? 15 : kind === 'ammo' ? 16 : kind === 'armor' ? 25 : kind === 'focus' ? 30 : 0,
       active:        true,
       spawnTime:     performance.now() / 1000,
       isChaos:       false,
@@ -89,11 +99,11 @@ export function PickupSystem() {
     const es       = entityStore
 
     // ── Regular pickup spawning ─────────────────────────────────────────────
-    if (mutators.weaponPickups !== 'none') {
+    if (mutators.weaponPickups !== 'none' || mutators.crateExtras.length > 0) {
       spawnTimer.current -= dt
       if (spawnTimer.current <= 0) {
         spawnTimer.current = 7 + Math.random() * 7
-        _spawnRandom(mutators.weaponPickups)
+        _spawnRandom(mutators.weaponPickups, mutators.crateExtras)
       }
     }
 
@@ -194,25 +204,31 @@ export function PickupSystem() {
 }
 
 // ── Internal helpers ──────────────────────────────────────────────────────────
-function _spawnRandom(mode: string) {
+function _spawnRandom(mode: string, extras: string[]) {
   const slot = _freeSlot()
   if (slot < 0) return
   const x   = (Math.random() - 0.5) * (ARENA_HALF * 2 - 5)
   const z   = (Math.random() - 0.5) * (ARENA_HALF * 2 - 5)
   const rng = Math.random()
 
+  // 20% chance to spawn a crate extra if any are configured
   let kind: PickupKind
-  if (mode === 'ammo')    kind = 'ammo'
-  else if (mode === 'weapons') kind = 'weapon'
-  else if (mode === 'chaos')   kind = rng < 0.25 ? 'bad_package' : rng < 0.55 ? 'weapon' : 'ammo'
-  else kind = rng < 0.5 ? 'ammo' : 'weapon'  // 'both'
+  if (extras.length > 0 && rng < 0.20) {
+    kind = extras[Math.floor(Math.random() * extras.length)] as PickupKind
+  } else if (mode === 'none') {
+    kind = extras.length > 0 ? extras[Math.floor(Math.random() * extras.length)] as PickupKind : 'ammo'
+  } else if (mode === 'ammo')    { kind = 'ammo' }
+  else if (mode === 'weapons')   { kind = 'weapon' }
+  else if (mode === 'chaos')     { kind = rng < 0.25 ? 'bad_package' : rng < 0.55 ? 'weapon' : 'ammo' }
+  else { kind = rng < 0.5 ? 'ammo' : 'weapon' }  // 'both'
 
   const weapons: WeaponId[] = ['pistol','smg','shotgun','rifle','uzi','mp5','m16']
+  const extraAmounts: Partial<Record<PickupKind, number>> = { ammo: 20, health: 20, armor: 25, focus: 30 }
   _push(slot, {
     id:            `pickup-${++entityStore.pickupIdCounter}`,
     x, z, kind,
     weaponId:      weapons[Math.floor(Math.random() * weapons.length)],
-    amount:        kind === 'ammo' ? 20 : 0,
+    amount:        extraAmounts[kind] ?? 0,
     active:        true,
     spawnTime:     performance.now() / 1000,
     isChaos:       false,
@@ -283,12 +299,33 @@ function _applyPickup(p: PickupData, setMsg: (m: string) => void) {
 
   } else if (p.kind === 'bad_package') {
     if (p.fuseTimer < 0) {
-      // Dud — small ammo bonus
       es.ammo = Math.min(es.maxAmmo, es.ammo + 8)
       setMsg('BLINDGÄNGER ✓')
     }
-    // Non-dud: fuseTimer > 0 → already ticking, player picked it up → starts countdown
-    // (countdown already running in update loop)
     setTimeout(() => setMsg(''), 1500)
+
+  } else if (p.kind === 'armor') {
+    const maxArmor = loadout.ownedEquipment.includes('palantir_suit')
+      ? EQUIPMENT_CONFIGS.palantir_suit.maxArmor : 50
+    es.player.armor = Math.min(maxArmor, es.player.armor + p.amount)
+    setMsg(`+${p.amount} RÜSTUNG`)
+    setTimeout(() => setMsg(''), 1400)
+
+  } else if (p.kind === 'focus') {
+    es.focus = Math.min(FOCUS_MAX, es.focus + p.amount)
+    setMsg('+FOCUS')
+    setTimeout(() => setMsg(''), 1200)
+
+  } else if (p.kind === 'quad_damage') {
+    const dur = useMutatorsStore.getState().quadDamageDuration
+    es.player.quadDamageTimer = dur
+    setMsg('★ QUAD DAMAGE!')
+    setTimeout(() => setMsg(''), 2200)
+
+  } else if (p.kind === 'berserker') {
+    const dur = useMutatorsStore.getState().berserkerDuration
+    es.player.berserkerTimer = dur
+    setMsg('⚡ BERSERKER!')
+    setTimeout(() => setMsg(''), 2200)
   }
 }

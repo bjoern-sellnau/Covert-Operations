@@ -26,10 +26,10 @@ import { GameLevelObjects, resolveCircleVsLevel, pointIntersectsLevel } from './
 import type { Level } from '../editor/editorStore'
 import {
   PLAYER_SPEED, PLAYER_RADIUS, BULLET_LIFETIME, BULLET_RADIUS,
-  ARENA_HALF, ENEMY_CONFIGS, WEAPON_CONFIGS, AMMO_CONFIGS,
+  ARENA_HALF, ENEMY_CONFIGS, WEAPON_CONFIGS, AMMO_CONFIGS, EQUIPMENT_CONFIGS,
   INVINCIBLE_DURATION, WAVE_BREAK_DURATION,
   BULLET_TIME_SCALE, BULLET_TIME_PLAYER_REAL,
-  FOCUS_MAX, FOCUS_DRAIN_RATE, FOCUS_REGEN_RATE, FOCUS_MIN_ACTIVATE,
+  FOCUS_MAX, FOCUS_REGEN_RATE, FOCUS_MIN_ACTIVATE,
   DIVE_SPEED, DIVE_DURATION, DIVE_COOLDOWN,
   SPIN_DURATION, SPIN_COOLDOWN, SPIN_FIRE_RATE,
   GRENADE_SPEED, GRENADE_FUSE, GRENADE_BOUNCE, GRENADE_RADIUS, GRENADE_DAMAGE,
@@ -366,6 +366,11 @@ export function GameScene() {
       entityStore.playerLives      = mutators.lives === 0 ? 999 : mutators.lives
       entityStore.p2Lives          = mutators.lives === 0 ? 999 : mutators.lives
     }
+    // Armor from Palantir Suit
+    const maxArmor = loadout.ownedEquipment.reduce((m, e) => Math.max(m, EQUIPMENT_CONFIGS[e]?.maxArmor ?? 0), 0)
+    entityStore.player.armor = maxArmor
+    // BT start charge mode
+    if (mutators.btChargeModes.includes('start')) entityStore.focus = FOCUS_MAX
 
     const ids = spawnWave(1, DIFFICULTY_MULTS[useSettingsStore.getState().difficulty][0])
     setEnemyIds(ids)
@@ -701,20 +706,26 @@ export function GameScene() {
     }
 
     // ── Bullet time ───────────────────────────────────────────────────────────
+    const btMuts     = useMutatorsStore.getState()
     const wantBT     = keys.has('ShiftLeft') || keys.has('ShiftRight') || mobileInput.btDown
     const maneuverBT = es.maneuver !== 'none'
+    const btDrain    = 100 / Math.max(1, btMuts.btDuration)
+    const btRegen    = btMuts.btChargeModes.includes('time') ? FOCUS_REGEN_RATE : 0
 
     if (maneuverBT) {
       es.isBulletTime = true
-      // No focus drain during maneuver
     } else if (wantBT && es.focus >= FOCUS_MIN_ACTIVATE) {
       es.isBulletTime = true
-      es.focus = Math.max(0, es.focus - FOCUS_DRAIN_RATE * delta)
+      es.focus = Math.max(0, es.focus - btDrain * delta)
       if (es.focus === 0) es.isBulletTime = false
     } else {
       es.isBulletTime = false
-      es.focus = Math.min(FOCUS_MAX, es.focus + FOCUS_REGEN_RATE * delta)
+      es.focus = Math.min(FOCUS_MAX, es.focus + btRegen * delta)
     }
+
+    // ── Power-up timers ───────────────────────────────────────────────────────
+    if (es.player.quadDamageTimer > 0) es.player.quadDamageTimer = Math.max(0, es.player.quadDamageTimer - rawDt)
+    if (es.player.berserkerTimer  > 0) es.player.berserkerTimer  = Math.max(0, es.player.berserkerTimer  - rawDt)
 
     const timeScale = es.isBulletTime ? BULLET_TIME_SCALE : 1.0
     const dt        = rawDt * timeScale
@@ -896,10 +907,16 @@ export function GameScene() {
     // ── Weapon config (used by both P1 and P2 shooting) ──────────────────────
     const loadout          = useLoadoutStore.getState()
     const weaponCfg        = WEAPON_CONFIGS[loadout.selectedWeapon]
-    const finalDamage      = weaponCfg.baseDamage + AMMO_CONFIGS[loadout.selectedAmmo].damageBonus
+    const quadActive       = es.player.quadDamageTimer > 0
+    const quadMult         = quadActive ? 4 : 1
+    const finalDamage      = (weaponCfg.baseDamage + AMMO_CONFIGS[loadout.selectedAmmo].damageBonus) * quadMult
     const isEnergy         = loadout.selectedWeapon === 'blaster' || loadout.selectedWeapon === 'plasma'
     const isFlakWep        = loadout.selectedWeapon === 'flak'
-    const bulletMaxBounces = weaponCfg.maxBounces ?? MAX_BOUNCES
+    const shootMuts        = useMutatorsStore.getState()
+    const mutBounceCount   = shootMuts.bulletBounce
+      ? (shootMuts.bulletBounceCount === 0 ? 999 : shootMuts.bulletBounceCount)
+      : 0
+    const bulletMaxBounces = Math.min(weaponCfg.maxBounces ?? MAX_BOUNCES, mutBounceCount === 999 ? 999 : mutBounceCount)
 
     // ── Player 2 — local co-op (skipped in net mode; P2 driven by network) ───
     if (netRole !== 'offline') {
@@ -1098,11 +1115,19 @@ export function GameScene() {
           }
         }
       }
-      if (!skipPlayer) {
+      if (!skipPlayer && !useMutatorsStore.getState().godMode && es.player.berserkerTimer <= 0) {
         _diff.set(sx - es.player.position.x, sz - es.player.position.y)
         if (_diff.length() < radius && now > es.player.invincibleUntil) {
           const falloff = 1 - _diff.length() / radius
-          es.player.health -= Math.round(dmg * 0.5 * falloff)
+          const splashDmg = Math.round(dmg * 0.5 * falloff)
+          if (es.player.armor > 0) {
+            const absorbed = Math.min(es.player.armor, splashDmg)
+            es.player.armor = Math.max(0, es.player.armor - absorbed)
+            const remain = splashDmg - absorbed
+            if (remain > 0) es.player.health -= remain
+          } else {
+            es.player.health -= splashDmg
+          }
           es.player.invincibleUntil = now + INVINCIBLE_DURATION
         }
       }
@@ -1336,11 +1361,21 @@ export function GameScene() {
         }
 
         // Damage player
-        _diff.set(g.x - es.player.position.x, g.z - es.player.position.y)
-        if (_diff.length() < GRENADE_RADIUS && now > es.player.invincibleUntil) {
-          const falloff = 1 - _diff.length() / GRENADE_RADIUS
-          es.player.health -= Math.round(30 * falloff)
-          es.player.invincibleUntil = now + INVINCIBLE_DURATION
+        if (!useMutatorsStore.getState().godMode && es.player.berserkerTimer <= 0) {
+          _diff.set(g.x - es.player.position.x, g.z - es.player.position.y)
+          if (_diff.length() < GRENADE_RADIUS && now > es.player.invincibleUntil) {
+            const falloff  = 1 - _diff.length() / GRENADE_RADIUS
+            const grenDmg  = Math.round(30 * falloff)
+            if (es.player.armor > 0) {
+              const absorbed = Math.min(es.player.armor, grenDmg)
+              es.player.armor = Math.max(0, es.player.armor - absorbed)
+              const remain = grenDmg - absorbed
+              if (remain > 0) es.player.health -= remain
+            } else {
+              es.player.health -= grenDmg
+            }
+            es.player.invincibleUntil = now + INVINCIBLE_DURATION
+          }
         }
       }
     }
@@ -1811,9 +1846,19 @@ export function GameScene() {
         ebToRemove.push(ebId); continue
       }
       if (Math.hypot(es.player.position.x - eb.position.x, es.player.position.y - eb.position.y) < PLAYER_RADIUS + 0.1 && now > es.player.invincibleUntil) {
-        es.player.health = Math.max(0, es.player.health - eb.damage)
+        if (!useMutatorsStore.getState().godMode && es.player.berserkerTimer <= 0) {
+          const dmg = eb.damage
+          if (es.player.armor > 0) {
+            const absorbed = Math.min(es.player.armor, dmg)
+            es.player.armor = Math.max(0, es.player.armor - absorbed)
+            const remain = dmg - absorbed
+            if (remain > 0) es.player.health = Math.max(0, es.player.health - remain)
+          } else {
+            es.player.health = Math.max(0, es.player.health - dmg)
+          }
+          playHit(0.9)
+        }
         es.player.invincibleUntil = now + INVINCIBLE_DURATION
-        playHit(0.9)
         ebToRemove.push(ebId); continue
       }
       if (es.player2Active && es.player2.health > 0 && now > es.player2.invincibleUntil) {
@@ -1837,13 +1882,17 @@ export function GameScene() {
     for (const id of enemiesToRemove) {
       const dying = es.enemies.get(id)
       if (dying && mutators.enemyDrops.length > 0) {
-        // Random drop from allowed types
         const kind = mutators.enemyDrops[Math.floor(Math.random() * mutators.enemyDrops.length)]
         spawnEnemyDrop(dying.position.x, dying.position.y, [kind])
       }
       if (es.enemies.delete(id)) changed = true
     }
     if (changed) setEnemyIds(Array.from(es.enemies.keys()))
+
+    // BT charge via kills
+    if (enemiesToRemove.length > 0 && useMutatorsStore.getState().btChargeModes.includes('kills')) {
+      es.focus = Math.min(FOCUS_MAX, es.focus + enemiesToRemove.length * 8)
+    }
 
     es.score         += scoreGained
     es.creditsEarned += creditsGained
@@ -1878,7 +1927,7 @@ export function GameScene() {
     } else if (p1Dead && p2Dead && !isRange && !gameOverFiredRef.current) {
       gameOverFiredRef.current = true
       useLoadoutStore.getState().addCredits(es.creditsEarned)
-      useGameStore.getState().updateHUD(0, es.score, es.wave, es.ammo, es.maxAmmo, es.creditsEarned)
+      useGameStore.getState().updateHUD(0, es.score, es.wave, es.ammo, es.maxAmmo, es.creditsEarned, Math.round(es.player.armor))
       if (cameraModeRef.current === 'fps') {
         document.exitPointerLock()
         cameraModeRef.current = 'topdown'
@@ -1943,7 +1992,7 @@ export function GameScene() {
     hudTimer.current += delta
     if (hudTimer.current >= 0.08) {
       hudTimer.current = 0
-      updateHUD(Math.max(0, Math.ceil(es.player.health)), es.score, es.wave, es.ammo, es.maxAmmo, es.creditsEarned)
+      updateHUD(Math.max(0, Math.ceil(es.player.health)), es.score, es.wave, es.ammo, es.maxAmmo, es.creditsEarned, Math.round(es.player.armor))
     }
     hudP2Timer.current += delta
     if (hudP2Timer.current >= 0.1) {

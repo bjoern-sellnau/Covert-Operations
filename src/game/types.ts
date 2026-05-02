@@ -2,7 +2,7 @@ export type GamePhase = 'menu' | 'missions' | 'briefing' | 'mutators' | 'lobby' 
 
 export type EnemyType = 'basic' | 'fast' | 'tank' | 'berserker' | 'flanker' | 'juggernaut'
 export type WeaponId = 'pistol' | 'smg' | 'shotgun' | 'rifle' | 'uzi' | 'mp5' | 'm16' | 'blaster' | 'plasma' | 'bazooka' | 'flak' | 'banana' | 'knife' | 'bat' | 'stick' | 'bfg' | 'grenade' | 'vernichter' | 'deathlas' | 'ioncan'
-export type EquipmentId = 'backpack' | 'chest_pouch' | 'leg_pouch'
+export type EquipmentId = 'backpack' | 'chest_pouch' | 'leg_pouch' | 'palantir_suit'
 export type AmmoId = 'standard' | 'hollow_point' | 'ap'
 
 // ── Enemy ──────────────────────────────────────────────────────────────────
@@ -108,16 +108,18 @@ export const WEAPON_CONFIGS: Record<WeaponId, WeaponConfig> = {
 
 export interface EquipmentConfig {
   name: string
-  slot: 'back' | 'chest' | 'legs'
+  slot: 'back' | 'chest' | 'legs' | 'body'
   price: number
   ammoMultBonus: number
+  maxArmor: number
   description: string
 }
 
 export const EQUIPMENT_CONFIGS: Record<EquipmentId, EquipmentConfig> = {
-  backpack:    { name: 'Taktikrucksack', slot: 'back',  price: 100, ammoMultBonus: 0.6, description: '+60% Munitionskapazität. Trägt schwere Last.' },
-  chest_pouch: { name: 'Brusttasche',   slot: 'chest', price: 80,  ammoMultBonus: 0.3, description: '+30% Munitionskapazität. Schneller Zugriff.' },
-  leg_pouch:   { name: 'Beintasche',    slot: 'legs',  price: 70,  ammoMultBonus: 0.3, description: '+30% Munitionskapazität. Am Oberschenkel befestigt.' },
+  backpack:      { name: 'Taktikrucksack', slot: 'back',  price: 100,  ammoMultBonus: 0.6, maxArmor: 0,   description: '+60% Munitionskapazität. Trägt schwere Last.' },
+  chest_pouch:   { name: 'Brusttasche',   slot: 'chest', price: 80,   ammoMultBonus: 0.3, maxArmor: 0,   description: '+30% Munitionskapazität. Schneller Zugriff.' },
+  leg_pouch:     { name: 'Beintasche',    slot: 'legs',  price: 70,   ammoMultBonus: 0.3, maxArmor: 0,   description: '+30% Munitionskapazität. Am Oberschenkel befestigt.' },
+  palantir_suit: { name: 'Palantir Suit', slot: 'body',  price: 1500, ammoMultBonus: 0,   maxArmor: 100, description: '100% Rüstungsschutz beim Start. Nimmt Schaden vor HP.' },
 }
 
 // ── Ammunition ─────────────────────────────────────────────────────────────
@@ -178,6 +180,13 @@ export const GRENADE_DAMAGE   = 65
 
 // Ricochets
 export const MAX_BOUNCES = 2
+
+// Armor
+export const PLAYER_MAX_ARMOR = 100
+
+// Power-ups (default durations in seconds — overridable via mutators)
+export const QUAD_DAMAGE_DURATION_DEFAULT = 90
+export const BERSERKER_DURATION_DEFAULT   = 60
 
 // Vernichter (BFG)
 export const VERNICHTER_SPEED      = 6
