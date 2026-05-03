@@ -495,9 +495,16 @@ export function HUD() {
 
       {/* Weapon slots bar — 10 slots (1-9, 0) */}
       <div style={{
-        position: 'absolute', bottom: 10, left: '50%', transform: 'translateX(-50%)',
-        display: 'flex', gap: 4, alignItems: 'flex-end',
+        position: 'absolute',
+        bottom: 'max(10px, calc(env(safe-area-inset-bottom, 0px) + 10px))',
+        left: 0, right: 0,
+        display: 'flex', justifyContent: 'center',
+        overflowX: 'auto',
+        WebkitOverflowScrolling: 'touch' as never,
+        padding: '0 10px',
+        pointerEvents: 'auto',
       }}>
+        <div style={{ display: 'flex', gap: 4, alignItems: 'flex-end', flexShrink: 0 }}>
         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map((slot) => {
           const slotWeapons = WEAPON_SLOT_WEAPONS[slot] ?? []
           const ownedInSlot = slotWeapons.filter(w => ownedWeapons.includes(w))
@@ -554,6 +561,7 @@ export function HUD() {
             </div>
           )
         })}
+        </div>
       </div>
 
       <P2Panel />
@@ -597,7 +605,7 @@ export function HUD() {
           height={120}
           style={{
             position: 'absolute',
-            bottom: 70,
+            bottom: 'max(70px, calc(env(safe-area-inset-bottom, 0px) + 70px))' as never,
             right: 20,
             width: 120,
             height: 120,

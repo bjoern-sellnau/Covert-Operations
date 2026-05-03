@@ -51,7 +51,7 @@
 ## Spielmechanik & Bugs
 
 - [x] **Figuren sind falsch rotiert** — Player/Enemy-Meshes drehen sich in falsche Richtung
-- [ ] **Weapon-HUD ist manchmal abgeschnitten** — Layout-Fix für das Waffen-Panel im HUD
+- [x] **Weapon-HUD ist manchmal abgeschnitten** — Layout-Fix für das Waffen-Panel im HUD
 - [x] Blut Ultra: zu wenige Partikel (45 → 80)
 - [ ] **Level-Größe** — größere Arena, eventuell Tile-basiert oder Fog of War
 
