@@ -10,7 +10,6 @@ import { startAudioRecording, stopAudioRecording } from '../game/audioCore'
 
 function P2Panel() {
   const p2Active  = useGameStore((s) => s.p2Active)
-  const p2Health  = useGameStore((s) => s.p2Health)
   const p2Ammo    = useGameStore((s) => s.p2Ammo)
   const p2MaxAmmo = useGameStore((s) => s.p2MaxAmmo)
 
@@ -25,8 +24,6 @@ function P2Panel() {
     )
   }
 
-  const hpPct    = Math.max(0, p2Health / PLAYER_MAX_HEALTH) * 100
-  const hpColor  = hpPct > 50 ? '#ff8833' : hpPct > 25 ? '#ffaa00' : '#ff3300'
   const ammoPct  = p2MaxAmmo > 0 ? (p2Ammo / p2MaxAmmo) * 100 : 0
   const p2Grens  = entityStore.grenadeCount2
 
@@ -39,13 +36,6 @@ function P2Panel() {
     }}>
       <div style={{ color: '#ff6600', fontSize: 10, letterSpacing: 3, marginBottom: 8, textShadow: '0 0 6px #ff4400' }}>
         SPIELER 2
-      </div>
-      <div style={{ color: '#88aacc', fontSize: 9, letterSpacing: 2, marginBottom: 3 }}>HEALTH</div>
-      <div style={{ height: 7, background: '#111122', border: `1px solid #ff440033`, borderRadius: 2, overflow: 'hidden', marginBottom: 3 }}>
-        <div style={{ height: '100%', width: `${hpPct}%`, background: hpColor, transition: 'width 0.1s', boxShadow: `0 0 5px ${hpColor}` }} />
-      </div>
-      <div style={{ color: hpColor, fontSize: 11, fontWeight: 'bold', marginBottom: 8 }}>
-        {p2Health <= 0 ? 'TOT' : `${p2Health} / ${PLAYER_MAX_HEALTH}`}
       </div>
       <div style={{ color: '#88aacc', fontSize: 9, letterSpacing: 2, marginBottom: 3 }}>MUNITION</div>
       <div style={{ height: 5, background: '#111122', borderRadius: 2, overflow: 'hidden', marginBottom: 3 }}>
@@ -206,8 +196,14 @@ export function HUD() {
   const [quadTimer,   setQuadTimer]   = useState(0)
   const [bersTimer,   setBersTimer]   = useState(0)
   const [fps,         setFps]         = useState(0)
+  const [isPortrait,  setIsPortrait]  = useState(() => window.innerHeight > window.innerWidth)
   const fpsFrames = useRef(0)
   const fpsLast   = useRef(performance.now())
+  useEffect(() => {
+    const handler = () => setIsPortrait(window.innerHeight > window.innerWidth)
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
   useEffect(() => {
     let id: number
     const loop = (now: number) => {
@@ -493,76 +489,120 @@ export function HUD() {
         </div>
       )}
 
-      {/* Weapon slots bar — 10 slots (1-9, 0) */}
-      <div style={{
-        position: 'absolute',
-        bottom: 'max(10px, calc(env(safe-area-inset-bottom, 0px) + 10px))',
-        left: 0, right: 0,
-        display: 'flex', justifyContent: 'center',
-        overflowX: 'auto',
-        WebkitOverflowScrolling: 'touch' as never,
-        padding: '0 10px',
-        pointerEvents: 'auto',
-      }}>
-        <div style={{ display: 'flex', gap: 4, alignItems: 'flex-end', flexShrink: 0 }}>
-        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map((slot) => {
-          const slotWeapons = WEAPON_SLOT_WEAPONS[slot] ?? []
-          const ownedInSlot = slotWeapons.filter(w => ownedWeapons.includes(w))
-          const isActiveSlot = activeSlot === slot
-          // Active weapon shown in this slot: the selected one if it belongs here, else first owned
-          const displayW: WeaponId | undefined = isActiveSlot && ownedInSlot.includes(selectedWeapon)
-            ? selectedWeapon
-            : ownedInSlot[0]
-          const hasWeapons = ownedInSlot.length > 0
-          const active = displayW === selectedWeapon && isActiveSlot
-          const slotAmmo = displayW ? (active ? ammo : (weaponAmmo.get(displayW) ?? 0)) : 0
-          const slotMaxAmmo = displayW ? Math.max(1, WEAPON_CONFIGS[displayW].baseAmmo) : 1
-          const ammoPct = Math.min(1, slotAmmo / slotMaxAmmo)
-          const reloading = active && reloadTimer > 0
-          const reloadPct = reloading ? 1 - reloadTimer / WEAPON_CONFIGS[selectedWeapon].reloadTime : 1
-          const slotColor = isActiveSlot ? '#00aaff' : '#223344'
-          return (
-            <div key={slot} style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-              padding: '4px 6px',
-              background: active ? '#00aaff18' : isActiveSlot ? '#ffffff06' : hasWeapons ? '#ffffff05' : 'transparent',
-              border: `1px solid ${active ? '#00aaff88' : isActiveSlot ? '#334466' : hasWeapons ? '#1a2a2a' : '#111'}`,
-              borderRadius: 3, minWidth: 44,
-              opacity: hasWeapons ? 1 : 0.2,
-            }}>
-              <div style={{ color: isActiveSlot ? '#556688' : '#334455', fontSize: 8, letterSpacing: 1 }}>
-                {slot === 0 ? '0' : slot}
+      {/* Weapon slots bar — portrait: left side vertical · landscape: bottom horizontal */}
+      {isPortrait ? (
+        /* ── Portrait: vertical list on left ── */
+        <div style={{
+          position: 'absolute',
+          top: '50%', left: 'max(8px, env(safe-area-inset-left, 8px))',
+          transform: 'translateY(-50%)',
+          display: 'flex', flexDirection: 'column', gap: 2,
+          pointerEvents: 'auto',
+        }}>
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map((slot) => {
+            const slotWeapons  = WEAPON_SLOT_WEAPONS[slot] ?? []
+            const ownedInSlot  = slotWeapons.filter(w => ownedWeapons.includes(w))
+            const isActiveSlot = activeSlot === slot
+            const displayW: WeaponId | undefined = isActiveSlot && ownedInSlot.includes(selectedWeapon)
+              ? selectedWeapon : ownedInSlot[0]
+            const hasWeapons   = ownedInSlot.length > 0
+            const active       = displayW === selectedWeapon && isActiveSlot
+            const slotAmmo     = displayW ? (active ? ammo : (weaponAmmo.get(displayW) ?? 0)) : 0
+            const slotMaxAmmo  = displayW ? Math.max(1, WEAPON_CONFIGS[displayW].baseAmmo) : 1
+            const ap           = Math.min(1, slotAmmo / slotMaxAmmo)
+            const reloading    = active && reloadTimer > 0
+            const reloadPct    = reloading ? 1 - reloadTimer / WEAPON_CONFIGS[selectedWeapon].reloadTime : 1
+            return (
+              <div key={slot} style={{
+                display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 5,
+                padding: '3px 7px',
+                background: active ? '#00aaff18' : isActiveSlot ? '#ffffff06' : hasWeapons ? '#ffffff04' : 'transparent',
+                border: `1px solid ${active ? '#00aaff88' : isActiveSlot ? '#334466' : hasWeapons ? '#1a2a2a' : '#111'}`,
+                borderRadius: 3, opacity: hasWeapons ? 1 : 0.18,
+              }}>
+                <div style={{ color: isActiveSlot ? '#556688' : '#2a3a44', fontSize: 8, width: 8, flexShrink: 0 }}>
+                  {slot === 0 ? '0' : slot}
+                </div>
+                <div style={{ color: active ? '#00ccff' : isActiveSlot ? '#4488aa' : '#334455', fontSize: 9, fontWeight: active ? 'bold' : 'normal', width: 46, whiteSpace: 'nowrap', overflow: 'hidden' }}>
+                  {displayW ? WEAPON_CONFIGS[displayW].shortName : '—'}
+                </div>
+                {displayW && (
+                  <>
+                    <div style={{ width: 40, height: 3, background: '#111', borderRadius: 1, overflow: 'hidden', flexShrink: 0 }}>
+                      <div style={{ height: '100%', width: `${(reloading ? reloadPct : ap) * 100}%`, background: reloading ? '#ffcc00' : ap > 0.3 ? '#00ccff' : '#ff4400', transition: 'width 0.05s' }} />
+                    </div>
+                    <div style={{ color: reloading ? '#ffcc00' : ap > 0 ? '#445566' : '#ff3300', fontSize: 8, width: 20, textAlign: 'right', flexShrink: 0 }}>
+                      {reloading ? '…' : slotAmmo}
+                    </div>
+                  </>
+                )}
               </div>
-              {displayW ? (
-                <>
-                  <div style={{ color: active ? '#00ccff' : isActiveSlot ? '#4488aa' : '#445566', fontSize: 10, fontWeight: active ? 'bold' : 'normal', letterSpacing: 1, whiteSpace: 'nowrap' }}>
-                    {WEAPON_CONFIGS[displayW].shortName}
-                  </div>
-                  {ownedInSlot.length > 1 && (
-                    <div style={{ color: slotColor, fontSize: 7, opacity: 0.6 }}>
-                      {'·'.repeat(ownedInSlot.length)}
-                    </div>
-                  )}
-                  <div style={{ width: '100%', height: 3, background: '#111', borderRadius: 1, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${ammoPct * 100}%`, background: ammoPct > 0.3 ? '#00ccff' : '#ff4400', transition: 'width 0.05s' }} />
-                  </div>
-                  {reloading && (
-                    <div style={{ width: '100%', height: 2, background: '#111', borderRadius: 1, overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${reloadPct * 100}%`, background: '#ffcc00', transition: 'width 0.05s' }} />
-                    </div>
-                  )}
-                  <div style={{ color: reloading ? '#ffcc00' : ammoPct > 0 ? '#445566' : '#ff3300', fontSize: 8 }}>
-                    {reloading ? 'LADEN' : `${slotAmmo}`}
-                  </div>
-                </>
-              ) : (
-                <div style={{ color: '#1a2233', fontSize: 9 }}>—</div>
-              )}
-            </div>
-          )
-        })}
+            )
+          })}
         </div>
-      </div>
+      ) : (
+        /* ── Landscape: horizontal bar at bottom ── */
+        <div style={{
+          position: 'absolute',
+          bottom: 'max(10px, calc(env(safe-area-inset-bottom, 0px) + 10px))',
+          left: '50%', transform: 'translateX(-50%)',
+          display: 'flex', gap: 4, alignItems: 'flex-end',
+          pointerEvents: 'auto',
+        }}>
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map((slot) => {
+            const slotWeapons  = WEAPON_SLOT_WEAPONS[slot] ?? []
+            const ownedInSlot  = slotWeapons.filter(w => ownedWeapons.includes(w))
+            const isActiveSlot = activeSlot === slot
+            const displayW: WeaponId | undefined = isActiveSlot && ownedInSlot.includes(selectedWeapon)
+              ? selectedWeapon : ownedInSlot[0]
+            const hasWeapons   = ownedInSlot.length > 0
+            const active       = displayW === selectedWeapon && isActiveSlot
+            const slotAmmo     = displayW ? (active ? ammo : (weaponAmmo.get(displayW) ?? 0)) : 0
+            const slotMaxAmmo  = displayW ? Math.max(1, WEAPON_CONFIGS[displayW].baseAmmo) : 1
+            const ap           = Math.min(1, slotAmmo / slotMaxAmmo)
+            const reloading    = active && reloadTimer > 0
+            const reloadPct    = reloading ? 1 - reloadTimer / WEAPON_CONFIGS[selectedWeapon].reloadTime : 1
+            const slotColor    = isActiveSlot ? '#00aaff' : '#223344'
+            return (
+              <div key={slot} style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+                padding: '4px 6px',
+                background: active ? '#00aaff18' : isActiveSlot ? '#ffffff06' : hasWeapons ? '#ffffff05' : 'transparent',
+                border: `1px solid ${active ? '#00aaff88' : isActiveSlot ? '#334466' : hasWeapons ? '#1a2a2a' : '#111'}`,
+                borderRadius: 3, minWidth: 44,
+                opacity: hasWeapons ? 1 : 0.2,
+              }}>
+                <div style={{ color: isActiveSlot ? '#556688' : '#334455', fontSize: 8, letterSpacing: 1 }}>
+                  {slot === 0 ? '0' : slot}
+                </div>
+                {displayW ? (
+                  <>
+                    <div style={{ color: active ? '#00ccff' : isActiveSlot ? '#4488aa' : '#445566', fontSize: 10, fontWeight: active ? 'bold' : 'normal', letterSpacing: 1, whiteSpace: 'nowrap' }}>
+                      {WEAPON_CONFIGS[displayW].shortName}
+                    </div>
+                    {ownedInSlot.length > 1 && (
+                      <div style={{ color: slotColor, fontSize: 7, opacity: 0.6 }}>{'·'.repeat(ownedInSlot.length)}</div>
+                    )}
+                    <div style={{ width: '100%', height: 3, background: '#111', borderRadius: 1, overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${ap * 100}%`, background: ap > 0.3 ? '#00ccff' : '#ff4400', transition: 'width 0.05s' }} />
+                    </div>
+                    {reloading && (
+                      <div style={{ width: '100%', height: 2, background: '#111', borderRadius: 1, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${reloadPct * 100}%`, background: '#ffcc00', transition: 'width 0.05s' }} />
+                      </div>
+                    )}
+                    <div style={{ color: reloading ? '#ffcc00' : ap > 0 ? '#445566' : '#ff3300', fontSize: 8 }}>
+                      {reloading ? 'LADEN' : `${slotAmmo}`}
+                    </div>
+                  </>
+                ) : (
+                  <div style={{ color: '#1a2233', fontSize: 9 }}>—</div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       <P2Panel />
 
