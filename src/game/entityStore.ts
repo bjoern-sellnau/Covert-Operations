@@ -163,7 +163,7 @@ function makeEntityStore() {
     maxAmmo: 48,
     creditsEarned: 0,
     // Maneuvers
-    maneuver: 'none' as 'none' | 'dive' | 'spin',
+    maneuver: 'none' as 'none' | 'dive' | 'spin' | 'gunkata',
     maneuverTimer: 0,
     maneuverDx: 0,
     maneuverDz: 0,
@@ -171,6 +171,9 @@ function makeEntityStore() {
     diveCooldown: 0,
     spinCooldown: 0,
     spinFireTimer: 0,
+    gunKataCooldown: 0,
+    gunKataFireTimer: 0,
+    gunKataTargetQueue: [] as string[],  // ordered enemy ids to fire at
     // Grenades
     grenadeIdCounter: 0,
     grenades: [] as GrenadeData[],
@@ -273,6 +276,9 @@ export function resetEntityStore() {
   s.diveCooldown = 0
   s.spinCooldown = 0
   s.spinFireTimer = 0
+  s.gunKataCooldown = 0
+  s.gunKataFireTimer = 0
+  s.gunKataTargetQueue = []
   s.grenades = []
   s.grenadeCount = 3
   s.isAkimbo = false

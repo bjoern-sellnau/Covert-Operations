@@ -35,6 +35,15 @@ interface MutatorsState {
   botCount:        number
   botEnemyTypes:   EnemyType[]
   killMultipliers: boolean
+  // Bullet Ballet (Akimbo-Spin)
+  balletDuration:    number   // seconds (default 1.4)
+  balletBulletCount: number   // bullets fired per tick (default 2)
+  balletSpeed:       number   // multiplier for spin rate + fire rate (default 1.0)
+  // Gun Kata
+  gunKataEnabled:    boolean
+  gunKataDuration:   number   // seconds (default 1.5)
+  gunKataTargets:    number   // max enemies auto-targeted per burst (default 4)
+  gunKataSpeed:      number   // bullet speed multiplier (default 1.0)
 
   setGameType:          (v: GameType) => void
   setRoundTimeSec:      (v: number) => void
@@ -56,6 +65,13 @@ interface MutatorsState {
   setBotCount:          (v: number) => void
   toggleBotEnemyType:   (v: EnemyType) => void
   setKillMultipliers:   (v: boolean) => void
+  setBalletDuration:    (v: number) => void
+  setBalletBulletCount: (v: number) => void
+  setBalletSpeed:       (v: number) => void
+  setGunKataEnabled:    (v: boolean) => void
+  setGunKataDuration:   (v: number) => void
+  setGunKataTargets:    (v: number) => void
+  setGunKataSpeed:      (v: number) => void
 }
 
 export const useMutatorsStore = create<MutatorsState>()(
@@ -81,6 +97,13 @@ export const useMutatorsStore = create<MutatorsState>()(
       botCount:        6,
       botEnemyTypes:   ['basic', 'fast'],
       killMultipliers: true,
+      balletDuration:    1.4,
+      balletBulletCount: 2,
+      balletSpeed:       1.0,
+      gunKataEnabled:    false,
+      gunKataDuration:   1.5,
+      gunKataTargets:    4,
+      gunKataSpeed:      1.0,
 
       setGameType:          (gameType)       => set({ gameType }),
       setRoundTimeSec:      (roundTimeSec)   => set({ roundTimeSec }),
@@ -114,6 +137,13 @@ export const useMutatorsStore = create<MutatorsState>()(
         set({ botEnemyTypes: types.includes(v) ? types.filter(t => t !== v) : [...types, v] })
       },
       setKillMultipliers:    (killMultipliers)    => set({ killMultipliers }),
+      setBalletDuration:    (balletDuration)    => set({ balletDuration }),
+      setBalletBulletCount: (balletBulletCount) => set({ balletBulletCount }),
+      setBalletSpeed:       (balletSpeed)       => set({ balletSpeed }),
+      setGunKataEnabled:    (gunKataEnabled)    => set({ gunKataEnabled }),
+      setGunKataDuration:   (gunKataDuration)   => set({ gunKataDuration }),
+      setGunKataTargets:    (gunKataTargets)    => set({ gunKataTargets }),
+      setGunKataSpeed:      (gunKataSpeed)      => set({ gunKataSpeed }),
     }),
     { name: 'covert-ops-mutators-v3' }
   )

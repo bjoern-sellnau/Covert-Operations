@@ -190,7 +190,8 @@ export function HUD() {
 
   const [diveCd,      setDiveCd]      = useState(0)
   const [spinCd,      setSpinCd]      = useState(0)
-  const [maneuver,    setManeuver]    = useState<'none' | 'dive' | 'spin'>('none')
+  const [kataCd,      setKataCd]      = useState(0)
+  const [maneuver,    setManeuver]    = useState<'none' | 'dive' | 'spin' | 'gunkata'>('none')
   const [reloadTimer, setReloadTimer] = useState(0)
   const [weaponAmmo,  setWeaponAmmo]  = useState<Map<string, number>>(new Map())
   const [chaosAmmo,   setChaosAmmo]   = useState(0)
@@ -295,6 +296,7 @@ export function HUD() {
     const id = setInterval(() => {
       setDiveCd(Math.max(0, entityStore.diveCooldown))
       setSpinCd(Math.max(0, entityStore.spinCooldown))
+      setKataCd(Math.max(0, entityStore.gunKataCooldown))
       setManeuver(entityStore.maneuver)
       setReloadTimer(entityStore.reloadTimer)
       setWeaponAmmo(new Map(entityStore.weaponAmmo))
@@ -385,6 +387,9 @@ export function HUD() {
             {canAkimbo && (
               <ManeuverBar label={maneuver === 'spin' ? '↺ SPIN' : 'SPIN'} cooldown={spinCd} maxCooldown={SPIN_COOLDOWN} color="#cc44ff" active={maneuver === 'spin'} />
             )}
+            {maneuver === 'gunkata' || kataCd > 0 ? (
+              <ManeuverBar label={maneuver === 'gunkata' ? '✦ KATA' : 'KATA'} cooldown={kataCd} maxCooldown={3} color="#ff4488" active={maneuver === 'gunkata'} />
+            ) : null}
           </div>
         </div>
 

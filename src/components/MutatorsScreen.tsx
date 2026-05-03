@@ -13,12 +13,16 @@ export function MutatorsScreen() {
     btChargeModes, btDuration, btVisualEffect,
     godMode, crateExtras, quadDamageDuration, berserkerDuration,
     botCount, botEnemyTypes, killMultipliers,
+    balletDuration, balletBulletCount, balletSpeed,
+    gunKataEnabled, gunKataDuration, gunKataTargets, gunKataSpeed,
     setGameType, setRoundTimeSec, setWeaponPickups, toggleEnemyDrop,
     setSuddenDeath, setSuddenDeathSec, setLives, setChaosMode,
     setBulletBounce, setBulletBounceCount,
     toggleBtChargeMode, setBtDuration, setBtVisualEffect,
     setGodMode, toggleCrateExtra, setQuadDamageDuration, setBerserkerDuration,
     setBotCount, toggleBotEnemyType, setKillMultipliers,
+    setBalletDuration, setBalletBulletCount, setBalletSpeed,
+    setGunKataEnabled, setGunKataDuration, setGunKataTargets, setGunKataSpeed,
   } = useMutatorsStore()
 
   function startGame() {
@@ -312,6 +316,62 @@ export function MutatorsScreen() {
             sub="Double Kill · Multi Kill · Killing Spree · Godlike …"
             onClick={() => setKillMultipliers(!killMultipliers)}
           />
+        </div>
+
+        {/* Bullet Ballet */}
+        <div style={card}>
+          <div style={secLabel}>Bullet Ballet (Q/E · Akimbo)</div>
+          <div style={{ color: '#556677', fontSize: 9, letterSpacing: 2 }}>DAUER (SEK.)</div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {[0.8, 1.0, 1.4, 2.0, 3.0].map((v) => (
+              <button key={v} style={tog(balletDuration === v, '#cc44ff')} onClick={() => setBalletDuration(v)}>{v}s</button>
+            ))}
+          </div>
+          <div style={{ color: '#556677', fontSize: 9, letterSpacing: 2, marginTop: 6 }}>KUGELN PRO TICK</div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {[1, 2, 3, 4, 6].map((v) => (
+              <button key={v} style={tog(balletBulletCount === v, '#cc44ff')} onClick={() => setBalletBulletCount(v)}>{v}×</button>
+            ))}
+          </div>
+          <div style={{ color: '#556677', fontSize: 9, letterSpacing: 2, marginTop: 6 }}>GESCHWINDIGKEIT</div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {([0.5, 0.75, 1.0, 1.5, 2.0] as const).map((v) => (
+              <button key={v} style={tog(balletSpeed === v, '#cc44ff')} onClick={() => setBalletSpeed(v)}>{v}×</button>
+            ))}
+          </div>
+        </div>
+
+        {/* Gun Kata */}
+        <div style={card}>
+          <div style={secLabel}>Gun Kata (G-Taste)</div>
+          <Toggle
+            on={gunKataEnabled} color="#ff4488"
+            label="GUN KATA"
+            sub="Equilibrium-Stil: Auto-Ziel auf Feinde in Slowmo · G-Taste"
+            onClick={() => setGunKataEnabled(!gunKataEnabled)}
+          />
+          {gunKataEnabled && (
+            <>
+              <div style={{ color: '#556677', fontSize: 9, letterSpacing: 2, marginTop: 6 }}>DAUER (SEK.)</div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {[1.0, 1.5, 2.0, 3.0].map((v) => (
+                  <button key={v} style={tog(gunKataDuration === v, '#ff4488')} onClick={() => setGunKataDuration(v)}>{v}s</button>
+                ))}
+              </div>
+              <div style={{ color: '#556677', fontSize: 9, letterSpacing: 2, marginTop: 6 }}>MAX. ZIELE</div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {[2, 3, 4, 6, 8].map((v) => (
+                  <button key={v} style={tog(gunKataTargets === v, '#ff4488')} onClick={() => setGunKataTargets(v)}>{v}</button>
+                ))}
+              </div>
+              <div style={{ color: '#556677', fontSize: 9, letterSpacing: 2, marginTop: 6 }}>KUGELGESCHWINDIGKEIT</div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {([0.75, 1.0, 1.5, 2.0] as const).map((v) => (
+                  <button key={v} style={tog(gunKataSpeed === v, '#ff4488')} onClick={() => setGunKataSpeed(v)}>{v}×</button>
+                ))}
+              </div>
+            </>
+          )}
         </div>
 
         {/* Crate extras */}

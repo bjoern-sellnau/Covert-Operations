@@ -32,7 +32,7 @@ import {
   BULLET_TIME_SCALE, BULLET_TIME_PLAYER_REAL,
   FOCUS_MAX, FOCUS_REGEN_RATE, FOCUS_MIN_ACTIVATE,
   DIVE_SPEED, DIVE_DURATION, DIVE_COOLDOWN,
-  SPIN_DURATION, SPIN_COOLDOWN, SPIN_FIRE_RATE,
+  SPIN_COOLDOWN, SPIN_FIRE_RATE,
   GRENADE_SPEED, GRENADE_FUSE, GRENADE_BOUNCE, GRENADE_RADIUS, GRENADE_DAMAGE,
   MAX_BOUNCES,
   VERNICHTER_SPEED, VERNICHTER_RADIUS, VERNICHTER_DAMAGE,
@@ -360,6 +360,7 @@ export function GameScene() {
   const spacePrev  = useRef(false)
   const qPrev      = useRef(false)
   const ePrev      = useRef(false)
+  const gPrev      = useRef(false)
   const rPrev      = useRef(false)
   const digitPrev  = useRef<Set<number>>(new Set())
   const firePrev   = useRef(false)
@@ -698,6 +699,7 @@ export function GameScene() {
     spacePrev.current = spaceDown
     qPrev.current     = qDown
     ePrev.current     = eDown
+    gPrev.current     = keys.has('KeyG')
     rPrev.current     = rDown
 
     // ── Number keys 1-0: slot-based weapon switching (with cycling) ──────────
@@ -834,7 +836,7 @@ export function GameScene() {
     }
 
     // ── Aim direction ─────────────────────────────────────────────────────────
-    if ((cameraModeRef.current !== 'fps' || mobileControls) && es.maneuver !== 'spin') {
+    if ((cameraModeRef.current !== 'fps' || mobileControls) && es.maneuver !== 'spin' && es.maneuver !== 'gunkata') {
       if (mobileControls) {
         // Auto-aim at nearest enemy
         let nearDist = Infinity
@@ -886,11 +888,29 @@ export function GameScene() {
     }
 
     // ── Trigger: Ballett-Spin (Q/E, only when akimbo) ─────────────────────────
+    const balletDuration    = mutators.balletDuration
+    const balletBulletCount = mutators.balletBulletCount
+    const balletSpeedMult   = mutators.balletSpeed
     if ((qJust || eJust) && es.maneuver === 'none' && es.spinCooldown <= 0 && es.isAkimbo) {
       es.spinDir       = qJust ? -1 : 1
       es.maneuver      = 'spin'
-      es.maneuverTimer = SPIN_DURATION
+      es.maneuverTimer = balletDuration
       es.spinFireTimer = 0
+    }
+
+    // ── Trigger: Gun Kata (G key) ──────────────────────────────────────────────
+    const gJust = keys.has('KeyG') && !gPrev.current
+    if (gJust && es.maneuver === 'none' && es.gunKataCooldown <= 0 && mutators.gunKataEnabled) {
+      es.maneuver      = 'gunkata'
+      es.maneuverTimer = mutators.gunKataDuration
+      es.gunKataFireTimer = 0
+      // Pre-sort enemies by distance for targeting
+      const sorted = [...es.enemies.values()].sort((a, b) => {
+        const da = Math.hypot(a.position.x - es.player.position.x, a.position.y - es.player.position.y)
+        const db = Math.hypot(b.position.x - es.player.position.x, b.position.y - es.player.position.y)
+        return da - db
+      })
+      es.gunKataTargetQueue = sorted.slice(0, mutators.gunKataTargets).map(e => e.id)
     }
 
     // ── Player movement ───────────────────────────────────────────────────────
@@ -906,13 +926,26 @@ export function GameScene() {
       }
     } else if (es.maneuver === 'spin') {
       // No WASD movement during spin, just rotate
-      const spinRate = (Math.PI * 2 * 1.5) / SPIN_DURATION
+      const spinRate = (Math.PI * 2 * 1.5) / balletDuration * balletSpeedMult
       es.player.angle += es.spinDir * spinRate * rawDt
       _toMouse.set(Math.sin(es.player.angle), -Math.cos(es.player.angle))
       es.maneuverTimer -= rawDt
       if (es.maneuverTimer <= 0) {
         es.maneuver     = 'none'
         es.spinCooldown = SPIN_COOLDOWN
+      }
+    } else if (es.maneuver === 'gunkata') {
+      // Gun Kata: player can still move but auto-aims + fires at queued targets
+      if (keys.has('KeyW') || keys.has('ArrowUp'))    dz -= 1
+      if (keys.has('KeyS') || keys.has('ArrowDown'))  dz += 1
+      if (keys.has('KeyA') || keys.has('ArrowLeft'))  dx -= 1
+      if (keys.has('KeyD') || keys.has('ArrowRight')) dx += 1
+      if (mobileControls) { dx += mobileInput.dx; dz += mobileInput.dz }
+      es.maneuverTimer -= rawDt
+      if (es.maneuverTimer <= 0) {
+        es.maneuver      = 'none'
+        es.gunKataCooldown = mutators.gunKataDuration * 2
+        es.gunKataTargetQueue = []
       }
     } else {
       if (keys.has('KeyW') || keys.has('ArrowUp'))    dz -= 1
@@ -1251,13 +1284,16 @@ export function GameScene() {
       }
     }
 
-    // Spin auto-fire (fires both barrels)
-    if (es.maneuver === 'spin' && es.ammo >= 2) {
+    // Spin auto-fire (configurable bullet count + speed)
+    if (es.maneuver === 'spin' && es.ammo >= balletBulletCount) {
       es.spinFireTimer -= rawDt
       if (es.spinFireTimer <= 0) {
-        es.spinFireTimer = SPIN_FIRE_RATE
-        for (const offset of [-0.12, 0.12]) {
-          const ang  = Math.atan2(_toMouse.x, _toMouse.y) + offset
+        es.spinFireTimer = SPIN_FIRE_RATE / balletSpeedMult
+        const baseAng = Math.atan2(_toMouse.x, _toMouse.y)
+        const spread  = balletBulletCount > 1 ? 0.24 / (balletBulletCount - 1) : 0
+        const startOff = balletBulletCount > 1 ? -0.12 : 0
+        for (let bi = 0; bi < balletBulletCount; bi++) {
+          const ang  = baseAng + startOff + bi * spread
           const bDir = new THREE.Vector2(Math.sin(ang), Math.cos(ang))
           const bid  = `bullet-${++es.bulletIdCounter}`
           es.bullets.set(bid, {
@@ -1266,7 +1302,7 @@ export function GameScene() {
               es.player.position.x + bDir.x * (PLAYER_RADIUS + 0.2),
               es.player.position.y + bDir.y * (PLAYER_RADIUS + 0.2),
             ),
-            velocity: new THREE.Vector2(bDir.x * weaponCfg.bulletSpeed, bDir.y * weaponCfg.bulletSpeed),
+            velocity: new THREE.Vector2(bDir.x * weaponCfg.bulletSpeed * balletSpeedMult, bDir.y * weaponCfg.bulletSpeed * balletSpeedMult),
             lifetime: BULLET_LIFETIME,
             damage:   finalDamage,
             bounces:  0,
@@ -1275,11 +1311,61 @@ export function GameScene() {
             isFlak: isFlakWep,
           })
         }
-        es.ammo = Math.max(0, es.ammo - 2)
+        es.ammo = Math.max(0, es.ammo - balletBulletCount)
         WEAPON_SOUNDS[activeWeaponId]?.()
         setBulletIds(Array.from(es.bullets.keys()))
       }
-    } else if (isShooting && es.player.shootCooldown <= 0 && es.ammo > 0 && es.maneuver !== 'spin' && es.burstRemaining === 0
+    }
+
+    // Gun Kata auto-fire (targets queued enemies in slowmo)
+    if (es.maneuver === 'gunkata' && es.ammo > 0) {
+      es.isBulletTime = true  // activate slowmo during Gun Kata
+      es.gunKataFireTimer -= rawDt
+      if (es.gunKataFireTimer <= 0 && es.gunKataTargetQueue.length > 0) {
+        es.gunKataFireTimer = mutators.gunKataDuration / (mutators.gunKataTargets * 2)
+        const targetId = es.gunKataTargetQueue.shift()!
+        const target   = es.enemies.get(targetId)
+        if (target) {
+          const dx2 = target.position.x - es.player.position.x
+          const dz2 = target.position.y - es.player.position.y
+          const len2 = Math.hypot(dx2, dz2)
+          if (len2 > 0.01) {
+            const bDir = new THREE.Vector2(dx2 / len2, dz2 / len2)
+            // Auto-aim: update player facing toward target
+            es.player.angle = Math.atan2(bDir.x, -bDir.y)
+            const spd = weaponCfg.bulletSpeed * mutators.gunKataSpeed
+            const bid = `bullet-${++es.bulletIdCounter}`
+            es.bullets.set(bid, {
+              id: bid,
+              position: new THREE.Vector2(
+                es.player.position.x + bDir.x * (PLAYER_RADIUS + 0.2),
+                es.player.position.y + bDir.y * (PLAYER_RADIUS + 0.2),
+              ),
+              velocity: new THREE.Vector2(bDir.x * spd, bDir.y * spd),
+              lifetime: BULLET_LIFETIME,
+              damage:   finalDamage * 1.5,  // Gun Kata bonus damage
+              bounces:  0,
+              maxBounces: bulletMaxBounces,
+              isEnergy,
+              isFlak: false,
+            })
+            es.ammo = Math.max(0, es.ammo - 1)
+            WEAPON_SOUNDS[activeWeaponId]?.()
+            setBulletIds(Array.from(es.bullets.keys()))
+            // Re-queue this target for another hit if queue is running short
+            es.gunKataTargetQueue.push(targetId)
+          }
+        }
+      }
+      if (es.gunKataTargetQueue.length === 0 || es.ammo === 0) {
+        es.isBulletTime = false
+      }
+    } else if (es.maneuver !== 'gunkata') {
+      // Cooldown ticks outside of gunkata
+      if (es.gunKataCooldown > 0) es.gunKataCooldown -= rawDt
+    }
+
+    if (isShooting && es.player.shootCooldown <= 0 && es.ammo > 0 && es.maneuver !== 'spin' && es.maneuver !== 'gunkata' && es.burstRemaining === 0
         && !weaponCfg.isVernichter && !weaponCfg.isLaser && !weaponCfg.isIon) {
       es.player.shootCooldown = weaponCfg.shootCooldown
       const baseAngle = Math.atan2(_toMouse.x, _toMouse.y)
