@@ -406,12 +406,12 @@ const CONTROLS: Array<[string, string]> = [
   ['LEERTASTE',      'Schießen (Alternative)'],
   ['SHIFT',          'Bullet Time aktivieren'],
   ['SPACE (kurz)',   'Dive – schnelles Ausweichen'],
-  ['SPACE (halten)', 'Spin – 360° (mit Akimbo)'],
-  ['G',              'Granate werfen'],
+  ['Q / E',          'Bullet Ballet – Spin-Angriff (nur mit Akimbo)'],
+  ['G',              'Gun Kata – Auto-Aim-Angriff (Mutator aktivieren)'],
+  ['Slot 7',         'Granate werfen'],
   ['R',              'Nachladen'],
   ['1 – 0',          'Waffenslot wählen'],
   ['F',              'Kamera wechseln (Topdown → Iso → Ego)'],
-  ['E',              'Akimbo umschalten (Pistole / SMG)'],
   ['PFEIL / GAMEPAD','Spieler 2 steuern'],
 ]
 

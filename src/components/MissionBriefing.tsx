@@ -27,7 +27,7 @@ const ARENA_CARDS: Card[] = [
     body: [
       '1-5 — Waffe wechseln · R — Nachladen',
       'SHIFT — Bullet Time · LEERTASTE — Dive-Roll',
-      'G — Granate · V — Vernichter (BFG)',
+      'Slot 7 — Granate · G — Gun Kata (Mutator) · V — Vernichter',
       'F — Ego-Perspektive umschalten',
     ],
   },

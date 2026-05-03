@@ -13,6 +13,7 @@ const ENEMIES = [
 export function MainMenu() {
   const setPhase    = useGameStore((s) => s.setPhase)
   const setGameMode = useGameStore((s) => s.setGameMode)
+  const setSkipShop = useGameStore((s) => s.setSkipShop)
   const { credits } = useLoadoutStore()
 
   return (
@@ -100,7 +101,7 @@ export function MainMenu() {
             boxShadow: '0 0 20px #00aaff44, inset 0 0 20px #00aaff11',
             transition: 'all 0.15s',
           }}
-          onClick={() => setPhase('character_select')}
+          onClick={() => { setSkipShop(false); setPhase('character_select') }}
           onMouseEnter={(e) => {
             e.currentTarget.style.background = 'linear-gradient(135deg, #005599 0%, #003366 100%)'
             e.currentTarget.style.color = '#fff'
@@ -155,7 +156,7 @@ export function MainMenu() {
         {/* Ghost row */}
         <div style={{ display: 'flex', gap: 8, width: '100%' }}>
           {[
-            { label: 'Direkt spielen', onClick: () => { setGameMode('arena'); setPhase('briefing') } },
+            { label: 'Direkt spielen', onClick: () => { setGameMode('arena'); setSkipShop(true); setPhase('briefing') } },
             { label: '⚙ Optionen',     onClick: () => setPhase('options') },
             { label: '? Hilfe',         onClick: () => setPhase('help') },
             { label: '▶ Demos',         onClick: () => setPhase('demo_viewer') },

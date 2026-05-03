@@ -398,7 +398,8 @@ export function OptionsScreen() {
           <div style={labelStyle}>Tastatur-Steuerung</div>
           <div style={{ color: '#8899aa', fontSize: 10, letterSpacing: 1, lineHeight: 1.8 }}>
             WASD — Bewegen &nbsp;·&nbsp; Maus — Zielen &nbsp;·&nbsp; LMT — Schießen<br />
-            G — Granate &nbsp;·&nbsp; Space — Dive &nbsp;·&nbsp; Shift — Bullet Time<br />
+            G — Gun Kata (Mutator) &nbsp;·&nbsp; Space — Dive &nbsp;·&nbsp; Shift — Bullet Time<br />
+            Q/E — Bullet Ballet (Akimbo) &nbsp;·&nbsp; Slot 7 — Granate<br />
             1–5 — Waffe wechseln &nbsp;·&nbsp; R — Nachladen &nbsp;·&nbsp; V — Vernichter<br />
             L — Todeslaser &nbsp;·&nbsp; I — Ionen-Kanone &nbsp;·&nbsp; F — Ego-Perspektive<br />
             Q / E — Ballett-Spin (Akimbo)

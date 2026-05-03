@@ -9,37 +9,40 @@ import { useSettingsStore } from '../store/settingsStore'
 interface Props { player2?: boolean }
 
 export function PlayerMesh({ player2 = false }: Props) {
-  const innerRef     = useRef<THREE.Group>(null)
-  const healthBarRef = useRef<THREE.Mesh>(null)
-  const leftArmRef   = useRef<THREE.Mesh>(null)
-  const rightArmRef  = useRef<THREE.Mesh>(null)
-  const leftLegRef   = useRef<THREE.Mesh>(null)
-  const rightLegRef  = useRef<THREE.Mesh>(null)
-  const walkPhase    = useRef(0)
-  const prevPos      = useRef({ x: 0, y: 0 })
+  const innerRef        = useRef<THREE.Group>(null)
+  const healthBarRef    = useRef<THREE.Mesh>(null)
+  const leftArmRef      = useRef<THREE.Mesh>(null)
+  const rightArmRef     = useRef<THREE.Mesh>(null)
+  const leftLegRef      = useRef<THREE.Mesh>(null)
+  const rightLegRef     = useRef<THREE.Mesh>(null)
+  const akimboWeaponRef = useRef<THREE.Mesh>(null)
+  const walkPhase       = useRef(0)
+  const prevPos         = useRef({ x: 0, y: 0 })
 
-  const playerSkin = useSettingsStore((s) => s.playerSkin)
-  const sc         = player2 ? null : SKIN_CONFIGS[playerSkin]
+  const playerSkin  = useSettingsStore((s) => s.playerSkin)
+  const isLowQuality = useSettingsStore((s) => s.graphicsQuality === 'low')
+  const sc          = player2 ? null : SKIN_CONFIGS[playerSkin]
 
   const skinMat    = useMemo(() => new THREE.MeshStandardMaterial({ color: sc?.skin ?? '#d4956a', roughness: 0.7, metalness: 0.0 }), [sc?.skin])
   const uniformMat = useMemo(() => new THREE.MeshStandardMaterial({
     color:             player2 ? '#cc3300' : (sc?.uniform ?? '#1a3a6e'),
     emissive:          player2 ? '#aa2200' : (sc?.uniformEmissive ?? '#001144'),
     emissiveIntensity: player2 ? 0.3       : (sc?.uniformEmissiveIntensity ?? 0.3),
-    roughness: 0.55, metalness: player2 ? 0.2 : (sc?.metalness ?? 0.2),
-  }), [player2, sc?.uniform, sc?.uniformEmissive, sc?.uniformEmissiveIntensity, sc?.metalness])
+    roughness: 0.55, metalness: isLowQuality ? 0 : (player2 ? 0.2 : (sc?.metalness ?? 0.2)),
+  }), [player2, sc?.uniform, sc?.uniformEmissive, sc?.uniformEmissiveIntensity, sc?.metalness, isLowQuality])
   const helmetMat  = useMemo(() => new THREE.MeshStandardMaterial({
     color:             player2 ? '#ff6600' : (sc?.helmet ?? '#00aaff'),
     emissive:          player2 ? '#ff6600' : (sc?.helmetEmissive ?? '#00aaff'),
     emissiveIntensity: player2 ? 0.55      : (sc?.helmetEmissiveIntensity ?? 0.55),
-    roughness: 0.3, metalness: player2 ? 0.7 : (sc?.metalness ?? 0.7),
-  }), [player2, sc?.helmet, sc?.helmetEmissive, sc?.helmetEmissiveIntensity, sc?.metalness])
+    roughness: 0.3, metalness: isLowQuality ? 0 : (player2 ? 0.7 : (sc?.metalness ?? 0.7)),
+  }), [player2, sc?.helmet, sc?.helmetEmissive, sc?.helmetEmissiveIntensity, sc?.metalness, isLowQuality])
   const pantsMat   = useMemo(() => new THREE.MeshStandardMaterial({
     color: player2 ? '#7a1a00' : (sc?.pants ?? '#0d1f3c'), roughness: 0.8, metalness: 0.1,
   }), [player2, sc?.pants])
   const weaponMat  = useMemo(() => new THREE.MeshStandardMaterial({
-    color: '#1a1a1a', emissive: '#111111', emissiveIntensity: 0.2, roughness: 0.2, metalness: 0.9,
-  }), [])
+    color: '#1a1a1a', emissive: '#111111', emissiveIntensity: 0.2, roughness: 0.2,
+    metalness: isLowQuality ? 0 : 0.9,
+  }), [isLowQuality])
 
   useFrame((state, delta) => {
     const es  = entityStore
@@ -56,6 +59,7 @@ export function PlayerMesh({ player2 = false }: Props) {
     const invincible = now < p.invincibleUntil
     const visible    = !invincible || Math.floor(now * 12) % 2 === 0
     if (innerRef.current) innerRef.current.visible = visible
+    if (akimboWeaponRef.current) akimboWeaponRef.current.visible = !player2 && es.isAkimbo
 
     // Health bar
     if (healthBarRef.current) {
@@ -192,12 +196,10 @@ export function PlayerMesh({ player2 = false }: Props) {
         <mesh material={weaponMat} position={[0, 0.09, -0.54]} castShadow>
           <boxGeometry args={[0.13, 0.09, 0.52]} />
         </mesh>
-        {/* Akimbo second weapon (P1 only) */}
-        {!player2 && (
-          <mesh material={weaponMat} position={[-0.22, 0.09, -0.42]} rotation={[0.2, -0.3, 0]} castShadow>
-            <boxGeometry args={[0.10, 0.08, 0.38]} />
-          </mesh>
-        )}
+        {/* Akimbo second weapon — visibility toggled via ref in useFrame */}
+        <mesh ref={akimboWeaponRef} material={weaponMat} visible={false} position={[-0.22, 0.09, -0.42]} rotation={[0.2, -0.3, 0]} castShadow>
+          <boxGeometry args={[0.10, 0.08, 0.38]} />
+        </mesh>
         {/* Left leg */}
         <mesh ref={leftLegRef} material={pantsMat} position={[-0.09, -0.20, 0.02]} castShadow>
           <boxGeometry args={[0.12, 0.24, 0.14]} />

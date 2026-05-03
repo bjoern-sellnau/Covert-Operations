@@ -10,6 +10,7 @@ export function GameOver() {
   const creditsEarned  = useGameStore((s) => s.creditsEarned)
   const isPlaytesting  = useGameStore((s) => s.isPlaytesting)
   const gameMode       = useGameStore((s) => s.gameMode)
+  const skipShop       = useGameStore((s) => s.skipShop)
   const { credits }    = useLoadoutStore()
 
   return (
@@ -108,31 +109,36 @@ export function GameOver() {
           </>
         ) : (
           <>
-            <button
-              onClick={() => setPhase('shop')}
-              style={{
-                background: '#00aaff22', border: '2px solid #00aaff', color: '#00aaff',
-                fontSize: 14, letterSpacing: 4, padding: '14px 32px', cursor: 'pointer',
-                fontFamily: 'inherit', textTransform: 'uppercase', transition: 'all 0.15s',
-                boxShadow: '0 0 14px #00aaff44',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = '#00aaff44'; e.currentTarget.style.color = '#ffffff' }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = '#00aaff22'; e.currentTarget.style.color = '#00aaff' }}
-            >
-              Ausrüstung
-            </button>
+            {!skipShop && (
+              <button
+                onClick={() => setPhase('shop')}
+                style={{
+                  background: '#00aaff22', border: '2px solid #00aaff', color: '#00aaff',
+                  fontSize: 14, letterSpacing: 4, padding: '14px 32px', cursor: 'pointer',
+                  fontFamily: 'inherit', textTransform: 'uppercase', transition: 'all 0.15s',
+                  boxShadow: '0 0 14px #00aaff44',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#00aaff44'; e.currentTarget.style.color = '#ffffff' }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = '#00aaff22'; e.currentTarget.style.color = '#00aaff' }}
+              >
+                Ausrüstung
+              </button>
+            )}
 
             <button
-              onClick={() => setPhase('playing')}
+              onClick={() => setPhase(skipShop ? 'briefing' : 'playing')}
               style={{
-                background: 'transparent', border: '2px solid #445566', color: '#667788',
+                background: skipShop ? '#00aaff22' : 'transparent',
+                border: `2px solid ${skipShop ? '#00aaff' : '#445566'}`,
+                color: skipShop ? '#00aaff' : '#667788',
                 fontSize: 14, letterSpacing: 4, padding: '14px 32px', cursor: 'pointer',
                 fontFamily: 'inherit', textTransform: 'uppercase', transition: 'all 0.15s',
+                boxShadow: skipShop ? '0 0 14px #00aaff44' : 'none',
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = '#22334422'; e.currentTarget.style.color = '#aabbcc' }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#667788' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = skipShop ? '#00aaff44' : '#22334422'; e.currentTarget.style.color = skipShop ? '#ffffff' : '#aabbcc' }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = skipShop ? '#00aaff22' : 'transparent'; e.currentTarget.style.color = skipShop ? '#00aaff' : '#667788' }}
             >
-              Wiederholen
+              {skipShop ? 'Nochmal' : 'Wiederholen'}
             </button>
 
             <button

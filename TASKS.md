@@ -6,9 +6,9 @@
 
 ## Bugs (Kritisch)
 
-- [ ] Wenn man einen Game-Modus ohne Shop gewählt hat (z.B. Direkt spielen), kommt man nach Game Over nicht mehr raus
-- [ ] Änderungen für Flak-Waffe sind wieder raus (Regression)
-- [ ] Low-Graphics-Modus sieht wieder wie vorher aus (Regression)
+- [x] Wenn man einen Game-Modus ohne Shop gewählt hat (z.B. Direkt spielen), kommt man nach Game Over nicht mehr raus
+- [x] Änderungen für Flak-Waffe sind wieder raus (Regression)
+- [x] Low-Graphics-Modus sieht wieder wie vorher aus (Regression)
 - [ ] Skalierung führt zu Problemen mit dem Level
 - [ ] UI hat Probleme mit Fullscreen-Modus auf iPad
 - [ ] UI hat allgemeine Probleme auf iPad
@@ -16,10 +16,10 @@
 - [ ] Alle Menüs sind zu dunkel, 3D-Modelle im Hilfe-Screen immer noch nicht sichtbar
 - [ ] Das HUD auf iPhone muss überarbeitet werden (z.B. kein Nachladen möglich)
 - [ ] Das UI auf iPad ist zu nahe am Home-Indicator → Browser wird oft minimiert
-- [ ] Akimbo funktioniert nicht mehr / Logik unklar
-- [ ] Bullet Ballet funktioniert nicht
-- [ ] Gun Kata funktioniert nicht
-- [ ] Briefings und Hilfe-Screens an neue Steuerung anpassen (z.B. G = Granate stimmt nicht mehr)
+- [x] Akimbo funktioniert nicht mehr / Logik unklar (zweite Waffe immer sichtbar → per useFrame gesteuert)
+- [x] Bullet Ballet funktioniert nicht (isAkimbo jetzt per-Frame berechnet statt einmalig bei Start)
+- [x] Gun Kata funktioniert nicht (erfordert Mutator-Aktivierung → Hinweis in allen Hilfe-Texten ergänzt)
+- [x] Briefings und Hilfe-Screens an neue Steuerung anpassen (z.B. G = Granate stimmt nicht mehr)
 - [ ] Wenn man auf Zurück drückt werden Credits etc. nicht auf Standard zurückgesetzt
 
 ---

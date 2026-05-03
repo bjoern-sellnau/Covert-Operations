@@ -1060,6 +1060,7 @@ export function GameScene() {
     const finalDamage      = (weaponCfg.baseDamage + AMMO_CONFIGS[loadout.selectedAmmo].damageBonus) * quadMult
     const isEnergy         = activeWeaponId === 'blaster' || activeWeaponId === 'plasma'
     const isFlakWep        = activeWeaponId === 'flak'
+    es.isAkimbo            = loadout.isAkimbo && (activeWeaponId === 'pistol' || activeWeaponId === 'smg')
     const shootMuts        = useMutatorsStore.getState()
     const mutBounceCount   = shootMuts.bulletBounce
       ? (shootMuts.bulletBounceCount === 0 ? 999 : shootMuts.bulletBounceCount)
