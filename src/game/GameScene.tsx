@@ -2,7 +2,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { entityStore, resetEntityStore, spawnParticles, spawnDecal } from './entityStore'
-import type { BananaData } from './entityStore'
+import type { BananaData, BulletData } from './entityStore'
 import { useMutatorsStore } from '../store/mutatorsStore'
 import { PickupSystem, spawnEnemyDrop } from './PickupSystem'
 import type { CameraMode } from '../store/gameStore'
@@ -1543,7 +1543,10 @@ export function GameScene() {
         grenadeIdxToRemove.push(gi)
         if (mesh) mesh.visible = false
 
+        playExplosionSmall()
         spawnParticles(g.x, g.z, 'explosion', EXPL_COUNTS[bloodIntensity])
+        spawnParticles(g.x, g.z, 'spark', SPARK_COUNTS[bloodIntensity])
+        spawnDecal(g.x, g.z, 1.2)
 
         // Damage enemies
         const explodedEnemies = new Set<string>()
@@ -1941,7 +1944,8 @@ export function GameScene() {
     }
 
     // ── Update enemies ────────────────────────────────────────────────────────
-    const hitBullets = new Set<string>()
+    const hitBullets      = new Set<string>()
+    const pendingShrapnel: BulletData[] = []
 
     for (const [eid, enemy] of es.enemies) {
       if (enemiesToRemove.includes(eid)) continue
@@ -2011,12 +2015,32 @@ export function GameScene() {
           if (bloodIntensity > 0) {
             spawnDecal(enemy.position.x, enemy.position.y, 0.4 + Math.random() * 0.5)
           }
+          if (bullet.isFlak) {
+            spawnParticles(enemy.position.x, enemy.position.y, 'explosion', Math.ceil(EXPL_COUNTS[bloodIntensity] * 0.4))
+            spawnParticles(enemy.position.x, enemy.position.y, 'spark', SPARK_COUNTS[bloodIntensity])
+            const shrapnelDmg = Math.max(1, Math.ceil(bullet.damage * 0.3))
+            for (let si = 0; si < 4; si++) {
+              const sa  = Math.random() * Math.PI * 2
+              const spd = 8 + Math.random() * 6
+              const sbid = `bullet-${++es.bulletIdCounter}`
+              pendingShrapnel.push({
+                id: sbid, position: new THREE.Vector2(enemy.position.x, enemy.position.y),
+                velocity: new THREE.Vector2(Math.sin(sa) * spd, Math.cos(sa) * spd),
+                lifetime: 0.35, damage: shrapnelDmg, bounces: 0, maxBounces: 0,
+                isEnergy: true, isFlak: false,
+              })
+            }
+          }
           if (enemy.health <= 0 && !enemiesToRemove.includes(eid)) {
             enemiesToRemove.push(eid)
             scoreGained   += cfg.scoreValue
             creditsGained += cfg.creditValue
             spawnParticles(enemy.position.x, enemy.position.y, 'blood', BLOOD_COUNTS[bloodIntensity])
             spawnDecal(enemy.position.x, enemy.position.y, 0.6 + Math.random() * 0.6)
+            if (bullet.isFlak || bullet.damage >= 40) {
+              spawnParticles(enemy.position.x, enemy.position.y, 'explosion', EXPL_COUNTS[bloodIntensity])
+              spawnParticles(enemy.position.x, enemy.position.y, 'spark', Math.ceil(SPARK_COUNTS[bloodIntensity] * 0.5))
+            }
             playDeath(0.5)
           }
           break
@@ -2041,6 +2065,12 @@ export function GameScene() {
         setEnemyBulletIds(Array.from(es.enemyBullets.keys()))
         playEnemyFire()
       }
+    }
+
+    // Commit flak shrapnel bullets spawned during enemy collision
+    if (pendingShrapnel.length > 0) {
+      for (const sb of pendingShrapnel) es.bullets.set(sb.id, sb)
+      setBulletIds(Array.from(es.bullets.keys()))
     }
 
     // ── Enemy bullet movement & player collision ──────────────────────────────

@@ -43,6 +43,13 @@ Die aktuelle Reihenfolge ist falsch. Neue Reihenfolge:
 - [ ] Option in Mutatoren: Autoreload aktivierbar
 - [ ] Im Level-Editor kann man eingeben, in welchen Spielmodi eine Karte verfügbar ist (Standard: alle)
 
+### Visuelle Effekte
+- [x] Flak trifft Gegner → Mini-Explosion + Sekundär-Splitter (4 Shrapnel-Bullets in zufällige Richtungen)
+- [x] Granate explodiert → Explosion + Funken + Decal + Sound (playExplosionSmall)
+- [x] RPG/Bazooka → bereits via doSplash implementiert (Explosion + Funken + Decal + Sound)
+- [x] Gegner stirbt durch mächtige Waffe (Flak oder Schaden ≥ 40) → zusätzliche Explosions-Partikel
+- [x] Blut-Spots auf Gegnern bei Treffer → bereits via spawnDecal implementiert
+
 ### Startup-Animationen
 - [ ] Beim Start werden Animationen angezeigt:
   1. Coded by Claude Code
