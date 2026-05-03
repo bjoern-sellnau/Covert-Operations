@@ -24,7 +24,7 @@
 - [x] Demos exportieren (JSON-Download)
 - [x] Demos importieren (JSON-Upload)
 - [ ] Demos als Videosequenzen für Missionen nutzen (Cutscene-System)
-- [ ] Demo-Funktion auch im Level-Editor einbauen
+- [x] Demo-Funktion auch im Level-Editor einbauen
 - [x] **Wo ist diese Funktion?** — Hauptmenü → „▶ Demos", HUD-Button „REC"
 
 ---
@@ -33,7 +33,7 @@
 
 - [x] Shared AudioContext + Master-Bus (`audioCore.ts`)
 - [x] Audio-Aufnahme via MediaRecorder (HUD-Button „AUD", Download als .webm/.ogg)
-- [ ] **Aufgenommene Tracks als Custom Tracks in den Optionen auswählbar** — Import-System + Track-Store + Options-Integration
+- [x] **Aufgenommene Tracks als Custom Tracks in den Optionen auswählbar** — Import-System + Track-Store + Options-Integration
 - [x] **Wo ist dieser?** — HUD-Button „AUD" (neben REC), startet/stoppt Aufnahme des kompletten Audio-Outputs
 
 ---

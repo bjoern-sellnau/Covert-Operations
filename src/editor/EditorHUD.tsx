@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { useEditorStore, OBJECT_TYPE_CFGS, type ObjectType, type ViewMode, type ToolMode, type Level, type GravityMode } from './editorStore'
 import { useGameStore } from '../store/gameStore'
+import { useDemoStore } from '../store/demoStore'
 import { ScriptPanel } from './ScriptPanel'
 import { TEXTURE_META, DEFAULT_TEXTURE, getThumbnail, type TextureKey } from '../game/textures'
 import { PRESET_LEVELS } from './presetLevels'
@@ -257,7 +258,13 @@ export function EditorHUD() {
     if (!level) { alert('Kein Level ausgewählt!'); return }
     setActivePlayLevel(level)
     setPlaytesting(true)
+    useDemoStore.getState().startRecording()
     setPhase('playing')
+  }
+
+  const handleViewDemos = () => {
+    useDemoStore.getState().setViewerReturnTo('editor')
+    setPhase('demo_viewer')
   }
 
   const handleCanvasClick = () => {
@@ -334,6 +341,8 @@ export function EditorHUD() {
         >
           ▶ TESTEN
         </button>
+
+        <button style={btn()} onClick={handleViewDemos}>▶ Demos</button>
 
         <div style={{ width: 1, height: 28, background: C.border }} />
 

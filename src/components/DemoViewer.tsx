@@ -91,7 +91,7 @@ const SPEEDS = [0.25, 0.5, 1, 2, 4]
 
 export function DemoViewer() {
   const setPhase = useGameStore((s) => s.setPhase)
-  const { demos, deleteDemo, importDemo } = useDemoStore()
+  const { demos, deleteDemo, importDemo, viewerReturnTo } = useDemoStore()
 
   const [selected, setSelected] = useState<Demo | null>(null)
   const [playing,  setPlaying]  = useState(false)
@@ -202,14 +202,14 @@ export function DemoViewer() {
         padding: '14px 20px', borderBottom: '1px solid #0e1825', flexShrink: 0,
       }}>
         <button
-          onClick={() => setPhase('menu')}
+          onClick={() => setPhase(viewerReturnTo)}
           style={{
             padding: '6px 14px', background: 'transparent',
             border: '1px solid #1a2a3a', color: '#445566',
             fontSize: 10, letterSpacing: 2, cursor: 'pointer', fontFamily: 'inherit',
           }}
         >
-          ← ZURÜCK
+          {viewerReturnTo === 'editor' ? '← EDITOR' : '← ZURÜCK'}
         </button>
         <div style={{ color: '#00aaff', fontSize: 18, fontWeight: 'bold', letterSpacing: 6, textShadow: '0 0 12px #00aaff66' }}>
           DEMOS

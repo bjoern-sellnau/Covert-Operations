@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { entityStore } from './entityStore'
 import { useDemoStore, type DemoFrame } from '../store/demoStore'
@@ -9,6 +9,16 @@ export function DemoRecorder() {
   const frames     = useRef<DemoFrame[]>([])
   const startTime  = useRef(0)
   const wasActive  = useRef(false)
+
+  // Save any active recording when the Game component unmounts (e.g. back to editor)
+  useEffect(() => {
+    return () => {
+      if (wasActive.current) {
+        const { finishRecording } = useDemoStore.getState()
+        finishRecording(frames.current, entityStore.score, entityStore.wave, performance.now() - startTime.current)
+      }
+    }
+  }, [])
 
   useFrame(() => {
     const { isRecording, finishRecording } = useDemoStore.getState()

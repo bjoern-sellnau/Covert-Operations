@@ -23,17 +23,20 @@ export interface Demo {
 }
 
 interface DemoState {
-  isRecording: boolean
-  demos:       Demo[]
-  startRecording:  () => void
-  finishRecording: (frames: DemoFrame[], score: number, wave: number, duration: number) => void
-  deleteDemo:      (id: string) => void
-  importDemo:      (demo: Demo) => void
+  isRecording:      boolean
+  viewerReturnTo:   'menu' | 'editor'
+  demos:            Demo[]
+  startRecording:      () => void
+  finishRecording:     (frames: DemoFrame[], score: number, wave: number, duration: number) => void
+  setViewerReturnTo:   (to: 'menu' | 'editor') => void
+  deleteDemo:          (id: string) => void
+  importDemo:          (demo: Demo) => void
 }
 
 export const useDemoStore = create<DemoState>()((set, get) => ({
-  isRecording: false,
-  demos:       [],
+  isRecording:    false,
+  viewerReturnTo: 'menu',
+  demos:          [],
 
   startRecording: () => set({ isRecording: true }),
 
@@ -51,6 +54,8 @@ export const useDemoStore = create<DemoState>()((set, get) => ({
     }
     set({ isRecording: false, demos: [demo, ...get().demos].slice(0, 20) })
   },
+
+  setViewerReturnTo: (to) => set({ viewerReturnTo: to }),
 
   deleteDemo: (id) => set({ demos: get().demos.filter(d => d.id !== id) }),
 
