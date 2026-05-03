@@ -100,7 +100,7 @@ export function MainMenu() {
             boxShadow: '0 0 20px #00aaff44, inset 0 0 20px #00aaff11',
             transition: 'all 0.15s',
           }}
-          onClick={() => setPhase('shop')}
+          onClick={() => setPhase('character_select')}
           onMouseEnter={(e) => {
             e.currentTarget.style.background = 'linear-gradient(135deg, #005599 0%, #003366 100%)'
             e.currentTarget.style.color = '#fff'

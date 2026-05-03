@@ -3,6 +3,8 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { entityStore } from './entityStore'
 import { PLAYER_MAX_HEALTH } from './types'
+import { SKIN_CONFIGS } from './skins'
+import { useSettingsStore } from '../store/settingsStore'
 
 interface Props { player2?: boolean }
 
@@ -16,20 +18,25 @@ export function PlayerMesh({ player2 = false }: Props) {
   const walkPhase    = useRef(0)
   const prevPos      = useRef({ x: 0, y: 0 })
 
-  const skinMat    = useMemo(() => new THREE.MeshStandardMaterial({ color: '#d4956a', roughness: 0.7, metalness: 0.0 }), [])
+  const playerSkin = useSettingsStore((s) => s.playerSkin)
+  const sc         = player2 ? null : SKIN_CONFIGS[playerSkin]
+
+  const skinMat    = useMemo(() => new THREE.MeshStandardMaterial({ color: sc?.skin ?? '#d4956a', roughness: 0.7, metalness: 0.0 }), [sc?.skin])
   const uniformMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: player2 ? '#cc3300' : '#1a3a6e',
-    emissive: player2 ? '#aa2200' : '#001144',
-    emissiveIntensity: 0.3, roughness: 0.55, metalness: 0.2,
-  }), [player2])
+    color:             player2 ? '#cc3300' : (sc?.uniform ?? '#1a3a6e'),
+    emissive:          player2 ? '#aa2200' : (sc?.uniformEmissive ?? '#001144'),
+    emissiveIntensity: player2 ? 0.3       : (sc?.uniformEmissiveIntensity ?? 0.3),
+    roughness: 0.55, metalness: player2 ? 0.2 : (sc?.metalness ?? 0.2),
+  }), [player2, sc?.uniform, sc?.uniformEmissive, sc?.uniformEmissiveIntensity, sc?.metalness])
   const helmetMat  = useMemo(() => new THREE.MeshStandardMaterial({
-    color: player2 ? '#ff6600' : '#00aaff',
-    emissive: player2 ? '#ff6600' : '#00aaff',
-    emissiveIntensity: 0.55, roughness: 0.3, metalness: 0.7,
-  }), [player2])
+    color:             player2 ? '#ff6600' : (sc?.helmet ?? '#00aaff'),
+    emissive:          player2 ? '#ff6600' : (sc?.helmetEmissive ?? '#00aaff'),
+    emissiveIntensity: player2 ? 0.55      : (sc?.helmetEmissiveIntensity ?? 0.55),
+    roughness: 0.3, metalness: player2 ? 0.7 : (sc?.metalness ?? 0.7),
+  }), [player2, sc?.helmet, sc?.helmetEmissive, sc?.helmetEmissiveIntensity, sc?.metalness])
   const pantsMat   = useMemo(() => new THREE.MeshStandardMaterial({
-    color: player2 ? '#7a1a00' : '#0d1f3c', roughness: 0.8, metalness: 0.1,
-  }), [player2])
+    color: player2 ? '#7a1a00' : (sc?.pants ?? '#0d1f3c'), roughness: 0.8, metalness: 0.1,
+  }), [player2, sc?.pants])
   const weaponMat  = useMemo(() => new THREE.MeshStandardMaterial({
     color: '#1a1a1a', emissive: '#111111', emissiveIntensity: 0.2, roughness: 0.2, metalness: 0.9,
   }), [])
@@ -133,24 +140,23 @@ export function PlayerMesh({ player2 = false }: Props) {
       helmetMat.emissiveIntensity = 0.9
     } else if (p.berserkerTimer > 0) {
       const pulse = (Math.sin(now * 10) + 1) * 0.5
-      uniformMat.color.setHex(player2 ? 0xcc3300 : 0x1a3a6e)
+      uniformMat.color.set(player2 ? '#cc3300' : (sc?.uniform ?? '#1a3a6e'))
       uniformMat.emissive.setRGB(1, 0.35, 0)
       uniformMat.emissiveIntensity = 0.6 + pulse * 1.2
       helmetMat.emissive.setRGB(1, 0.4, 0)
       helmetMat.emissiveIntensity = 0.8 + pulse
     } else if (p.health < 30) {
-      // restore original colors
-      uniformMat.color.setHex(player2 ? 0xcc3300 : 0x1a3a6e)
-      helmetMat.color.setHex(player2 ? 0xff6600 : 0x00aaff)
-      helmetMat.emissive.setHex(player2 ? 0xff6600 : 0x00aaff)
-      helmetMat.emissiveIntensity = 0.55
-      uniformMat.emissiveIntensity = 0.3 + ((Math.sin(now * 8) + 1) * 0.5) * 0.7
+      uniformMat.color.set(player2 ? '#cc3300' : (sc?.uniform ?? '#1a3a6e'))
+      helmetMat.color.set(player2 ? '#ff6600' : (sc?.helmet ?? '#00aaff'))
+      helmetMat.emissive.set(player2 ? '#ff6600' : (sc?.helmetEmissive ?? '#00aaff'))
+      helmetMat.emissiveIntensity = sc?.helmetEmissiveIntensity ?? 0.55
+      uniformMat.emissiveIntensity = (sc?.uniformEmissiveIntensity ?? 0.3) + ((Math.sin(now * 8) + 1) * 0.5) * 0.7
     } else {
-      uniformMat.color.setHex(player2 ? 0xcc3300 : 0x1a3a6e)
-      helmetMat.color.setHex(player2 ? 0xff6600 : 0x00aaff)
-      helmetMat.emissive.setHex(player2 ? 0xff6600 : 0x00aaff)
-      helmetMat.emissiveIntensity = 0.55
-      uniformMat.emissiveIntensity = 0.3
+      uniformMat.color.set(player2 ? '#cc3300' : (sc?.uniform ?? '#1a3a6e'))
+      helmetMat.color.set(player2 ? '#ff6600' : (sc?.helmet ?? '#00aaff'))
+      helmetMat.emissive.set(player2 ? '#ff6600' : (sc?.helmetEmissive ?? '#00aaff'))
+      helmetMat.emissiveIntensity = sc?.helmetEmissiveIntensity ?? 0.55
+      uniformMat.emissiveIntensity = sc?.uniformEmissiveIntensity ?? 0.3
     }
 
     // Muzzle flash
