@@ -583,6 +583,34 @@ export function playKillMulti(tier = 0, volume = 1) {
   })
 }
 
+// ── Kill combo jingle — tier 0..3 = double/multi/ultra/monster kill ───────────
+export function playKillCombo(tier = 0, volume = 1) {
+  const ac = ctx()
+  const out = masterGain(volume * 0.4)
+  const t = ac.currentTime
+
+  const configs: Array<{ notes: number[]; wave: OscillatorType; gap: number; dur: number }> = [
+    // tier 0 — DOUBLE KILL: two punchy staccato hits
+    { notes: [440, 554],                      wave: 'square',   gap: 0.07,  dur: 0.08 },
+    // tier 1 — MULTI KILL: three-note punchy rising
+    { notes: [370, 494, 622],                 wave: 'square',   gap: 0.06,  dur: 0.09 },
+    // tier 2 — ULTRA KILL: four notes, sawtooth, slightly brassy
+    { notes: [415, 523, 659, 831],            wave: 'sawtooth', gap: 0.05,  dur: 0.09 },
+    // tier 3 — MONSTER KILL: chaotic five-note fanfare, higher + faster
+    { notes: [698, 831, 988, 1175, 1397],     wave: 'sawtooth', gap: 0.038, dur: 0.085 },
+  ]
+
+  const { notes, wave, gap, dur } = configs[Math.min(tier, configs.length - 1)]
+  notes.forEach((freq, i) => {
+    const o = osc(freq, wave)
+    const g = ac.createGain()
+    o.connect(g); g.connect(out)
+    const s = t + i * gap
+    g.gain.setValueAtTime(0.35, s); g.gain.exponentialRampToValueAtTime(0.001, s + dur)
+    o.start(s); o.stop(s + dur + 0.01)
+  })
+}
+
 // ── Enemy fire (small short zap for enemy shooting) ───────────────────────────
 export function playEnemyFire(volume = 1) {
   const ac = ctx()

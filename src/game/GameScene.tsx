@@ -10,7 +10,7 @@ import {
   WEAPON_SOUNDS,
   playExplosionSmall, playExplosionLarge,
   playFlakBounce, playBananaBounce, playRicochet,
-  playHit, playDeath, playKillMulti, playEnemyFire,
+  playHit, playDeath, playKillMulti, playKillCombo, playEnemyFire,
 } from './sounds'
 import { useGameStore } from '../store/gameStore'
 import { useNetStore } from '../net/netStore'
@@ -2021,8 +2021,11 @@ export function GameScene() {
           : streakTier === 1 ? '⚡ RAMPAGE'
           : streakTier === 0 ? '⚡ KILLING SPREE'
           : null
-        const msg = streakMsg ?? comboMsg
-        if (msg) { playKillMulti(streakTier >= 0 ? streakTier : 0); setWaveMessage(msg); setTimeout(() => setWaveMessage(''), 1800) }
+        if (streakMsg) { playKillMulti(streakTier); setWaveMessage(streakMsg); setTimeout(() => setWaveMessage(''), 1800) }
+        else if (comboMsg) {
+          const comboTier = es.killComboCount >= 5 ? 3 : es.killComboCount === 4 ? 2 : es.killComboCount === 3 ? 1 : 0
+          playKillCombo(comboTier); setWaveMessage(comboMsg); setTimeout(() => setWaveMessage(''), 1800)
+        }
       }
 
       if (isHardlineMode) {
