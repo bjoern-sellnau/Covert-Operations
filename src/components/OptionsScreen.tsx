@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useGameStore } from '../store/gameStore'
 import { useSettingsStore, DIFFICULTY_LABELS, DIFFICULTY_MULTS } from '../store/settingsStore'
 import type { Difficulty, GraphicsQuality } from '../store/settingsStore'
 import { useLoadoutStore } from '../game/loadoutStore'
-import { previewTrack, stopMusic } from '../game/music'
+import { previewTrack, stopMusic, playCustomTrack } from '../game/music'
+import { useCustomTracksStore } from '../store/customTracksStore'
 
 type PreviewId = 'game1' | 'game2' | 'game3' | 'game4' | 'game5' | 'game6' | 'game7' | 'game8' | 'game9' | 'game10' | 'game11' | 'game12' | 'game13' | 'game14' | 'game15' | 'game16' | 'game17' | 'game18' | 'game19' | 'game20' | 'game21' | 'game22' | 'game23' | 'game24' | 'game25' | 'game26' | 'game27' | 'game28' | 'game29' | 'game30' | 'game31'
 
@@ -45,6 +46,7 @@ export function OptionsScreen() {
   const setPhase = useGameStore((s) => s.setPhase)
   const { bloodIntensity, setBloodIntensity, mobileControls, setMobileControls,
           musicEnabled, setMusicEnabled, musicTrack, setMusicTrack,
+          customTrackId, setCustomTrackId,
           difficulty, setDifficulty,
           graphicsQuality, setGraphicsQuality,
           charScale, setCharScale,
@@ -52,9 +54,23 @@ export function OptionsScreen() {
           showEnemyMarkers, setShowEnemyMarkers,
           showMinimap, setShowMinimap } = useSettingsStore()
   const { credits, setCredits } = useLoadoutStore()
+  const { tracks: customTracks, addTrack, removeTrack } = useCustomTracksStore()
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [view, setView]           = useState<'main' | 'music'>('main')
   const [previewing, setPreviewing] = useState<string | null>(null)
+
+  function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const url  = URL.createObjectURL(file)
+    const name = file.name.replace(/\.[^.]+$/, '').slice(0, 32)
+    const id   = addTrack(name, url)
+    setMusicTrack('custom')
+    setCustomTrackId(id)
+    playCustomTrack(url)
+    e.target.value = ''
+  }
 
   function handlePreview(val: PreviewId) {
     if (previewing === val) { stopMusic(); setPreviewing(null); return }
@@ -93,9 +109,10 @@ export function OptionsScreen() {
     fontFamily: "'Courier New', monospace", textTransform: 'uppercase', transition: 'all 0.12s',
   }
 
-  const currentTrack = tracks.find(([id]) => id === musicTrack)
-  const trackLabel   = musicTrack === 'auto' ? 'AUTO' : (currentTrack?.[1] ?? '—')
-  const trackColor   = currentTrack?.[2] ?? '#ffaa00'
+  const currentTrack   = tracks.find(([id]) => id === musicTrack)
+  const activeCustom   = musicTrack === 'custom' ? customTracks.find((t) => t.id === customTrackId) : null
+  const trackLabel     = musicTrack === 'auto' ? 'AUTO' : musicTrack === 'custom' ? (activeCustom?.name ?? 'EIGENER TRACK') : (currentTrack?.[1] ?? '—')
+  const trackColor     = musicTrack === 'custom' ? '#aaffcc' : (currentTrack?.[2] ?? '#ffaa00')
 
   // ── Music sub-screen ─────────────────────────────────────────────────────────
   if (view === 'music') {
@@ -106,12 +123,64 @@ export function OptionsScreen() {
         </div>
         <div style={{ color: '#445566', fontSize: 10, letterSpacing: 4, marginBottom: 20 }}>TRACK AUSWÄHLEN</div>
 
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="audio/*"
+          style={{ display: 'none' }}
+          onChange={handleImport}
+        />
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: 'min(92vw, 480px)', paddingBottom: 24 }}>
           {/* AUTO */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <button style={tog(musicTrack === 'auto', '#ffaa00')} onClick={() => setMusicTrack('auto')}>AUTO</button>
             <span style={{ color: '#667788', fontSize: 9, letterSpacing: 1 }}>Jeder Level hat seinen eigenen Track</span>
           </div>
+
+          {/* Custom tracks */}
+          <div style={{ color: '#445566', fontSize: 9, letterSpacing: 4, marginTop: 6 }}>EIGENE TRACKS</div>
+          {customTracks.map((ct) => (
+            <div key={ct.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <button
+                style={tog(musicTrack === 'custom' && customTrackId === ct.id, '#aaffcc')}
+                onClick={() => {
+                  setMusicTrack('custom')
+                  setCustomTrackId(ct.id)
+                  playCustomTrack(ct.url)
+                }}
+              >
+                {ct.name}
+              </button>
+              <button
+                onClick={() => {
+                  removeTrack(ct.id)
+                  if (customTrackId === ct.id) setMusicTrack('auto')
+                }}
+                style={{
+                  background: 'transparent', border: '1px solid #3a1520', color: '#884444',
+                  fontSize: 10, padding: '5px 10px', cursor: 'pointer', fontFamily: 'inherit',
+                  transition: 'all 0.12s', flexShrink: 0,
+                }}
+              >✕</button>
+            </div>
+          ))}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button
+              style={{
+                background: 'transparent', border: '1px dashed #2a4a35', color: '#44aa66',
+                fontSize: 10, letterSpacing: 2, padding: '7px 14px', cursor: 'pointer',
+                fontFamily: 'inherit', transition: 'all 0.12s',
+              }}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              + DATEI IMPORTIEREN
+            </button>
+            <span style={{ color: '#445566', fontSize: 9, letterSpacing: 1 }}>MP3, WAV, OGG, WEBM</span>
+          </div>
+
+          <div style={{ borderBottom: '1px solid #1a2535', margin: '4px 0' }} />
+          <div style={{ color: '#445566', fontSize: 9, letterSpacing: 4 }}>EINGEBAUTE TRACKS</div>
 
           {/* Tracks */}
           {tracks.map(([val, lbl, col, desc]) => (

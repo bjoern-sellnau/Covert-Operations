@@ -4,7 +4,8 @@ import { useNetStore } from './net/netStore'
 import { useSettingsStore } from './store/settingsStore'
 import { useMutatorsStore } from './store/mutatorsStore'
 import { socket } from './net/socket'
-import { startMenuMusic, startGameMusic, startGameMusic2, startGameMusic3, startGameMusic4, startGameMusic5, startGameMusic6, startGameMusic7, startGameMusic8, startGameMusic9, startGameMusic10, startGameMusic11, startGameMusic12, startGameMusic13, startGameMusic14, startGameMusic15, startGameMusic16, startGameMusic17, startGameMusic18, startGameMusic19, startGameMusic20, startGameMusic21, startGameMusic22, startGameMusic23, startGameMusic24, startGameMusic25, startGameMusic26, startGameMusic27, startGameMusic28, startGameMusic29, startGameMusic30, startGameMusic31, startSkydiveMusic, stopMusic } from './game/music'
+import { startMenuMusic, startGameMusic, startGameMusic2, startGameMusic3, startGameMusic4, startGameMusic5, startGameMusic6, startGameMusic7, startGameMusic8, startGameMusic9, startGameMusic10, startGameMusic11, startGameMusic12, startGameMusic13, startGameMusic14, startGameMusic15, startGameMusic16, startGameMusic17, startGameMusic18, startGameMusic19, startGameMusic20, startGameMusic21, startGameMusic22, startGameMusic23, startGameMusic24, startGameMusic25, startGameMusic26, startGameMusic27, startGameMusic28, startGameMusic29, startGameMusic30, startGameMusic31, startSkydiveMusic, stopMusic, playCustomTrack } from './game/music'
+import { useCustomTracksStore } from './store/customTracksStore'
 import { Game } from './game/Game'
 import { HUD } from './components/HUD'
 import { MainMenu } from './components/MainMenu'
@@ -30,9 +31,11 @@ export function App() {
   const cameraMode     = useGameStore((s) => s.cameraMode)
   const bigExplosion   = useGameStore((s) => s.bigExplosion)
   const netRole        = useNetStore((s) => s.role)
-  const mobileControls  = useSettingsStore((s) => s.mobileControls)
-  const musicEnabled    = useSettingsStore((s) => s.musicEnabled)
-  const btVisualEffect  = useMutatorsStore((s) => s.btVisualEffect)
+  const mobileControls   = useSettingsStore((s) => s.mobileControls)
+  const musicEnabled     = useSettingsStore((s) => s.musicEnabled)
+  const customTrackId    = useSettingsStore((s) => s.customTrackId)
+  const btVisualEffect   = useMutatorsStore((s) => s.btVisualEffect)
+  const customTracks     = useCustomTracksStore((s) => s.tracks)
   const visualBT        = isBulletTime && btVisualEffect
 
   const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement)
@@ -97,8 +100,13 @@ export function App() {
     else if (musicTrack === 'game29') startGameMusic29()
     else if (musicTrack === 'game30') startGameMusic30()
     else if (musicTrack === 'game31') startGameMusic31()
+    else if (musicTrack === 'custom') {
+      const url = customTracks.find((t) => t.id === customTrackId)?.url
+      if (url) playCustomTrack(url)
+      else startGameMusic()
+    }
     else startGameMusic()
-  }, [phase, musicEnabled, musicTrack])
+  }, [phase, musicEnabled, musicTrack, customTrackId, customTracks])
 
   // ── Persistent socket event listeners (survive phase transitions) ────────
   useEffect(() => {

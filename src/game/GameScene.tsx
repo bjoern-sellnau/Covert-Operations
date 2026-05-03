@@ -485,12 +485,24 @@ export function GameScene() {
 
   // ── FPS pointer lock ──────────────────────────────────────────────────────
   useEffect(() => {
+    let lastX = -1
     const handler = (e: MouseEvent) => {
-      if (cameraModeRef.current !== 'fps' || !document.pointerLockElement) return
-      entityStore.player.angle += e.movementX * FPS_SENS
+      if (cameraModeRef.current !== 'fps') return
+      if (document.pointerLockElement) {
+        entityStore.player.angle += e.movementX * FPS_SENS
+      } else {
+        // Fallback for iPad/Safari where pointer lock is unavailable
+        if (lastX >= 0) entityStore.player.angle += (e.clientX - lastX) * FPS_SENS
+        lastX = e.clientX
+      }
     }
+    const resetLastX = () => { lastX = -1 }
     window.addEventListener('mousemove', handler)
-    return () => window.removeEventListener('mousemove', handler)
+    window.addEventListener('mousedown', resetLastX)
+    return () => {
+      window.removeEventListener('mousemove', handler)
+      window.removeEventListener('mousedown', resetLastX)
+    }
   }, [])
 
   // ── Mousewheel: cycle weapon slots ───────────────────────────────────────

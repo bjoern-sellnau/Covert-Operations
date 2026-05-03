@@ -53,48 +53,48 @@
 - [x] **Figuren sind falsch rotiert** — Player/Enemy-Meshes drehen sich in falsche Richtung
 - [x] **Weapon-HUD ist manchmal abgeschnitten** — Portrait: linke Seite vertikal, Landscape: unten horizontal (Safe-Area)
 - [x] Blut Ultra: zu wenige Partikel (45 → 80)
-- [ ] **Level-Größe** — größere Arena, eventuell Tile-basiert oder Fog of War
+- [x] **Level-Größe** — größere Arena, eventuell Tile-basiert oder Fog of War
 
 ---
 
 ## Bullet Ballet / Gun Kata
 
-- [ ] **Bullet Ballet in Mutatoren konfigurierbar machen**
-  - [ ] Dauer einstellbar
-  - [ ] Kugelanzahl einstellbar
-  - [ ] Geschwindigkeit einstellbar
-- [ ] **Neue Fähigkeit: Gun Kata** (inspiriert von Equilibrium)
-  - [ ] Ebenfalls in Slowmo
-  - [ ] Gleiches Konfigurations-Setup wie Bullet Ballet
+- [x] **Bullet Ballet in Mutatoren konfigurierbar machen**
+  - [x] Dauer einstellbar
+  - [x] Kugelanzahl einstellbar
+  - [x] Geschwindigkeit einstellbar
+- [x] **Neue Fähigkeit: Gun Kata** (inspiriert von Equilibrium)
+  - [x] Ebenfalls in Slowmo
+  - [x] Gleiches Konfigurations-Setup wie Bullet Ballet
 
 ---
 
 ## Sound
 
-- [ ] **Kill-Multiplikator-Sounds anpassen** — alle klingen gleich, verschiedene Töne pro Multiplikator-Stufe
+- [x] **Kill-Multiplikator-Sounds anpassen** — alle klingen gleich, verschiedene Töne pro Multiplikator-Stufe
 
 ---
 
 ## Menü & Navigation
 
-- [ ] **Menü-Reihenfolge anpassen:**
+- [x] **Menü-Reihenfolge anpassen:**
   1. Charakter-Auswahl (Player-Skin)
   2. Mutatoren
   3. Shop (nur bei aktiven Modi)
   4. Hinweise / Briefing
-- [ ] **Player-Charakter-Auswahl** (mehrere Skins):
-  - [ ] Doom Guy
-  - [ ] Halo (Master Chief)
-  - [ ] Unreal Tournament
-  - [ ] Palantir Suit — Orange/Silber (default)
-  - [ ] Palantir Stealth Suit — Grau mit orangenen Akzenten
+- [x] **Player-Charakter-Auswahl** (mehrere Skins):
+  - [x] Doom Guy
+  - [x] Halo (Master Chief)
+  - [x] Unreal Tournament
+  - [x] Palantir Suit — Orange/Silber (default)
+  - [x] Palantir Stealth Suit — Grau mit orangenen Akzenten
 
 ---
 
 ## Steuerung
 
-- [ ] **iPad mit Magic Keyboard Case (kein Mobile-Mode)**
-  - [ ] First-Person-Modus: Richtungswechsel per Trackpad (wie auf dem Mac)
+- [x] **iPad mit Magic Keyboard Case (kein Mobile-Mode)**
+  - [x] First-Person-Modus: Richtungswechsel per Trackpad (wie auf dem Mac)
 
 ---
 

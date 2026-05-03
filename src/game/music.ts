@@ -486,7 +486,43 @@ export function startGameMusic4() {
 
 export function stopMusic() {
   _track = null
+  stopCustomTrack()
   clearAudio()
+}
+
+// ── Custom track (user-imported audio file) ───────────────────────────────────
+
+let _customEl:  HTMLAudioElement | null = null
+let _customSrc: MediaElementAudioSourceNode | null = null
+
+export function playCustomTrack(url: string) {
+  if (_customEl?.getAttribute('data-url') === url) return
+  stopCustomTrack()
+  clearAudio()
+  const c = ctx()
+  const el = new Audio(url)
+  el.loop = true
+  el.setAttribute('data-url', url)
+  const src = c.createMediaElementSource(el)
+  src.connect(master())
+  master().gain.cancelScheduledValues(c.currentTime)
+  master().gain.setValueAtTime(0, c.currentTime)
+  master().gain.linearRampToValueAtTime(0.4, c.currentTime + 1.5)
+  el.play().catch(() => {})
+  _customEl  = el
+  _customSrc = src
+}
+
+function stopCustomTrack() {
+  if (_customEl) {
+    _customEl.pause()
+    _customEl.removeAttribute('data-url')
+    _customEl = null
+  }
+  if (_customSrc) {
+    try { _customSrc.disconnect() } catch { /**/ }
+    _customSrc = null
+  }
 }
 
 // ── Game track 5 — Action Rock (E minor, 120 BPM) ────────────────────────────

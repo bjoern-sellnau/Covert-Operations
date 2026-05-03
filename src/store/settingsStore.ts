@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { SkinId } from '../game/skins'
 
-export type MusicTrack = 'auto' | 'game1' | 'game2' | 'game3' | 'game4' | 'game5' | 'game6' | 'game7' | 'game8' | 'game9' | 'game10' | 'game11' | 'game12' | 'game13' | 'game14' | 'game15' | 'game16' | 'game17' | 'game18' | 'game19' | 'game20' | 'game21' | 'game22' | 'game23' | 'game24' | 'game25' | 'game26' | 'game27' | 'game28' | 'game29' | 'game30' | 'game31'
+export type MusicTrack = 'auto' | 'custom' | 'game1' | 'game2' | 'game3' | 'game4' | 'game5' | 'game6' | 'game7' | 'game8' | 'game9' | 'game10' | 'game11' | 'game12' | 'game13' | 'game14' | 'game15' | 'game16' | 'game17' | 'game18' | 'game19' | 'game20' | 'game21' | 'game22' | 'game23' | 'game24' | 'game25' | 'game26' | 'game27' | 'game28' | 'game29' | 'game30' | 'game31'
 export type Difficulty = 'ultra_easy' | 'very_easy' | 'easy' | 'normal' | 'hard' | 'hardcore' | 'nightmare'
 export type GraphicsQuality = 'low' | 'medium' | 'high'
 
@@ -41,7 +41,9 @@ interface SettingsStore {
   showEnemyMarkers: boolean  // show off-screen enemy direction arrows
   showMinimap: boolean       // show minimap overlay
   playerSkin: SkinId
+  customTrackId: string           // id from customTracksStore when musicTrack === 'custom'
   setPlayerSkin: (v: SkinId) => void
+  setCustomTrackId: (v: string) => void
   setBloodIntensity: (v: 0 | 1 | 2 | 3) => void
   setMobileControls: (v: boolean) => void
   setMusicEnabled: (v: boolean) => void
@@ -72,7 +74,9 @@ export const useSettingsStore = create<SettingsStore>()(
       showEnemyMarkers:    true,
       showMinimap:         false,
       playerSkin:          'palantir' as SkinId,
+      customTrackId:       '',
       setPlayerSkin:       (playerSkin) => set({ playerSkin }),
+      setCustomTrackId:    (customTrackId) => set({ customTrackId }),
       setBloodIntensity:  (bloodIntensity)  => set({ bloodIntensity }),
       setMobileControls:  (mobileControls)  => set({ mobileControls }),
       setMusicEnabled:    (musicEnabled)    => set({ musicEnabled }),
