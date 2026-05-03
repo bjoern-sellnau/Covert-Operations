@@ -96,18 +96,18 @@ function RecButton() {
       style={{
         display: 'flex', alignItems: 'center', gap: 4,
         cursor: 'pointer', userSelect: 'none',
-        opacity: isRecording ? 1 : 0.45,
+        opacity: 1,
         transition: 'opacity 0.15s',
       }}
       title={isRecording ? 'Aufnahme stoppen' : 'Demo aufnehmen'}
     >
       <div style={{
         width: 8, height: 8, borderRadius: '50%',
-        background: isRecording ? (pulse ? '#ff2200' : '#aa1100') : '#334455',
+        background: isRecording ? (pulse ? '#ff2200' : '#aa1100') : '#556677',
         boxShadow: isRecording ? `0 0 6px ${pulse ? '#ff2200' : '#660000'}` : 'none',
         transition: 'all 0.3s',
       }} />
-      <span style={{ color: isRecording ? '#ff4422' : '#334455', fontSize: 9, letterSpacing: 2 }}>
+      <span style={{ color: isRecording ? '#ff4422' : '#7799aa', fontSize: 9, letterSpacing: 2 }}>
         {isRecording ? 'REC' : 'REC'}
       </span>
     </div>
@@ -146,18 +146,18 @@ function AudioRecButton() {
       style={{
         display: 'flex', alignItems: 'center', gap: 4,
         cursor: 'pointer', userSelect: 'none',
-        opacity: recording ? 1 : 0.45,
+        opacity: 1,
         transition: 'opacity 0.15s',
       }}
       title={recording ? 'Audio-Aufnahme stoppen & herunterladen' : 'Audio aufnehmen'}
     >
       <div style={{
         width: 8, height: 8, borderRadius: 2,
-        background: recording ? (pulse ? '#ff8800' : '#aa5500') : '#334455',
+        background: recording ? (pulse ? '#ff8800' : '#aa5500') : '#556677',
         boxShadow: recording ? `0 0 6px ${pulse ? '#ff8800' : '#663300'}` : 'none',
         transition: 'all 0.3s',
       }} />
-      <span style={{ color: recording ? '#ff9933' : '#334455', fontSize: 9, letterSpacing: 2 }}>
+      <span style={{ color: recording ? '#ff9933' : '#7799aa', fontSize: 9, letterSpacing: 2 }}>
         AUD
       </span>
     </div>

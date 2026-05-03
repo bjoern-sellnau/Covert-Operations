@@ -34,7 +34,6 @@ import {
   DIVE_SPEED, DIVE_DURATION, DIVE_COOLDOWN,
   SPIN_COOLDOWN, SPIN_FIRE_RATE,
   GRENADE_SPEED, GRENADE_FUSE, GRENADE_BOUNCE, GRENADE_RADIUS, GRENADE_DAMAGE,
-  MAX_BOUNCES,
   VERNICHTER_SPEED, VERNICHTER_RADIUS, VERNICHTER_DAMAGE,
   LASER_RANGE, LASER_WIDTH,
   ION_DELAY, ION_BEAM_DURATION, ION_RADIUS,
@@ -1065,7 +1064,10 @@ export function GameScene() {
     const mutBounceCount   = shootMuts.bulletBounce
       ? (shootMuts.bulletBounceCount === 0 ? 999 : shootMuts.bulletBounceCount)
       : 0
-    const bulletMaxBounces = Math.min(weaponCfg.maxBounces ?? MAX_BOUNCES, mutBounceCount === 999 ? 999 : mutBounceCount)
+    // Weapon-native bounces (e.g. Flak: 3, Banana: 5) apply regardless of mutator;
+    // mutator can add more bounces on top, but never removes native ones.
+    const nativeBounces    = weaponCfg.maxBounces ?? 0
+    const bulletMaxBounces = mutBounceCount === 999 ? 999 : Math.max(nativeBounces, mutBounceCount)
 
     // ── Player 2 — local co-op (skipped in net mode; P2 driven by network) ───
     if (netRole !== 'offline') {

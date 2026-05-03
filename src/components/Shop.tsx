@@ -615,7 +615,6 @@ function IonCard() {
 export function Shop() {
   const [category, setCategory] = useState<Category>('waffen')
   const setPhase    = useGameStore((s) => s.setPhase)
-  const setGameMode = useGameStore((s) => s.setGameMode)
   const gameMode    = useGameStore((s) => s.gameMode)
   const { credits } = useLoadoutStore()
   const gameType    = useMutatorsStore((s) => s.gameType)
@@ -822,7 +821,7 @@ export function Shop() {
         <button
           onClick={() => {
             if (gameMode === 'shooting_range') { setPhase('playing') }
-            else { setGameMode('arena'); setPhase('briefing') }
+            else { setPhase('mutators') }
           }}
           style={{
             background: '#00aaff22', border: '2px solid #00aaff', color: '#00ccff',
