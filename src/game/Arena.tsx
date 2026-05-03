@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import * as THREE from 'three'
 import { ARENA_HALF, WALL_THICKNESS } from './types'
 import { getTextures, cloneForObject } from './textures'
+import { useSettingsStore } from '../store/settingsStore'
 
 const size  = ARENA_HALF * 2
 const wallH = 2.5
@@ -15,6 +16,7 @@ function Wall({
   rotation?: [number, number, number]
   width: number
 }) {
+  const isLowQuality = useSettingsStore((s) => s.graphicsQuality === 'low')
   const material = useMemo(() => {
     const tex = cloneForObject(getTextures().arenaWall, width, wallH, 2)
     return new THREE.MeshStandardMaterial({
@@ -22,13 +24,13 @@ function Wall({
       color:            new THREE.Color('#1e2040'),
       emissive:         new THREE.Color('#080814'),
       emissiveIntensity: 0.25,
-      roughness:        0.85,
-      metalness:        0.15,
+      roughness:        isLowQuality ? 1 : 0.85,
+      metalness:        isLowQuality ? 0 : 0.15,
     })
-  }, [width])
+  }, [width, isLowQuality])
 
   return (
-    <mesh position={position} rotation={rotation ?? [0, 0, 0]} receiveShadow castShadow material={material}>
+    <mesh position={position} rotation={rotation ?? [0, 0, 0]} receiveShadow={!isLowQuality} castShadow={!isLowQuality} material={material}>
       <boxGeometry args={[width, wallH, WALL_THICKNESS]} />
     </mesh>
   )
@@ -52,25 +54,25 @@ function EdgeGlow({
 }
 
 export function Arena() {
+  const isLowQuality = useSettingsStore((s) => s.graphicsQuality === 'low')
   const floorMat = useMemo(() => {
     const tex = getTextures().floor.clone()
     tex.needsUpdate = true
-    // floor covers `size x size` world units; tile every 2 world units
     tex.repeat.set(size / 2, size / 2)
     return new THREE.MeshStandardMaterial({
       map:      tex,
-      roughness: 0.88,
-      metalness: 0.08,
-      color:    new THREE.Color('#ccd0ff'),  // slight blue tint
+      roughness: isLowQuality ? 1 : 0.88,
+      metalness: isLowQuality ? 0 : 0.08,
+      color:    new THREE.Color('#ccd0ff'),
     })
-  }, [])
+  }, [isLowQuality])
 
   const wallY = wallH / 2
 
   return (
     <group>
       {/* Floor */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow material={floorMat}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow={!isLowQuality} material={floorMat}>
         <planeGeometry args={[size, size]} />
       </mesh>
 
@@ -89,9 +91,9 @@ export function Arena() {
       {/* Corner pillars */}
       {([-1, 1] as const).flatMap((sx) =>
         ([-1, 1] as const).map((sz) => (
-          <mesh key={`${sx}${sz}`} position={[sx * ARENA_HALF, wallH / 2, sz * ARENA_HALF]} castShadow>
+          <mesh key={`${sx}${sz}`} position={[sx * ARENA_HALF, wallH / 2, sz * ARENA_HALF]} castShadow={!isLowQuality}>
             <boxGeometry args={[WALL_THICKNESS * 2, wallH + 0.2, WALL_THICKNESS * 2]} />
-            <meshStandardMaterial color="#080816" roughness={0.7} metalness={0.4} />
+            <meshStandardMaterial color="#080816" roughness={0.7} metalness={isLowQuality ? 0 : 0.4} />
           </mesh>
         )),
       )}

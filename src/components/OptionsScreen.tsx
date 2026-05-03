@@ -250,7 +250,7 @@ export function OptionsScreen() {
             })}
           </div>
           <div style={{ color: '#667788', fontSize: 9, letterSpacing: 1 }}>
-            Niedrig: bessere Performance · Hoch: volle Auflösung + Schatten
+            Niedrig: nur globales Licht, keine Schatten, keine Reflexionen · Hoch: volle Beleuchtung + Schatten
           </div>
         </div>
 

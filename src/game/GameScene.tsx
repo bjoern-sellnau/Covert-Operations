@@ -172,6 +172,7 @@ function DebugView() {
 }
 
 function ShootingRangeLayout() {
+  const isLowQuality = useSettingsStore((s) => s.graphicsQuality === 'low')
   return (
     <>
       {/* Backdrop wall */}
@@ -219,7 +220,7 @@ function ShootingRangeLayout() {
           {/* Stand pole */}
           <mesh position={[0, 0.55, 0]} castShadow>
             <cylinderGeometry args={[0.05, 0.05, 1.3, 6]} />
-            <meshStandardMaterial color="#555" metalness={0.8} roughness={0.3} />
+            <meshStandardMaterial color="#555" metalness={isLowQuality ? 0 : 0.8} roughness={0.3} />
           </mesh>
           {/* Base */}
           <mesh position={[0, -0.06, 0]} castShadow>
@@ -2192,11 +2193,11 @@ export function GameScene() {
       <group ref={fpsWeaponRef} visible={false}>
         <mesh position={[0, -0.04, 0.1]} rotation={[0.15, 0, 0]}>
           <boxGeometry args={[0.09, 0.09, 0.26]} />
-          <meshStandardMaterial color="#1a3a6e" roughness={0.55} metalness={0.2} />
+          <meshStandardMaterial color="#1a3a6e" roughness={0.55} metalness={isLowQuality ? 0 : 0.2} />
         </mesh>
         <mesh position={[0, -0.01, -0.1]}>
           <boxGeometry args={[0.11, 0.08, 0.42]} />
-          <meshStandardMaterial color="#1a1a1a" emissive="#111111" emissiveIntensity={0.2} roughness={0.2} metalness={0.9} />
+          <meshStandardMaterial color="#1a1a1a" emissive="#111111" emissiveIntensity={0.2} roughness={0.2} metalness={isLowQuality ? 0 : 0.9} />
         </mesh>
       </group>
       {bulletIds.map((id) => <BulletMesh key={id} id={id} />)}
@@ -2215,7 +2216,7 @@ export function GameScene() {
             emissive="#ff2200"
             emissiveIntensity={0}
             roughness={0.4}
-            metalness={0.7}
+            metalness={isLowQuality ? 0 : 0.7}
           />
         </mesh>
       ))}
@@ -2228,7 +2229,7 @@ export function GameScene() {
           emissive="#0066ff"
           emissiveIntensity={2}
           roughness={0.1}
-          metalness={0.2}
+          metalness={isLowQuality ? 0 : 0.2}
           transparent
           opacity={0.9}
         />
@@ -2244,7 +2245,7 @@ export function GameScene() {
             emissive="#ffaa00"
             emissiveIntensity={0}
             roughness={0.5}
-            metalness={0.1}
+            metalness={isLowQuality ? 0 : 0.1}
           />
         </mesh>
       ))}
@@ -2257,7 +2258,7 @@ export function GameScene() {
           emissive="#ff2200"
           emissiveIntensity={1.5}
           roughness={0.1}
-          metalness={0.3}
+          metalness={isLowQuality ? 0 : 0.3}
           transparent
           opacity={0.92}
         />
