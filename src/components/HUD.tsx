@@ -179,6 +179,7 @@ export function HUD() {
   const inSuddenDeath = useGameStore((s) => s.inSuddenDeath)
   const chaosActive   = useGameStore((s) => s.chaosActive)
   const cameraMode    = useGameStore((s) => s.cameraMode)
+  const p2Active      = useGameStore((s) => s.p2Active)
 
   const { selectedWeapon, selectedAmmo, isAkimbo, ownedWeapons, activeSlot } = useLoadoutStore()
   const showEnemyMarkers = useSettingsStore((s) => s.showEnemyMarkers)
@@ -327,15 +328,17 @@ export function HUD() {
       }}>
         {/* Left: Health + Focus + Maneuver cooldowns */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, minWidth: 200 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            <div style={{ color: '#aaaacc', fontSize: 10, letterSpacing: 2 }}>HEALTH</div>
-            <div style={{ height: 10, background: '#111122', border: '1px solid #334', borderRadius: 2, overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${hpPct}%`, background: hpColor, transition: 'width 0.1s, background 0.3s', boxShadow: `0 0 6px ${hpColor}` }} />
+          {!p2Active && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              <div style={{ color: '#aaaacc', fontSize: 10, letterSpacing: 2 }}>HEALTH</div>
+              <div style={{ height: 10, background: '#111122', border: '1px solid #334', borderRadius: 2, overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${hpPct}%`, background: hpColor, transition: 'width 0.1s, background 0.3s', boxShadow: `0 0 6px ${hpColor}` }} />
+              </div>
+              <div style={{ color: hpColor, fontSize: 11, fontWeight: 'bold' }}>{health} / {PLAYER_MAX_HEALTH}</div>
             </div>
-            <div style={{ color: hpColor, fontSize: 11, fontWeight: 'bold' }}>{health} / {PLAYER_MAX_HEALTH}</div>
-          </div>
+          )}
 
-          {armor > 0 && (
+          {!p2Active && armor > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               <div style={{ color: '#4488ff', fontSize: 10, letterSpacing: 2 }}>RÜSTUNG</div>
               <div style={{ height: 6, background: '#111122', border: '1px solid #224', borderRadius: 2, overflow: 'hidden' }}>
