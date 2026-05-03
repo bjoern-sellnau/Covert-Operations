@@ -552,19 +552,34 @@ export function playBerserkerPickup(volume = 1) {
   snap.start(t + 0.3); snap.stop(t + 0.4)
 }
 
-// ── Kill multiplier jingle (quick ascending notes) ────────────────────────────
-export function playKillMulti(volume = 1) {
+// ── Kill multiplier jingle — tier 0..4 = spree/rampage/dominating/unstoppable/godlike ──
+export function playKillMulti(tier = 0, volume = 1) {
   const ac = ctx()
   const out = masterGain(volume * 0.4)
   const t = ac.currentTime
-  const notes = [523, 659, 784, 1047, 1319]
+
+  // Each tier: distinct pitches, wave type, speed, and note count
+  const configs: Array<{ notes: number[]; wave: OscillatorType; gap: number; dur: number }> = [
+    // tier 0 — KILLING SPREE: simple 3-note major arpeggio
+    { notes: [523, 659, 784],                 wave: 'square',   gap: 0.055, dur: 0.10 },
+    // tier 1 — RAMPAGE: 4-note ascending, faster
+    { notes: [587, 740, 880, 1175],           wave: 'square',   gap: 0.045, dur: 0.09 },
+    // tier 2 — DOMINATING: 5-note with a minor-7th flavour
+    { notes: [622, 784, 932, 1175, 1568],     wave: 'sawtooth', gap: 0.040, dur: 0.08 },
+    // tier 3 — UNSTOPPABLE: 5-note pentatonic, higher octave
+    { notes: [880, 1047, 1319, 1568, 1760],   wave: 'sawtooth', gap: 0.035, dur: 0.08 },
+    // tier 4 — GODLIKE: 6-note full-octave blaze with triangle finish
+    { notes: [1047, 1175, 1319, 1568, 1760, 2093], wave: 'triangle', gap: 0.030, dur: 0.07 },
+  ]
+
+  const { notes, wave, gap, dur } = configs[Math.min(tier, configs.length - 1)]
   notes.forEach((freq, i) => {
-    const o = osc(freq, 'square')
+    const o = osc(freq, wave)
     const g = ac.createGain()
     o.connect(g); g.connect(out)
-    const s = t + i * 0.045
-    g.gain.setValueAtTime(0.3, s); g.gain.exponentialRampToValueAtTime(0.001, s + 0.09)
-    o.start(s); o.stop(s + 0.1)
+    const s = t + i * gap
+    g.gain.setValueAtTime(0.35, s); g.gain.exponentialRampToValueAtTime(0.001, s + dur)
+    o.start(s); o.stop(s + dur + 0.01)
   })
 }
 

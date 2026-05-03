@@ -2009,14 +2009,20 @@ export function GameScene() {
           : es.killComboCount === 3 ? '★ MULTI KILL'
           : es.killComboCount === 2 ? '★ DOUBLE KILL'
           : null
-        const streakMsg = es.killStreak === 25 ? '⚡ GODLIKE'
-          : es.killStreak === 20 ? '⚡ UNSTOPPABLE'
-          : es.killStreak === 15 ? '⚡ DOMINATING'
-          : es.killStreak === 10 ? '⚡ RAMPAGE'
-          : es.killStreak === 5  ? '⚡ KILLING SPREE'
+        const streakTier = es.killStreak === 25 ? 4
+          : es.killStreak === 20 ? 3
+          : es.killStreak === 15 ? 2
+          : es.killStreak === 10 ? 1
+          : es.killStreak === 5  ? 0
+          : -1
+        const streakMsg = streakTier === 4 ? '⚡ GODLIKE'
+          : streakTier === 3 ? '⚡ UNSTOPPABLE'
+          : streakTier === 2 ? '⚡ DOMINATING'
+          : streakTier === 1 ? '⚡ RAMPAGE'
+          : streakTier === 0 ? '⚡ KILLING SPREE'
           : null
         const msg = streakMsg ?? comboMsg
-        if (msg) { playKillMulti(); setWaveMessage(msg); setTimeout(() => setWaveMessage(''), 1800) }
+        if (msg) { playKillMulti(streakTier >= 0 ? streakTier : 0); setWaveMessage(msg); setTimeout(() => setWaveMessage(''), 1800) }
       }
 
       if (isHardlineMode) {
