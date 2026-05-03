@@ -15,7 +15,7 @@ const spawn  = (x: number, z: number): LevelObject =>
   ({ id: id(), type: 'spawn',  x, z, sx: 1, sz: 1, rotY: 0 })
 
 function make(name: string, objects: LevelObject[], gravity: GravityMode = 'normal'): Level {
-  return { id: `preset-lvl-${_seq++}`, name, objects, scriptEntities: [], fogOfWar: false, gravity }
+  return { id: `preset-lvl-${_seq++}`, name, objects, scriptEntities: [], fogOfWar: false, gravity, arenaHalf: 18 }
 }
 
 // ── Schießstand ───────────────────────────────────────────────────────────────

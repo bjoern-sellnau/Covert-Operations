@@ -5,7 +5,7 @@ import { entityStore, spawnParticles } from './entityStore'
 import { useGameStore } from '../store/gameStore'
 import { useEditorStore } from '../editor/editorStore'
 import type { Level } from '../editor/editorStore'
-import type { ScriptAction, DoorEntity, EmitterEntity, PortalEntity } from '../editor/scriptTypes'
+import type { ScriptAction, DoorEntity, EmitterEntity, PortalEntity, ElevatorEntity } from '../editor/scriptTypes'
 import { ENEMY_CONFIGS } from './types'
 import { useSettingsStore, DIFFICULTY_MULTS } from '../store/settingsStore'
 
@@ -15,6 +15,14 @@ interface DoorRuntime {
   entity: DoorEntity
   isOpen: boolean
   animT: number   // 0 = fully closed, 1 = fully open
+}
+
+interface ElevatorRuntime {
+  entity: ElevatorEntity
+  state: 'idle' | 'boarding' | 'traveling' | 'arrived'
+  boardingT: number   // seconds since player stepped on
+  travelT: number     // seconds into travel animation
+  animY: number       // current Y offset for the platform mesh
 }
 
 interface CameraAnim {
@@ -28,19 +36,21 @@ interface CameraAnim {
 }
 
 export const scriptRuntime = {
-  doorRuntimes:   new Map<string, DoorRuntime>(),
-  collectedKeys:  new Set<string>(),
-  firedTriggers:  new Set<string>(),
-  emitterTimers:  new Map<string, number>(),
-  activeEmitters: new Set<string>(),
-  cameraAnim:     null as CameraAnim | null,
-  pendingActions: [] as ScriptAction[],
-  level:          null as Level | null,
-  initialized:    false,
+  doorRuntimes:     new Map<string, DoorRuntime>(),
+  elevatorRuntimes: new Map<string, ElevatorRuntime>(),
+  collectedKeys:    new Set<string>(),
+  firedTriggers:    new Set<string>(),
+  emitterTimers:    new Map<string, number>(),
+  activeEmitters:   new Set<string>(),
+  cameraAnim:       null as CameraAnim | null,
+  pendingActions:   [] as ScriptAction[],
+  level:            null as Level | null,
+  initialized:      false,
 }
 
 export function resetScriptRuntime() {
   scriptRuntime.doorRuntimes.clear()
+  scriptRuntime.elevatorRuntimes.clear()
   scriptRuntime.collectedKeys.clear()
   scriptRuntime.firedTriggers.clear()
   scriptRuntime.emitterTimers.clear()
@@ -65,6 +75,15 @@ function initFromLevel(level: Level) {
     if (entity.type === 'emitter') {
       scriptRuntime.emitterTimers.set(entity.id, 0)
       if (entity.startActive) scriptRuntime.activeEmitters.add(entity.id)
+    }
+    if (entity.type === 'elevator') {
+      scriptRuntime.elevatorRuntimes.set(entity.id, {
+        entity: entity as ElevatorEntity,
+        state: 'idle',
+        boardingT: 0,
+        travelT: 0,
+        animY: 0,
+      })
     }
   }
   scriptRuntime.initialized = true
@@ -176,7 +195,8 @@ export function ScriptEngine({ level }: { level: Level }) {
     initFromLevel(level)
   }, [level])
 
-  const emitterAccum = useRef<Map<string, number>>(new Map())
+  const emitterAccum      = useRef<Map<string, number>>(new Map())
+  const elevatorGroupRefs = useRef<Map<string, THREE.Group>>(new Map())
 
   useFrame((_, delta) => {
     const lvl = levelRef.current
@@ -284,6 +304,45 @@ export function ScriptEngine({ level }: { level: Level }) {
       }
     }
 
+    // ── Elevator logic ─────────────────────────────────────────────────────
+    for (const er of scriptRuntime.elevatorRuntimes.values()) {
+      const elev = er.entity
+      const hw = elev.w / 2
+      const hd = elev.d / 2
+      const onPlatform = px >= elev.x - hw && px <= elev.x + hw &&
+                         pz >= elev.z - hd && pz <= elev.z + hd
+
+      if (er.state === 'idle' && onPlatform) {
+        er.state = 'boarding'
+        er.boardingT = 0
+      }
+      if (er.state === 'boarding') {
+        er.boardingT += delta
+        if (er.boardingT >= 0.8) { er.state = 'traveling'; er.travelT = 0 }
+      }
+      if (er.state === 'traveling') {
+        er.travelT += delta
+        const progress = Math.min(1, er.travelT / elev.travelDuration)
+        er.animY = (elev.direction === 'up' ? 1 : -1) * progress * 7
+        if (progress >= 1 && er.state === 'traveling') {
+          er.state = 'arrived'
+          if (elev.targetLevelId) {
+            const levels = useEditorStore.getState().levels
+            const target = levels.find((l) => l.id === elev.targetLevelId)
+            if (target) {
+              useEditorStore.getState().setActivePlayLevel(target)
+              initFromLevel(target)
+              levelRef.current = target
+            }
+          }
+        }
+      }
+
+      // Update mesh position directly for smooth animation
+      const group = elevatorGroupRefs.current.get(elev.id)
+      if (group) group.position.y = er.animY
+    }
+
     // ── Execute queued actions ─────────────────────────────────────────────
     if (scriptRuntime.pendingActions.length > 0) {
       executePendingActions(camera, setWaveMessage, setEnemyIds, enemyIdsRef.current)
@@ -364,6 +423,51 @@ export function ScriptEngine({ level }: { level: Level }) {
             <meshStandardMaterial color={pe.color} emissive={pe.color} emissiveIntensity={0.8}
               transparent opacity={0.5} roughness={0.1} />
           </mesh>
+        )
+      })}
+
+      {/* Elevator visuals — Y position is updated via ref in useFrame */}
+      {level.scriptEntities.filter((e) => e.type === 'elevator').map((entity) => {
+        const elev = entity as ElevatorEntity
+        const er   = scriptRuntime.elevatorRuntimes.get(elev.id)
+        const pulsing = er?.state === 'boarding'
+        return (
+          <group
+            key={elev.id}
+            position={[elev.x, 0, elev.z]}
+            ref={(ref) => {
+              if (ref) elevatorGroupRefs.current.set(elev.id, ref)
+              else elevatorGroupRefs.current.delete(elev.id)
+            }}
+          >
+            {/* Platform slab */}
+            <mesh position={[0, 0.1, 0]} scale={[elev.w, 0.2, elev.d]}>
+              <boxGeometry />
+              <meshStandardMaterial
+                color="#223344" emissive={pulsing ? '#0055aa' : '#001122'}
+                emissiveIntensity={pulsing ? 1.8 : 0.5} roughness={0.3} metalness={0.8}
+              />
+            </mesh>
+            {/* Direction arrow */}
+            <mesh
+              position={[0, 0.55, 0]}
+              rotation-x={elev.direction === 'down' ? Math.PI : 0}
+            >
+              <coneGeometry args={[0.25, 0.5, 6]} />
+              <meshStandardMaterial
+                color={elev.direction === 'up' ? '#00ccff' : '#ff8800'}
+                emissive={elev.direction === 'up' ? '#0044aa' : '#aa4400'}
+                emissiveIntensity={0.8}
+              />
+            </mesh>
+            {/* Shaft indicator lines at corners */}
+            {([[-1, -1], [1, -1], [-1, 1], [1, 1]] as const).map(([sx, sz], i) => (
+              <mesh key={i} position={[sx * (elev.w / 2 - 0.1), 1.5, sz * (elev.d / 2 - 0.1)]}>
+                <boxGeometry args={[0.08, 3, 0.08]} />
+                <meshStandardMaterial color="#334455" emissive="#001122" emissiveIntensity={0.3} metalness={0.7} roughness={0.3} />
+              </mesh>
+            ))}
+          </group>
         )
       })}
     </>

@@ -85,6 +85,17 @@ export interface PortalEntity {
   label: string
 }
 
+export interface ElevatorEntity {
+  type: 'elevator'
+  id: string
+  x: number; z: number
+  w: number; d: number
+  targetLevelId: string
+  direction: 'up' | 'down'
+  travelDuration: number
+  label: string
+}
+
 export type ScriptEntity =
   | TriggerEntity
   | DoorEntity
@@ -93,6 +104,7 @@ export type ScriptEntity =
   | EmitterEntity
   | CameraNodeEntity
   | PortalEntity
+  | ElevatorEntity
 
 export type ScriptEntityType = ScriptEntity['type']
 
@@ -111,6 +123,7 @@ export function defaultEntity(type: ScriptEntityType, x: number, z: number): Scr
     case 'emitter':     return { ...base, type, particleType: 'spark', rate: 5, startActive: true, label: 'Emitter' }
     case 'camera_node': return { ...base, type, camY: 18, lookX: 0, lookY: 0, lookZ: 0, travelDuration: 2, holdDuration: 3, label: 'Kamera' }
     case 'portal':      return { ...base, type, w: 2, d: 0.3, targetLevelId: '', color: '#aa44ff', label: 'Portal' }
+    case 'elevator':    return { ...base, type, w: 3, d: 3, targetLevelId: '', direction: 'up', travelDuration: 2, label: 'Fahrstuhl' }
   }
 }
 
@@ -124,4 +137,5 @@ export const ENTITY_CFG: Record<ScriptEntityType, { label: string; color: string
   emitter:     { label: 'Emitter',      color: '#00ccff', icon: '✦' },
   camera_node: { label: 'Kamera',       color: '#4488ff', icon: '📷' },
   portal:      { label: 'Portal',       color: '#cc44ff', icon: '◈' },
+  elevator:    { label: 'Fahrstuhl',    color: '#44ffcc', icon: '▲' },
 }

@@ -267,7 +267,7 @@ function StatBar({ label, value, max = 5, color }: { label: string; value: numbe
 
 // ── Tab types ─────────────────────────────────────────────────────────────────
 
-type Tab = 'waffen' | 'pickups' | 'charaktere' | 'steuerung' | 'tipps'
+type Tab = 'waffen' | 'pickups' | 'charaktere' | 'steuerung' | 'tipps' | 'editor'
 
 // ── Weapon items ──────────────────────────────────────────────────────────────
 
@@ -468,6 +468,88 @@ function TipsTab() {
   )
 }
 
+// ── Editor tab ────────────────────────────────────────────────────────────────
+
+const EDITOR_SECTIONS: Array<{ title: string; color: string; items: Array<[string, string]> }> = [
+  {
+    title: 'Objekte platzieren', color: '#00aaff',
+    items: [
+      ['Mauer', 'Hohes, solides Hindernis. Breite (SX) anpassen für Korridore und Räume.'],
+      ['Säule', 'Runde Säule als Deckung. Radius durch SX/SZ skalieren.'],
+      ['Deckung', 'Niedriges Hindernis (~0.9m) — Feinde schießen darüber, aber du kannst dich dahinter ducken.'],
+      ['Kiste', 'Quadratische 1m-Kiste. Ideal für Lager und enge Gassen.'],
+      ['Spawn', 'Markiert Spieler- und Feind-Spawn-Punkt. Mindestens einen setzen!'],
+    ],
+  },
+  {
+    title: 'Skript-Entities', color: '#ffcc00',
+    items: [
+      ['Trigger', 'Unsichtbare Zone — wenn der Spieler eintritt, löst sie Aktionen aus. OneShot = einmalig.'],
+      ['Tür', 'Animierte Schiebetür. Kann mit Schlüssel gesperrt werden (KeyId eingeben).'],
+      ['Schlüssel', 'Pickup-Item das Türen öffnet. KeyId muss mit der Tür übereinstimmen.'],
+      ['Todeszone', 'Schadet oder tötet sofort. Für Lava, Abgründe, elektrifizierte Böden.'],
+      ['Emitter', 'Partikelquelle (Funken, Explosionen, Blut) — an/aus per Trigger steuerbar.'],
+      ['Kamera', 'Kamera-Pan-Punkt. Per Trigger aktivieren für Cutscene-artige Effekte.'],
+      ['Portal', 'Teleportiert den Spieler sofort in ein anderes Level (targetLevelId setzen).'],
+      ['Fahrstuhl', 'Platform die sich bewegt und dann ein neues Level lädt. Richtung (↑/↓) und Dauer einstellbar.'],
+    ],
+  },
+  {
+    title: 'Steuerung im Editor', color: '#00ff88',
+    items: [
+      ['Klick (Platzieren-Modus)', 'Neues Objekt am Mauszeiger setzen.'],
+      ['Klick (Auswahl-Modus)', 'Objekt auswählen → Eigenschaften rechts bearbeiten.'],
+      ['Ziehen', 'Ausgewähltes Objekt verschieben.'],
+      ['R-Taste', 'Rotation um 45° — für Wände und Türen.'],
+      ['Entf', 'Ausgewähltes Objekt löschen.'],
+      ['↓ Export', 'Level als JSON-Datei speichern.'],
+      ['↑ Import', 'JSON-Datei wieder laden.'],
+      ['▶ Testen', 'Level direkt im Spiel ausprobieren.'],
+    ],
+  },
+  {
+    title: 'Level-Optionen', color: '#ff8800',
+    items: [
+      ['Kartengröße', 'Schieberegler 36×36 bis 120×120. Größere Karten brauchen mehr Objekte für Struktur!'],
+      ['Gravitation', 'Normal / Mond (Granaten fliegen weiter) / Schwer (breitere Explosionen).'],
+      ['Nebel des Krieges', 'Aktiviert einen Sichtradius um den Spieler — Gegner außerhalb sind unsichtbar.'],
+      ['Vorlagen', 'Vorgefertigte Level zum Starten oder als Referenz importieren.'],
+    ],
+  },
+  {
+    title: 'Tipps & Tricks', color: '#cc44ff',
+    items: [
+      ['Spawns außen', 'Feind-Spawns an den Kartenrändern platzieren, Spieler-Spawn in der Mitte.'],
+      ['Fahrstuhl-Kette', 'Mehrere Level mit Fahrstühlen verknüpfen um mehrstöckige Karten zu bauen.'],
+      ['Trigger + Tür', 'Trigger-Zone direkt vor einer Tür mit Aktion "open_door" verknüpfen.'],
+      ['Fog of War', 'Mit Fog of War und vielen Hindernissen entsteht ein echtes Horror-/Dungeon-Feeling.'],
+      ['Textur wählen', 'Im Eigenschaften-Panel jede Textur pro Objekt separat setzen (Metall, Beton, etc.).'],
+    ],
+  },
+]
+
+function EditorTab() {
+  return (
+    <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+      {EDITOR_SECTIONS.map(({ title, color, items }) => (
+        <div key={title}>
+          <div style={{ color, fontSize: 12, fontWeight: 'bold', letterSpacing: 3, marginBottom: 10, textShadow: `0 0 8px ${color}66` }}>
+            {title.toUpperCase()}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            {items.map(([name, desc]) => (
+              <div key={name} style={{ display: 'flex', gap: 12, background: '#05050e', border: `1px solid ${color}22`, borderRadius: 4, padding: '8px 12px' }}>
+                <div style={{ color, fontSize: 10, letterSpacing: 1, minWidth: 120, flexShrink: 0, fontWeight: 'bold' }}>{name}</div>
+                <div style={{ color: '#7799aa', fontSize: 10, lineHeight: 1.6 }}>{desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // ── Item grid card ────────────────────────────────────────────────────────────
 
 function GridCard({ label, color, selected, onClick }: { label: string; color: string; selected: boolean; onClick: () => void }) {
@@ -506,7 +588,7 @@ export function HelpScreen() {
   const [selectedPickup, setSelectedPickup] = useState<PickupKind>('ammo')
   const [selectedChar, setSelectedChar]   = useState<CharId>('player')
 
-  const showModel = tab !== 'steuerung' && tab !== 'tipps'
+  const showModel = tab !== 'steuerung' && tab !== 'tipps' && tab !== 'editor'
 
   const modelParts: PartDef[] = (() => {
     if (tab === 'waffen')     return WEAPON_PARTS[selectedWeapon]
@@ -521,6 +603,7 @@ export function HelpScreen() {
     { id: 'charaktere', label: 'CHARAKTERE'},
     { id: 'steuerung',  label: 'STEUERUNG' },
     { id: 'tipps',      label: 'TIPPS'     },
+    { id: 'editor',     label: 'EDITOR'    },
   ]
 
   return (
@@ -590,6 +673,11 @@ export function HelpScreen() {
       {tab === 'tipps' && (
         <div style={{ flex: 1, overflowY: 'auto' }}>
           <TipsTab />
+        </div>
+      )}
+      {tab === 'editor' && (
+        <div style={{ flex: 1, overflowY: 'auto' }}>
+          <EditorTab />
         </div>
       )}
 

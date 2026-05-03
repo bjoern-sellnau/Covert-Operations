@@ -27,6 +27,7 @@ export interface Level {
   scriptEntities: ScriptEntity[]
   fogOfWar: boolean
   gravity: GravityMode
+  arenaHalf: number   // half-width of the square arena (default 18, range 18–60)
 }
 
 export interface ObjectTypeCfg {
@@ -88,6 +89,7 @@ interface EditorStore {
   setScriptPlaceType: (t: ScriptEntityType | null) => void
   toggleFogOfWar: () => void
   setGravity: (g: GravityMode) => void
+  setArenaHalf: (half: number) => void
 
   setViewMode: (m: ViewMode) => void
   setToolMode: (m: ToolMode) => void
@@ -110,7 +112,7 @@ export const useEditorStore = create<EditorStore>()(
 
       createLevel: (name = 'Neues Level') => {
         const id = newLid()
-        set((s) => ({ levels: [...s.levels, { id, name, objects: [], scriptEntities: [], fogOfWar: false, gravity: 'normal' }], currentLevelId: id }))
+        set((s) => ({ levels: [...s.levels, { id, name, objects: [], scriptEntities: [], fogOfWar: false, gravity: 'normal', arenaHalf: 18 }], currentLevelId: id }))
         return id
       },
 
@@ -123,6 +125,7 @@ export const useEditorStore = create<EditorStore>()(
           scriptEntities: level.scriptEntities ?? [],
           fogOfWar: level.fogOfWar ?? false,
           gravity: level.gravity ?? 'normal',
+          arenaHalf: level.arenaHalf ?? 18,
         }
         set((s) => ({ levels: [...s.levels, imported], currentLevelId: id }))
       },
@@ -235,6 +238,13 @@ export const useEditorStore = create<EditorStore>()(
         set((s) => ({
           levels: s.levels.map((l) =>
             l.id === s.currentLevelId ? { ...l, gravity } : l,
+          ),
+        })),
+
+      setArenaHalf: (arenaHalf) =>
+        set((s) => ({
+          levels: s.levels.map((l) =>
+            l.id === s.currentLevelId ? { ...l, arenaHalf: Math.round(arenaHalf) } : l,
           ),
         })),
 

@@ -210,7 +210,7 @@ export function EditorHUD() {
     currentLevelId, getCurrentLevel,
     setViewMode, setToolMode, setPlaceType,
     createLevel, importLevel, setActivePlayLevel,
-    setGravity, toggleFogOfWar,
+    setGravity, toggleFogOfWar, setArenaHalf,
   } = useEditorStore()
 
   const setPhase = useGameStore((s) => s.setPhase)
@@ -440,11 +440,24 @@ export function EditorHUD() {
                     })}
                   </div>
                   <button
-                    style={{ ...btn(getCurrentLevel()?.fogOfWar ?? false), width: '100%', fontSize: 9, padding: '5px' }}
+                    style={{ ...btn(getCurrentLevel()?.fogOfWar ?? false), width: '100%', fontSize: 9, padding: '5px', marginBottom: 10 }}
                     onClick={toggleFogOfWar}
                   >
                     Nebel des Krieges {getCurrentLevel()?.fogOfWar ? 'AN' : 'AUS'}
                   </button>
+                  <div style={{ color: C.textDim, fontSize: 9, marginBottom: 4 }}>
+                    Kartengröße: {(getCurrentLevel()?.arenaHalf ?? 18) * 2} × {(getCurrentLevel()?.arenaHalf ?? 18) * 2}
+                  </div>
+                  <input
+                    type="range"
+                    min={18} max={60} step={2}
+                    value={getCurrentLevel()?.arenaHalf ?? 18}
+                    onChange={(e) => setArenaHalf(parseInt(e.target.value))}
+                    style={{ width: '100%', accentColor: C.accent }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: C.textDim, fontSize: 8, marginTop: 2 }}>
+                    <span>36×36</span><span>120×120</span>
+                  </div>
                 </div>
               )}
             </>

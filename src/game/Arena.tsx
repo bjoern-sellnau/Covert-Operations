@@ -4,7 +4,6 @@ import { ARENA_HALF, WALL_THICKNESS } from './types'
 import { getTextures, cloneForObject } from './textures'
 import { useSettingsStore } from '../store/settingsStore'
 
-const size  = ARENA_HALF * 2
 const wallH = 2.5
 
 function Wall({
@@ -53,8 +52,9 @@ function EdgeGlow({
   )
 }
 
-export function Arena() {
+export function Arena({ arenaHalf = ARENA_HALF }: { arenaHalf?: number }) {
   const isLowQuality = useSettingsStore((s) => s.graphicsQuality === 'low')
+  const size = arenaHalf * 2
   const floorMat = useMemo(() => {
     const tex = getTextures().floor.clone()
     tex.needsUpdate = true
@@ -65,7 +65,7 @@ export function Arena() {
       metalness: isLowQuality ? 0 : 0.08,
       color:    new THREE.Color('#ccd0ff'),
     })
-  }, [isLowQuality])
+  }, [isLowQuality, size])
 
   const wallY = wallH / 2
 
@@ -77,21 +77,21 @@ export function Arena() {
       </mesh>
 
       {/* Walls */}
-      <Wall position={[0, wallY, -ARENA_HALF]} width={size + WALL_THICKNESS * 2} />
-      <Wall position={[0, wallY,  ARENA_HALF]} width={size + WALL_THICKNESS * 2} />
-      <Wall position={[-ARENA_HALF, wallY, 0]} rotation={[0, Math.PI / 2, 0]} width={size} />
-      <Wall position={[ ARENA_HALF, wallY, 0]} rotation={[0, Math.PI / 2, 0]} width={size} />
+      <Wall position={[0, wallY, -arenaHalf]} width={size + WALL_THICKNESS * 2} />
+      <Wall position={[0, wallY,  arenaHalf]} width={size + WALL_THICKNESS * 2} />
+      <Wall position={[-arenaHalf, wallY, 0]} rotation={[0, Math.PI / 2, 0]} width={size} />
+      <Wall position={[ arenaHalf, wallY, 0]} rotation={[0, Math.PI / 2, 0]} width={size} />
 
       {/* Neon edge glows */}
-      <EdgeGlow position={[0, 0.02, -ARENA_HALF + 0.5]} width={size} />
-      <EdgeGlow position={[0, 0.02,  ARENA_HALF - 0.5]} width={size} />
-      <EdgeGlow position={[-ARENA_HALF + 0.5, 0.02, 0]} rotation={[0, Math.PI / 2, 0]} width={size} />
-      <EdgeGlow position={[ ARENA_HALF - 0.5, 0.02, 0]} rotation={[0, Math.PI / 2, 0]} width={size} />
+      <EdgeGlow position={[0, 0.02, -arenaHalf + 0.5]} width={size} />
+      <EdgeGlow position={[0, 0.02,  arenaHalf - 0.5]} width={size} />
+      <EdgeGlow position={[-arenaHalf + 0.5, 0.02, 0]} rotation={[0, Math.PI / 2, 0]} width={size} />
+      <EdgeGlow position={[ arenaHalf - 0.5, 0.02, 0]} rotation={[0, Math.PI / 2, 0]} width={size} />
 
       {/* Corner pillars */}
       {([-1, 1] as const).flatMap((sx) =>
         ([-1, 1] as const).map((sz) => (
-          <mesh key={`${sx}${sz}`} position={[sx * ARENA_HALF, wallH / 2, sz * ARENA_HALF]} castShadow={!isLowQuality}>
+          <mesh key={`${sx}${sz}`} position={[sx * arenaHalf, wallH / 2, sz * arenaHalf]} castShadow={!isLowQuality}>
             <boxGeometry args={[WALL_THICKNESS * 2, wallH + 0.2, WALL_THICKNESS * 2]} />
             <meshStandardMaterial color="#080816" roughness={0.7} metalness={isLowQuality ? 0 : 0.4} />
           </mesh>

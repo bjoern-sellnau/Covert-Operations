@@ -95,11 +95,12 @@ function SuddenDeathOverlay() {
       ;[nRef, sRef, eRef, wRef].forEach(r => { if (r.current) r.current.visible = false })
       return
     }
-    // North strip: from z = ARENA_HALF inward by m
-    if (nRef.current) { nRef.current.visible = true; nRef.current.scale.set(ARENA_HALF * 2, 0.12, m); nRef.current.position.set(0, 0.06, ARENA_HALF - m / 2) }
-    if (sRef.current) { sRef.current.visible = true; sRef.current.scale.set(ARENA_HALF * 2, 0.12, m); sRef.current.position.set(0, 0.06, -ARENA_HALF + m / 2) }
-    if (eRef.current) { eRef.current.visible = true; eRef.current.scale.set(m, 0.12, ARENA_HALF * 2 - m * 2); eRef.current.position.set(ARENA_HALF - m / 2, 0.06, 0) }
-    if (wRef.current) { wRef.current.visible = true; wRef.current.scale.set(m, 0.12, ARENA_HALF * 2 - m * 2); wRef.current.position.set(-ARENA_HALF + m / 2, 0.06, 0) }
+    const ah = useEditorStore.getState().activePlayLevel?.arenaHalf ?? ARENA_HALF
+    const ah2 = ah * 2
+    if (nRef.current) { nRef.current.visible = true; nRef.current.scale.set(ah2, 0.12, m); nRef.current.position.set(0, 0.06, ah - m / 2) }
+    if (sRef.current) { sRef.current.visible = true; sRef.current.scale.set(ah2, 0.12, m); sRef.current.position.set(0, 0.06, -ah + m / 2) }
+    if (eRef.current) { eRef.current.visible = true; eRef.current.scale.set(m, 0.12, ah2 - m * 2); eRef.current.position.set(ah - m / 2, 0.06, 0) }
+    if (wRef.current) { wRef.current.visible = true; wRef.current.scale.set(m, 0.12, ah2 - m * 2); wRef.current.position.set(-ah + m / 2, 0.06, 0) }
   })
 
   return (
@@ -248,11 +249,11 @@ function ShootingRangeLayout() {
   )
 }
 
-function _spawnBotEnemy(types: EnemyType[], hpMult: number, instakill: boolean): string {
+function _spawnBotEnemy(types: EnemyType[], hpMult: number, instakill: boolean, arenaHalf: number): string {
   const type = types[Math.floor(Math.random() * types.length)]
   const side = Math.floor(Math.random() * 4)
-  const edge = ARENA_HALF - 1.5
-  const off  = (Math.random() * 2 - 1) * (ARENA_HALF - 2)
+  const edge = arenaHalf - 1.5
+  const off  = (Math.random() * 2 - 1) * (arenaHalf - 2)
   const pos  = side === 0 ? new THREE.Vector2(-edge, off)
              : side === 1 ? new THREE.Vector2(edge, off)
              : side === 2 ? new THREE.Vector2(off, -edge)
@@ -321,6 +322,7 @@ export function GameScene() {
   const graphicsQuality  = useSettingsStore((s) => s.graphicsQuality)
   const isLowQuality     = graphicsQuality === 'low'
 
+  const arenaHalfRef      = useRef(ARENA_HALF)
   const playerGroupRef    = useRef<THREE.Group>(null)
   const player2GroupRef   = useRef<THREE.Group>(null)
   const ambientRef        = useRef<THREE.AmbientLight>(null)
@@ -434,7 +436,7 @@ export function GameScene() {
       const botTypes = (mutators.botEnemyTypes.length > 0 ? mutators.botEnemyTypes : ['basic']) as EnemyType[]
       const isInstakill = mutators.gameType === 'instakill'
       const ids: string[] = []
-      for (let i = 0; i < mutators.botCount; i++) ids.push(_spawnBotEnemy(botTypes, diffMult, isInstakill))
+      for (let i = 0; i < mutators.botCount; i++) ids.push(_spawnBotEnemy(botTypes, diffMult, isInstakill, arenaHalfRef.current))
       setEnemyIds(ids)
       const modeMsg = (mutators.gameType === 'hardline_solo' || mutators.gameType === 'hardline')
         ? 'HARDLINE — MESSER' : 'DEATHMATCH'
@@ -568,6 +570,8 @@ export function GameScene() {
     const now    = state.clock.elapsedTime
     const keys   = input.current.keys
     const level  = activeLevelRef.current
+    arenaHalfRef.current = level?.arenaHalf ?? ARENA_HALF
+    const arenaHalf = arenaHalfRef.current
     const grav   = activeLevelRef.current?.gravity ?? 'normal'
     // Moon: grenades bounce more, travel further; heavy: wider blasts
     const bounceDamp  = grav === 'moon' ? 0.9 : 0.7
@@ -610,12 +614,12 @@ export function GameScene() {
       }
     }
     if (es.inSuddenDeath) {
-      es.sdMargin = Math.min(ARENA_HALF - 1,
-        es.sdMargin + (ARENA_HALF / mutators.suddenDeathSec) * rawDt)
+      es.sdMargin = Math.min(arenaHalf - 1,
+        es.sdMargin + (arenaHalf / mutators.suddenDeathSec) * rawDt)
       es.sdTimer  = Math.max(0, es.sdTimer - rawDt)
       // Damage players in danger zone
       const inZone = (x: number, z: number) =>
-        Math.abs(x) > ARENA_HALF - es.sdMargin || Math.abs(z) > ARENA_HALF - es.sdMargin
+        Math.abs(x) > arenaHalf - es.sdMargin || Math.abs(z) > arenaHalf - es.sdMargin
       if (inZone(es.player.position.x, es.player.position.y))
         es.player.health -= 18 * rawDt
       if (es.sdTimer <= 0) { setPhase('gameover'); return }
@@ -942,7 +946,7 @@ export function GameScene() {
     }
 
     const moveSpeed = es.maneuver === 'dive' ? DIVE_SPEED : PLAYER_SPEED
-    const bound     = ARENA_HALF - PLAYER_RADIUS - 0.5
+    const bound     = arenaHalf - PLAYER_RADIUS - 0.5
     let nx = Math.max(-bound, Math.min(bound, es.player.position.x + dx * moveSpeed * playerDt))
     let nz = Math.max(-bound, Math.min(bound, es.player.position.y + dz * moveSpeed * playerDt))
     if (level) { const r = resolveCircleVsLevel(nx, nz, PLAYER_RADIUS, level); nx = r.x; nz = r.z }
@@ -1069,8 +1073,8 @@ export function GameScene() {
         if (p2dx !== 0 || p2dz !== 0) {
           const plen = Math.sqrt(p2dx * p2dx + p2dz * p2dz)
           p2dx /= plen; p2dz /= plen
-          let p2x = Math.max(-ARENA_HALF + PLAYER_RADIUS + 0.5, Math.min(ARENA_HALF - PLAYER_RADIUS - 0.5, p2.position.x + p2dx * PLAYER_SPEED * playerDt))
-          let p2z = Math.max(-ARENA_HALF + PLAYER_RADIUS + 0.5, Math.min(ARENA_HALF - PLAYER_RADIUS - 0.5, p2.position.y + p2dz * PLAYER_SPEED * playerDt))
+          let p2x = Math.max(-arenaHalf + PLAYER_RADIUS + 0.5, Math.min(arenaHalf - PLAYER_RADIUS - 0.5, p2.position.x + p2dx * PLAYER_SPEED * playerDt))
+          let p2z = Math.max(-arenaHalf + PLAYER_RADIUS + 0.5, Math.min(arenaHalf - PLAYER_RADIUS - 0.5, p2.position.y + p2dz * PLAYER_SPEED * playerDt))
           if (level) { const r = resolveCircleVsLevel(p2x, p2z, PLAYER_RADIUS, level); p2x = r.x; p2z = r.z }
           p2.position.x = p2x
           p2.position.y = p2z
@@ -1415,7 +1419,7 @@ export function GameScene() {
       g.z      += g.vz * rawDt
       g.timer  -= rawDt
 
-      const half = ARENA_HALF - 0.25
+      const half = arenaHalf - 0.25
       const maxGB = GRENADE_BOUNCE + extraBounce
       if (Math.abs(g.x) > half) {
         if (g.bounces < maxGB) { g.vx = -g.vx * bounceDamp; g.x = Math.sign(g.x) * half; g.bounces++ }
@@ -1571,7 +1575,7 @@ export function GameScene() {
       }
 
       // Hit wall → explode
-      const oob = Math.abs(vp.x) > ARENA_HALF - 0.5 || Math.abs(vp.z) > ARENA_HALF - 0.5
+      const oob = Math.abs(vp.x) > arenaHalf - 0.5 || Math.abs(vp.z) > arenaHalf - 0.5
       // Hit enemy → explode
       let hitEnemy = false
       for (const enemy of es.enemies.values()) {
@@ -1631,11 +1635,11 @@ export function GameScene() {
       const maxT = LASER_RANGE
       let endT = maxT
       if (Math.abs(dx) > 0.001) {
-        const tX = dx > 0 ? (ARENA_HALF - px) / dx : (-ARENA_HALF - px) / dx
+        const tX = dx > 0 ? (arenaHalf - px) / dx : (-arenaHalf - px) / dx
         if (tX > 0 && tX < endT) endT = tX
       }
       if (Math.abs(dz) > 0.001) {
-        const tZ = dz > 0 ? (ARENA_HALF - pz) / dz : (-ARENA_HALF - pz) / dz
+        const tZ = dz > 0 ? (arenaHalf - pz) / dz : (-arenaHalf - pz) / dz
         if (tZ > 0 && tZ < endT) endT = tZ
       }
       const x1 = px + dx * endT, z1 = pz + dz * endT
@@ -1772,7 +1776,7 @@ export function GameScene() {
         weaponProjLightRef.current.visible = true
       }
 
-      const oob = Math.abs(wp.x) > ARENA_HALF - 0.5 || Math.abs(wp.z) > ARENA_HALF - 0.5
+      const oob = Math.abs(wp.x) > arenaHalf - 0.5 || Math.abs(wp.z) > arenaHalf - 0.5
       let hitSomething = oob
       if (!oob && level && pointIntersectsLevel(wp.x, wp.z, isBfgProj ? 1.0 : 0.25, level)) hitSomething = true
       if (!hitSomething) {
@@ -1808,7 +1812,7 @@ export function GameScene() {
 
       let remove = bullet.lifetime <= 0
       if (!remove) {
-        const half = ARENA_HALF - BULLET_RADIUS
+        const half = arenaHalf - BULLET_RADIUS
         if (Math.abs(bullet.position.x) > half) {
           if (bullet.bounces < bullet.maxBounces) {
             bullet.velocity.x  = -bullet.velocity.x * 0.85
@@ -1945,7 +1949,7 @@ export function GameScene() {
       eb.position.x += eb.velocity.x * rawDt
       eb.position.y += eb.velocity.y * rawDt
       eb.lifetime -= rawDt
-      if (eb.lifetime <= 0 || Math.abs(eb.position.x) > ARENA_HALF + 2 || Math.abs(eb.position.y) > ARENA_HALF + 2) {
+      if (eb.lifetime <= 0 || Math.abs(eb.position.x) > arenaHalf + 2 || Math.abs(eb.position.y) > arenaHalf + 2) {
         ebToRemove.push(ebId); continue
       }
       if (Math.hypot(es.player.position.x - eb.position.x, es.player.position.y - eb.position.y) < PLAYER_RADIUS + 0.1 && now > es.player.invincibleUntil) {
@@ -2051,7 +2055,7 @@ export function GameScene() {
         const botTypes = (mutators.botEnemyTypes.length > 0 ? mutators.botEnemyTypes : ['basic']) as EnemyType[]
         const isInstakill = mutators.gameType === 'instakill'
         const deficit = mutators.botCount - es.enemies.size
-        for (let i = 0; i < deficit; i++) _spawnBotEnemy(botTypes, diffHpMult, isInstakill)
+        for (let i = 0; i < deficit; i++) _spawnBotEnemy(botTypes, diffHpMult, isInstakill, arenaHalf)
         setEnemyIds(Array.from(es.enemies.keys()))
       }
     } else {
@@ -2186,7 +2190,7 @@ export function GameScene() {
   return (
     <>
       <group scale={charScale}>
-        <Arena />
+        <Arena arenaHalf={arenaHalfRef.current} />
       </group>
       {gameModeLive === 'shooting_range' && <ShootingRangeLayout />}
       {activeLevelRef.current && <GameLevelObjects level={activeLevelRef.current} />}
@@ -2316,7 +2320,7 @@ export function GameScene() {
 
       {/* Script system */}
       {activePlayLevel && <ScriptEngine level={activePlayLevel} />}
-      {activePlayLevel?.fogOfWar && <FogOfWar />}
+      {activePlayLevel?.fogOfWar && <FogOfWar arenaHalf={activePlayLevel.arenaHalf ?? ARENA_HALF} />}
 
       <ambientLight ref={ambientRef} intensity={isLowQuality ? 1.6 : 0.25} color="#4488ff" />
       {!isLowQuality && <directionalLight ref={dirLightRef} position={[5, 15, 5]} intensity={1.2} color="#ffffff" castShadow />}

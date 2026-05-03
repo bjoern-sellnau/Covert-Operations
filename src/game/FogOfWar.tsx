@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import { entityStore } from './entityStore'
 import { ARENA_HALF } from './types'
 
+
 const VERTEX = /* glsl */`
 varying vec2 vUv;
 void main() {
@@ -31,20 +32,20 @@ void main() {
 `
 
 interface FogOfWarProps {
+  arenaHalf?: number
   revealRadius?: number  // world units
 }
 
-export function FogOfWar({ revealRadius = 8 }: FogOfWarProps) {
+export function FogOfWar({ arenaHalf = ARENA_HALF, revealRadius = 8 }: FogOfWarProps) {
   const matRef = useRef<THREE.ShaderMaterial>(null)
-  const arenaSize = ARENA_HALF * 2
+  const arenaSize = arenaHalf * 2
   const revealUV = revealRadius / arenaSize
 
   useFrame(() => {
     if (!matRef.current) return
     const p = entityStore.player.position
-    // Convert world X/Z to UV (0..1): center of arena = (0.5, 0.5)
-    const u = (p.x + ARENA_HALF) / arenaSize
-    const v = (p.y + ARENA_HALF) / arenaSize   // player uses Vector2: y = world Z
+    const u = (p.x + arenaHalf) / arenaSize
+    const v = (p.y + arenaHalf) / arenaSize
     matRef.current.uniforms.uPlayerUV.value.set(u, v)
   })
 
@@ -64,7 +65,7 @@ export function FogOfWar({ revealRadius = 8 }: FogOfWarProps) {
         uniforms={{
           uPlayerUV:  { value: new THREE.Vector2(0.5, 0.5) },
           uRevealR:   { value: revealUV },
-          uArenaHalf: { value: ARENA_HALF },
+          uArenaHalf: { value: arenaHalf },
         }}
       />
     </mesh>

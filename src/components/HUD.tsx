@@ -7,6 +7,7 @@ import { hudData } from '../game/hudData'
 import { ARENA_HALF, PLAYER_MAX_HEALTH, FOCUS_MAX, WEAPON_CONFIGS, AMMO_CONFIGS, DIVE_COOLDOWN, SPIN_COOLDOWN, WEAPON_SLOT_WEAPONS, type WeaponId } from '../game/types'
 import { useDemoStore } from '../store/demoStore'
 import { startAudioRecording, stopAudioRecording } from '../game/audioCore'
+import { useEditorStore } from '../editor/editorStore'
 
 function P2Panel() {
   const p2Active  = useGameStore((s) => s.p2Active)
@@ -234,7 +235,7 @@ export function HUD() {
   useEffect(() => {
     if (!showMinimap) return
     const SIZE = 120
-    const HALF = ARENA_HALF
+    const HALF = useEditorStore.getState().activePlayLevel?.arenaHalf ?? ARENA_HALF
     const toMap = (w: number) => ((w / HALF + 1) / 2) * SIZE
 
     const id = setInterval(() => {
