@@ -12,8 +12,8 @@
   - [x] Infos über jeden Charakter mit rotierendem 3D-Modell
   - [x] Steuerungsübersicht
   - [x] Spieltipps
-  - [ ] **Die 3D-Renderings sind zu dunkel** — Beleuchtung in HelpScreen-Canvas anpassen
-  - [ ] **Buttons unten auf iPad (Safari) abgeschnitten** — Layout-Fix für kleine/touch Viewports
+  - [x] **Die 3D-Renderings sind zu dunkel** — Beleuchtung in HelpScreen-Canvas anpassen
+  - [x] **Buttons unten auf iPad (Safari) abgeschnitten** — Layout-Fix für kleine/touch Viewports
 
 ---
 

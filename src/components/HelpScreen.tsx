@@ -237,9 +237,10 @@ function ModelViewer({ parts }: { parts: PartDef[] }) {
       camera={{ position: [0, 0.8, 3], fov: 35 }}
       style={{ width: 280, height: 280, background: 'transparent', borderRadius: 4 }}
     >
-      <ambientLight intensity={0.7} />
-      <directionalLight position={[3, 5, 3]} intensity={1.2} />
-      <directionalLight position={[-2, 2, -2]} intensity={0.4} color="#4488ff" />
+      <ambientLight intensity={3.0} />
+      <directionalLight position={[3, 6, 3]} intensity={4.0} />
+      <directionalLight position={[-3, 2, -2]} intensity={1.8} color="#88aaff" />
+      <pointLight position={[0, 0, 3]} intensity={2.5} distance={8} />
       <RotatingModel defs={parts} />
     </Canvas>
   )
@@ -559,7 +560,7 @@ export function HelpScreen() {
         </div>
 
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+        <div style={{ display: 'flex', gap: 4, overflowX: 'auto', flexShrink: 1, WebkitOverflowScrolling: 'touch' as never }}>
           {TABS.map(({ id, label }) => (
             <button
               key={id}
@@ -630,13 +631,15 @@ export function HelpScreen() {
           <div style={{
             borderTop: '1px solid #0d1520',
             padding: '10px 16px',
+            paddingBottom: 'max(10px, env(safe-area-inset-bottom, 10px))',
             background: '#03030b',
             flexShrink: 0,
           }}>
             <div style={{
               display: 'flex', gap: 6,
               overflowX: 'auto',
-              paddingBottom: 4,
+              WebkitOverflowScrolling: 'touch' as never,
+              paddingBottom: 2,
             }}>
               {tab === 'waffen' && ALL_WEAPONS.map((id) => (
                 <GridCard
