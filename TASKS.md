@@ -23,7 +23,7 @@
 - [x] Demo Player einbauen (`DemoViewer.tsx`, 2D-Canvas-Wiedergabe)
 - [x] Demos exportieren (JSON-Download)
 - [x] Demos importieren (JSON-Upload)
-- [ ] Demos als Videosequenzen für Missionen nutzen (Cutscene-System)
+- [x] Demos als Videosequenzen für Missionen nutzen (Cutscene-System)
 - [x] Demo-Funktion auch im Level-Editor einbauen
 - [x] **Wo ist diese Funktion?** — Hauptmenü → „▶ Demos", HUD-Button „REC"
 

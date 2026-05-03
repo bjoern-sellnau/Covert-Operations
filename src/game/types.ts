@@ -1,4 +1,4 @@
-export type GamePhase = 'menu' | 'character_select' | 'missions' | 'briefing' | 'mutators' | 'lobby' | 'options' | 'shop' | 'playing' | 'gameover' | 'editor' | 'skydive' | 'skydive_win' | 'help' | 'demo_viewer'
+export type GamePhase = 'menu' | 'character_select' | 'missions' | 'briefing' | 'cutscene' | 'mutators' | 'lobby' | 'options' | 'shop' | 'playing' | 'gameover' | 'editor' | 'skydive' | 'skydive_win' | 'help' | 'demo_viewer'
 
 export type EnemyType = 'basic' | 'fast' | 'tank' | 'berserker' | 'flanker' | 'juggernaut'
 export type WeaponId = 'pistol' | 'smg' | 'shotgun' | 'rifle' | 'uzi' | 'mp5' | 'm16' | 'blaster' | 'plasma' | 'bazooka' | 'flak' | 'banana' | 'knife' | 'bat' | 'stick' | 'bfg' | 'grenade' | 'vernichter' | 'deathlas' | 'ioncan'

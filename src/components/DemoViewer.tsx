@@ -91,7 +91,7 @@ const SPEEDS = [0.25, 0.5, 1, 2, 4]
 
 export function DemoViewer() {
   const setPhase = useGameStore((s) => s.setPhase)
-  const { demos, deleteDemo, importDemo, viewerReturnTo } = useDemoStore()
+  const { demos, deleteDemo, importDemo, viewerReturnTo, cutsceneMap, setCutscene } = useDemoStore()
 
   const [selected, setSelected] = useState<Demo | null>(null)
   const [playing,  setPlaying]  = useState(false)
@@ -311,6 +311,32 @@ export function DemoViewer() {
               {/* Meta */}
               <div style={{ color: '#334455', fontSize: 9, letterSpacing: 2, textAlign: 'center' }}>
                 {selected.name} · {selected.frames.length} FRAMES · {fmtMs(selected.duration)}
+              </div>
+
+              {/* Cutscene assignment */}
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
+                {(['arena', 'skydive', 'shooting_range'] as const).map((mode) => {
+                  const label = { arena: 'ARENA', skydive: 'SKYDIVE', shooting_range: 'SCHIESSTAND' }[mode]
+                  const isSet = cutsceneMap[mode] === selected.id
+                  return (
+                    <button
+                      key={mode}
+                      onClick={() => setCutscene(mode, isSet ? null : selected.id)}
+                      style={{
+                        background: isSet ? '#00aaff22' : 'transparent',
+                        border: `1px solid ${isSet ? '#00aaff' : '#1a2a3a'}`,
+                        color: isSet ? '#00aaff' : '#334455',
+                        fontSize: 9, letterSpacing: 2, padding: '5px 10px',
+                        cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.12s',
+                      }}
+                    >
+                      {isSet ? `✓ ${label}` : `+ ${label}`}
+                    </button>
+                  )
+                })}
+                <div style={{ color: '#223344', fontSize: 8, letterSpacing: 1, width: '100%', textAlign: 'center' }}>
+                  Als Cutscene für Mission setzen
+                </div>
               </div>
             </>
           )}

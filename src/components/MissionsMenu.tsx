@@ -1,8 +1,18 @@
 import { useGameStore } from '../store/gameStore'
+import { useDemoStore } from '../store/demoStore'
+import type { CutsceneMode } from '../store/demoStore'
 
 export function MissionsMenu() {
   const setPhase    = useGameStore((s) => s.setPhase)
   const setGameMode = useGameStore((s) => s.setGameMode)
+  const { cutsceneMap, demos } = useDemoStore()
+
+  function launchMission(mode: CutsceneMode) {
+    setGameMode(mode)
+    const csId = cutsceneMap[mode]
+    const csExists = csId && demos.some((d) => d.id === csId)
+    setPhase(csExists ? 'cutscene' : 'briefing')
+  }
 
   const card = (
     color: string,
@@ -51,7 +61,7 @@ export function MissionsMenu() {
           '↓ SKYDIVE INFILTRATION',
           'Fallschirm · Spezialop',
           'Springe aus 8.000m. Deploye den Fallschirm rechtzeitig und lande präzise auf der Zielzone.',
-          () => { setGameMode('skydive'); setPhase('briefing') },
+          () => launchMission('skydive'),
         )}
 
         {card(
@@ -59,7 +69,7 @@ export function MissionsMenu() {
           '⊕ SCHIEßSTAND',
           'Training · Unbegrenzte Munition',
           'Teste deine Waffen im gesicherten Trainingsbereich. Keine Lebenspunkte-Strafe — unbegrenzte Munition.',
-          () => { setGameMode('shooting_range'); setPhase('briefing') },
+          () => launchMission('shooting_range'),
         )}
 
         <button

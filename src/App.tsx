@@ -24,6 +24,7 @@ import { MutatorsScreen } from './components/MutatorsScreen'
 import { HelpScreen } from './components/HelpScreen'
 import { DemoViewer } from './components/DemoViewer'
 import { CharacterSelectScreen } from './components/CharacterSelectScreen'
+import { CutscenePlayer } from './components/CutscenePlayer'
 
 export function App() {
   const phase          = useGameStore((s) => s.phase)
@@ -199,6 +200,7 @@ export function App() {
       {phase === 'character_select'            && <CharacterSelectScreen />}
       {phase === 'missions'                    && <MissionsMenu />}
       {phase === 'briefing'                    && <MissionBriefing />}
+      {phase === 'cutscene'                    && <CutscenePlayer mode={useGameStore.getState().gameMode as import('./store/demoStore').CutsceneMode} onDone={() => useGameStore.getState().setPhase('briefing')} />}
       {phase === 'mutators'                    && <MutatorsScreen />}
       {phase === 'help'                        && <HelpScreen />}
       {phase === 'demo_viewer'                 && <DemoViewer />}
