@@ -986,7 +986,7 @@ export function GameScene() {
           0.52,
           es.player.position.y + fwdZ * 0.32 + rZ * 0.18,
         )
-        fpsWeaponRef.current.rotation.y = angle
+        fpsWeaponRef.current.rotation.y = -angle
         fpsWeaponRef.current.visible = true
       } else {
         fpsWeaponRef.current.visible = false
@@ -996,7 +996,7 @@ export function GameScene() {
     // ── Player mesh ───────────────────────────────────────────────────────────
     if (playerGroupRef.current) {
       playerGroupRef.current.position.set(es.player.position.x, 0, es.player.position.y)
-      playerGroupRef.current.rotation.y = es.player.angle
+      playerGroupRef.current.rotation.y = -es.player.angle
       playerGroupRef.current.visible    = cameraModeRef.current !== 'fps'
     }
 
@@ -1023,7 +1023,7 @@ export function GameScene() {
       // Show P2 mesh at position set by net receive block above
       if (es.player2Active && player2GroupRef.current) {
         player2GroupRef.current.position.set(es.player2.position.x, 0, es.player2.position.y)
-        player2GroupRef.current.rotation.y = es.player2.angle
+        player2GroupRef.current.rotation.y = -es.player2.angle
         player2GroupRef.current.visible    = true
       }
     }
@@ -1150,7 +1150,7 @@ export function GameScene() {
         // P2 mesh position
         if (player2GroupRef.current) {
           player2GroupRef.current.position.set(p2.position.x, 0, p2.position.y)
-          player2GroupRef.current.rotation.y = p2.angle
+          player2GroupRef.current.rotation.y = -p2.angle
           player2GroupRef.current.visible = true
         }
       } else if (player2GroupRef.current) {

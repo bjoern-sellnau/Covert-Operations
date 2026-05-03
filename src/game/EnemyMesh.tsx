@@ -38,7 +38,7 @@ export function EnemyMesh({ id }: Props) {
     // Face toward player
     const px = entityStore.player.position.x - enemy.position.x
     const pz = entityStore.player.position.y - enemy.position.y
-    if (px !== 0 || pz !== 0) groupRef.current.rotation.y = Math.atan2(px, -pz)
+    if (px !== 0 || pz !== 0) groupRef.current.rotation.y = Math.atan2(-px, pz)
 
     // Scale by enemy size × charScale setting
     const scale = (cfg.size / 0.45) * useSettingsStore.getState().charScale
