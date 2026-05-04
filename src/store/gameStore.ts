@@ -53,7 +53,7 @@ interface GameStore {
 }
 
 export const useGameStore = create<GameStore>((set) => ({
-  phase: 'menu',
+  phase: 'title_screen',
   health: 100,
   score: 0,
   wave: 1,
