@@ -27,12 +27,12 @@ export type CutsceneMode = 'arena' | 'skydive' | 'shooting_range'
 
 interface DemoState {
   isRecording:      boolean
-  viewerReturnTo:   'menu' | 'editor'
+  viewerReturnTo:   'title_screen' | 'editor'
   cutsceneMap:      Partial<Record<CutsceneMode, string>>
   demos:            Demo[]
   startRecording:      () => void
   finishRecording:     (frames: DemoFrame[], score: number, wave: number, duration: number) => void
-  setViewerReturnTo:   (to: 'menu' | 'editor') => void
+  setViewerReturnTo:   (to: 'title_screen' | 'editor') => void
   setCutscene:         (mode: CutsceneMode, demoId: string | null) => void
   deleteDemo:          (id: string) => void
   importDemo:          (demo: Demo) => void
@@ -40,7 +40,7 @@ interface DemoState {
 
 export const useDemoStore = create<DemoState>()((set, get) => ({
   isRecording:    false,
-  viewerReturnTo: 'menu',
+  viewerReturnTo: 'title_screen',
   cutsceneMap:    {},
   demos:          [],
 

@@ -626,7 +626,7 @@ export function HelpScreen() {
         flexShrink: 0,
       }}>
         <button
-          onClick={() => setPhase('menu')}
+          onClick={() => setPhase('title_screen')}
           style={{
             background: 'transparent', border: '1px solid #1a2a3a', color: '#7799aa',
             fontSize: 11, letterSpacing: 3, padding: '7px 14px', cursor: 'pointer',

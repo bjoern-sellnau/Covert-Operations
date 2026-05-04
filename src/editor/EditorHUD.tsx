@@ -346,7 +346,7 @@ export function EditorHUD() {
 
         <div style={{ width: 1, height: 28, background: C.border }} />
 
-        <button style={btn()} onClick={() => setPhase('menu')}>← Menü</button>
+        <button style={btn()} onClick={() => setPhase('title_screen')}>← Menü</button>
       </div>
 
       {/* ── Left panel: palette + levels ── */}

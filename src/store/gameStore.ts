@@ -83,7 +83,7 @@ export const useGameStore = create<GameStore>((set) => ({
   chaosActive:   false,
 
   setPhase: (phase) => {
-    if (phase === 'menu') {
+    if (phase === 'menu' || phase === 'title_screen') {
       set({
         phase,
         health: 100, score: 0, wave: 1,

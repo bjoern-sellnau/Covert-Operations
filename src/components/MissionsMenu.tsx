@@ -81,7 +81,7 @@ export function MissionsMenu() {
           }}
           onMouseEnter={(e) => { e.currentTarget.style.color = '#aabbcc'; e.currentTarget.style.borderColor = '#334455' }}
           onMouseLeave={(e) => { e.currentTarget.style.color = '#445566'; e.currentTarget.style.borderColor = '#1a2a35' }}
-          onClick={() => setPhase('menu')}
+          onClick={() => setPhase('singleplayer_menu')}
         >
           ← Zurück
         </button>

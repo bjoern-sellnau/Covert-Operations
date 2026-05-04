@@ -807,7 +807,7 @@ export function Shop() {
         gap: mob ? 8 : 16,
       }}>
         <button
-          onClick={() => setPhase('menu')}
+          onClick={() => setPhase('title_screen')}
           style={{
             background: 'transparent', border: '1px solid rgba(138,154,98,0.18)', color: 'rgba(138,154,98,0.4)',
             fontSize: mob ? 14 : 12, letterSpacing: 3, padding: mob ? '14px' : '10px 24px',

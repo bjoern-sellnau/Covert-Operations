@@ -51,7 +51,7 @@ export function SkydiveWin() {
             fontSize: 14, letterSpacing: 4, padding: '14px 32px', cursor: 'pointer',
             fontFamily: 'inherit', textTransform: 'uppercase', transition: 'all 0.15s',
           }}
-          onClick={() => setPhase('menu')}
+          onClick={() => setPhase('title_screen')}
           onMouseEnter={(e) => { e.currentTarget.style.color = '#557755'; e.currentTarget.style.borderColor = '#334433' }}
           onMouseLeave={(e) => { e.currentTarget.style.color = '#2a3a2a'; e.currentTarget.style.borderColor = '#1a2a1a' }}
         >

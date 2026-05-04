@@ -119,7 +119,7 @@ export function Lobby() {
           <button style={btn('#00aaff')} onClick={handleConnect}>
             ● Verbinden
           </button>
-          <button style={{ ...btn('#334455'), fontSize: 10 }} onClick={() => setPhase('menu')}>
+          <button style={{ ...btn('#334455'), fontSize: 10 }} onClick={() => setPhase('multiplayer_menu')}>
             ← Zurück
           </button>
         </div>

@@ -51,6 +51,17 @@ export function App() {
     return () => document.removeEventListener('fullscreenchange', onFSChange)
   }, [])
 
+  // Nostalgie-Shortcut: Shift+Alt+M → klassisches Menü
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.shiftKey && e.altKey && e.key === 'M') {
+        useGameStore.getState().setPhase('menu')
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
   const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch(() => {})

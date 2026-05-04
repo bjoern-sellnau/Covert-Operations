@@ -95,7 +95,7 @@ export function GameOver() {
               Nochmal
             </button>
             <button
-              onClick={() => setPhase('menu')}
+              onClick={() => setPhase('title_screen')}
               style={{
                 background: 'transparent', border: '1px solid #332222', color: '#443333',
                 fontSize: 14, letterSpacing: 4, padding: '14px 32px', cursor: 'pointer',
@@ -142,7 +142,7 @@ export function GameOver() {
             </button>
 
             <button
-              onClick={() => setPhase('menu')}
+              onClick={() => setPhase('title_screen')}
               style={{
                 background: 'transparent', border: '1px solid #332222', color: '#443333',
                 fontSize: 14, letterSpacing: 4, padding: '14px 32px', cursor: 'pointer',
