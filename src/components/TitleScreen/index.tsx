@@ -1,10 +1,18 @@
+import { useEffect } from 'react'
 import { Particles }     from './Particles'
 import { BootSequence }  from './BootSequence'
 import { Logo }          from './Logo'
 import { Menu }          from './Menu'
 
+// Persists across remounts — set to true after the first intro plays
+let introShown = false
+
 export function TitleScreen() {
-  const skipIntro = new URLSearchParams(window.location.search).get('skipIntro') === '1'
+  const skipIntro = introShown || new URLSearchParams(window.location.search).get('skipIntro') === '1'
+
+  useEffect(() => {
+    introShown = true
+  }, [])
   const chromeFade = skipIntro ? undefined : 'tsFadeIn 1s 4.4s both'
   const stampFade  = skipIntro ? undefined : 'tsFadeIn 1s 4.5s both'
   const barFade    = skipIntro ? undefined : 'tsFadeIn 1s 4.6s both'

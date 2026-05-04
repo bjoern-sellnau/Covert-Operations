@@ -187,14 +187,18 @@ Build the title screen as `<TitleScreen />` composed of sub-components. Read the
 - `Covert Operations Title Screen.html` — locked-in design with full intro animation
 - `Covert Operations Logo Final.html` — standalone logo
 
-**Sub-components** (`TitleScreen/{index.tsx, BootSequence.tsx, Logo.tsx, Menu.tsx, Particles.tsx, styles.module.css}`):
+**Sub-components** (`TitleScreen/{index.tsx, BootSequence.tsx, Logo.tsx, Menu.tsx, Particles.tsx}`):
 
-- [ ] **`<BootSequence />`** — full-screen black overlay, 7 terminal lines typing in sequentially, green scanline sweeps 2×, fades out at ~3.6s
-- [ ] **`<Logo />`** — SVG with orange `Δ` (SVG feGaussianBlur glow filter, no CSS drop-shadow), white `COVERT OPERATIONS`, orange tagline. Glitches in via clip-path + skew + blur at ~3.85s. Ambient opacity pulse loops.
-- [ ] **`<Menu />`** — 6 items (Singleplayer · Multiplayer · Level Editor · Track Player · Demos · Debug) with orange dividers, all neutral style (no pre-selection), left-to-right fade-in stagger from 4.3s. Hover: orange Δ pip + underline + letter-spacing. `data-testid` on each item. `onClick` no-ops for now.
-- [ ] **HUD chrome** — corner brackets (olive `#8a9a62`), `CLASSIFIED` / `TOP SECRET // CO-Δ-001` stamps, bottom bar with copyright + build string. Fade in at ~4.4–4.6s.
-- [ ] **Atmosphere** — radial dark-olive vignette, drifting fog layers, ~50 floating particles (canvas or animated divs), top-edge orange glow line. Always live, no animation gating.
-- [ ] **`?skipIntro=1`** query param skips boot sequence and lands in final state
+- [x] **`<BootSequence />`** — full-screen black overlay, 7 terminal lines typing in sequentially, green scanline sweeps 2×, fades out at ~3.6s
+- [x] **`<Logo />`** — SVG with orange `Δ` (SVG feGaussianBlur glow filter, no CSS drop-shadow), white `COVERT OPERATIONS`, orange tagline + orange rule (Variant 1). Glitches in via clip-path + skew + blur at ~3.85s. Ambient opacity pulse loops.
+- [x] **`<Menu />`** — 6 items (Singleplayer · Multiplayer · Level Editor · Track Player · Demos · Debug) with orange dividers, left-to-right fade-in stagger from 4.3s. Hover: orange Δ pip + underline + letter-spacing. `data-testid` on each item. Routed to phases.
+- [x] **HUD chrome** — corner brackets (olive `#8a9a62`), `CLASSIFIED` / `TOP SECRET // CO-Δ-001` stamps, bottom bar with copyright + build string. Fade in at ~4.4–4.6s.
+- [x] **Atmosphere** — radial dark-olive vignette, drifting fog layers, ~50 floating particles (canvas RAF), top-edge orange glow line. Always live.
+- [x] **`?skipIntro=1`** query param skips boot sequence and lands in final state
+- [x] **Back-navigation skips intro** — module-level flag `introShown` ensures the boot sequence only plays on the very first load; returning from any sub-menu lands directly in the final state
+- [x] **`<SingleplayerMenu />`** — CO-Δ style, routes: Missionen → missions, Story (disabled), Optionen → options, ← zurück → title_screen
+- [x] **`<MultiplayerMenu />`** — CO-Δ style, routes: Offline → character_select, Gefecht → briefing (skipShop), Online → lobby, Optionen → options, ← zurück → title_screen
+- [ ] **Debug-Menü** — Show Bounding Boxes, Cleanup Settings, Reset, Zurück
 
 **Color tokens:** `--orange` `#e05418`, `--cream` `#e0dcc8`, `--olive` `#8a9a62`, `--terminal-green` `#8aaa30`, bg radial `rgba(30,36,20,0.95)→rgba(8,9,6,1)`
 
