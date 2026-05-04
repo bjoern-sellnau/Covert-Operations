@@ -798,6 +798,7 @@ export function Shop() {
       {/* Footer */}
       <div style={{
         padding: mob ? '10px 12px' : '16px 28px',
+        paddingBottom: mob ? 'max(12px, calc(env(safe-area-inset-bottom, 0px) + 12px))' : '16px',
         borderTop: '1px solid #111122',
         display: 'flex',
         flexDirection: mob ? 'column' : 'row',

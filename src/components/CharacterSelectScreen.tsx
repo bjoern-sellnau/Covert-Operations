@@ -114,7 +114,7 @@ export function CharacterSelectScreen() {
       </div>
 
       {/* Navigation */}
-      <div style={{ display: 'flex', gap: 10, width: 'min(96vw, 520px)' }}>
+      <div style={{ display: 'flex', gap: 10, width: 'min(96vw, 520px)', paddingBottom: 'max(16px, calc(env(safe-area-inset-bottom, 0px) + 16px))' }}>
         <button
           onClick={() => setPhase('menu')}
           style={{

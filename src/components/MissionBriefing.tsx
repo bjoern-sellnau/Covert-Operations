@@ -255,6 +255,7 @@ export function MissionBriefing() {
           background: 'transparent', border: 'none', color: '#334455',
           fontSize: 10, letterSpacing: 2, padding: '12px', cursor: 'pointer',
           fontFamily: 'inherit', textTransform: 'uppercase', marginTop: 8,
+          paddingBottom: 'max(12px, calc(env(safe-area-inset-bottom, 0px) + 12px))',
         }}
       >
         Abbrechen

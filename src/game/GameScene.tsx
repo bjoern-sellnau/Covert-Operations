@@ -2321,9 +2321,7 @@ export function GameScene() {
 
   return (
     <>
-      <group scale={charScale}>
-        <Arena arenaHalf={arenaHalfRef.current} />
-      </group>
+      <Arena arenaHalf={arenaHalfRef.current} />
       {gameModeLive === 'shooting_range' && <ShootingRangeLayout />}
       {activeLevelRef.current && <GameLevelObjects level={activeLevelRef.current} />}
       <group ref={playerGroupRef} scale={charScale}>

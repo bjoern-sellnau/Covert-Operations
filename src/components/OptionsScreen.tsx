@@ -86,6 +86,7 @@ export function OptionsScreen() {
     alignItems: 'center', overflowY: 'auto',
     background: 'radial-gradient(ellipse at center, #0e1038 0%, #080814 70%)',
     fontFamily: "'Courier New', monospace", userSelect: 'none',
+    paddingBottom: 'max(24px, calc(env(safe-area-inset-bottom, 0px) + 24px))',
   }
   const section: React.CSSProperties = {
     display: 'flex', flexDirection: 'column', gap: 10,

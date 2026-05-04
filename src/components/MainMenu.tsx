@@ -180,7 +180,7 @@ export function MainMenu() {
       </div>
 
       {/* Bottom hint */}
-      <div style={{ color: '#667788', fontSize: 10, marginTop: 26, letterSpacing: 2, textAlign: 'center' }}>
+      <div style={{ color: '#667788', fontSize: 10, marginTop: 26, letterSpacing: 2, textAlign: 'center', paddingBottom: 'max(16px, calc(env(safe-area-inset-bottom, 0px) + 16px))' }}>
         WASD · MAUS · LMT &nbsp;·&nbsp; SHIFT = BULLET TIME &nbsp;·&nbsp; F = EGOPERSPEKTIVE
       </div>
     </div>

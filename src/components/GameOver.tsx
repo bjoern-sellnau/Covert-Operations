@@ -64,7 +64,7 @@ export function GameOver() {
       </div>
 
       {/* Buttons */}
-      <div style={{ display: 'flex', gap: 16 }}>
+      <div style={{ display: 'flex', gap: 16, paddingBottom: 'max(16px, calc(env(safe-area-inset-bottom, 0px) + 16px))' }}>
         {isPlaytesting ? (
           <button
             onClick={() => { setPlaytesting(false); setPhase('editor') }}

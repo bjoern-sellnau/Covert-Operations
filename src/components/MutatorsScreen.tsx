@@ -492,7 +492,9 @@ export function MutatorsScreen() {
 
       {/* Buttons */}
       <div style={{
-        display: 'flex', gap: 10, width: 'min(96vw, 780px)', padding: '16px 0 10px',
+        display: 'flex', gap: 10, width: 'min(96vw, 780px)',
+        padding: '16px 0',
+        paddingBottom: 'max(16px, calc(env(safe-area-inset-bottom, 0px) + 16px))',
       }}>
         <button
           onClick={() => setPhase('briefing')}
