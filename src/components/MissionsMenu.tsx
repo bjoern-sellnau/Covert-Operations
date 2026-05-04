@@ -1,91 +1,119 @@
+import { useState } from 'react'
 import { useGameStore } from '../store/gameStore'
 import { useDemoStore } from '../store/demoStore'
 import type { CutsceneMode } from '../store/demoStore'
+import { Particles } from './TitleScreen/Particles'
+import { playHover, playClick } from '../game/uiSounds'
+
+interface Mission { mode: CutsceneMode; title: string; sub: string; desc: string }
+
+const MISSIONS: Mission[] = [
+  { mode: 'skydive',        title: 'SKYDIVE INFILTRATION', sub: 'FALLSCHIRM · SPEZIALOP',
+    desc: 'Springe aus 8.000m. Deploye den Fallschirm rechtzeitig und lande präzise auf der Zielzone.' },
+  { mode: 'shooting_range', title: 'SCHIESSTAND',          sub: 'TRAINING · UNBEGRENZTE MUNITION',
+    desc: 'Teste deine Waffen im gesicherten Trainingsbereich. Keine LP-Strafe, unbegrenzte Munition.' },
+]
 
 export function MissionsMenu() {
   const setPhase    = useGameStore((s) => s.setPhase)
   const setGameMode = useGameStore((s) => s.setGameMode)
   const { cutsceneMap, demos } = useDemoStore()
+  const [hovered, setHovered] = useState<string | null>(null)
 
-  function launchMission(mode: CutsceneMode) {
+  function launch(mode: CutsceneMode) {
+    playClick()
     setGameMode(mode)
     const csId = cutsceneMap[mode]
-    const csExists = csId && demos.some((d) => d.id === csId)
-    setPhase(csExists ? 'cutscene' : 'briefing')
+    setPhase(csId && demos.some((d) => d.id === csId) ? 'cutscene' : 'briefing')
   }
 
-  const card = (
-    color: string,
-    title: string,
-    sub: string,
-    desc: string,
-    onClick: () => void,
-  ) => (
-    <div
-      onClick={onClick}
-      style={{
-        background: `${color}0a`,
-        border: `1px solid ${color}55`,
-        borderRadius: 6,
-        padding: '20px 22px',
-        cursor: 'pointer',
-        transition: 'all 0.15s',
-        display: 'flex', flexDirection: 'column', gap: 6,
-      }}
-      onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = `${color}20`; (e.currentTarget as HTMLDivElement).style.borderColor = color }}
-      onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = `${color}0a`; (e.currentTarget as HTMLDivElement).style.borderColor = `${color}55` }}
-    >
-      <div style={{ color, fontSize: 18, fontWeight: 'bold', letterSpacing: 3, textShadow: `0 0 10px ${color}88` }}>{title}</div>
-      <div style={{ color: `${color}99`, fontSize: 10, letterSpacing: 3, textTransform: 'uppercase' }}>{sub}</div>
-      <div style={{ color: '#445566', fontSize: 11, lineHeight: 1.6, marginTop: 4 }}>{desc}</div>
-    </div>
-  )
-
   return (
-    <div style={{
-      position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center',
-      background: 'radial-gradient(ellipse at center, #111840 0%, #060614 70%)',
-      fontFamily: "'Courier New', monospace", userSelect: 'none',
-    }}>
-      <div style={{ color: '#00aaff', fontSize: 26, fontWeight: 'bold', letterSpacing: 6, marginBottom: 6, textShadow: '0 0 14px #00aaff88' }}>
-        AUSGEWÄHLTE MISSIONEN
-      </div>
-      <div style={{ color: '#223344', fontSize: 10, letterSpacing: 4, marginBottom: 36 }}>
-        COVERT OPERATIONS
-      </div>
+    <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', animation: 'menuFadeIn 0.35s cubic-bezier(0.2,0.8,0.3,1) both' }}>
+      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 30%, rgba(30,36,20,0.95) 0%, rgba(8,9,6,1) 65%)' }} />
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse at 50% 50%, transparent 30%, rgba(0,0,0,0.75) 100%)' }} />
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent, rgba(224,84,24,0.8), transparent)' }} />
+      <Particles />
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: 'min(92vw, 440px)' }}>
-        {card(
-          '#ff8800',
-          '↓ SKYDIVE INFILTRATION',
-          'Fallschirm · Spezialop',
-          'Springe aus 8.000m. Deploye den Fallschirm rechtzeitig und lande präzise auf der Zielzone.',
-          () => launchMission('skydive'),
-        )}
+      {([['top','left'],['top','right'],['bottom','left'],['bottom','right']] as const).map(([v,h]) => (
+        <div key={v+h} style={{
+          position: 'absolute', [v]: 20, [h]: 24, width: 28, height: 28,
+          [`border${v.charAt(0).toUpperCase()+v.slice(1)}`]: '1.5px solid #8a9a62',
+          [`border${h.charAt(0).toUpperCase()+h.slice(1)}`]: '1.5px solid #8a9a62',
+          opacity: 0.5, pointerEvents: 'none',
+        }} />
+      ))}
 
-        {card(
-          '#00ff88',
-          '⊕ SCHIEßSTAND',
-          'Training · Unbegrenzte Munition',
-          'Teste deine Waffen im gesicherten Trainingsbereich. Keine Lebenspunkte-Strafe — unbegrenzte Munition.',
-          () => launchMission('shooting_range'),
-        )}
+      <div style={stampStyle('left')}>CLASSIFIED</div>
+      <div style={{ ...stampStyle('left'), top: 36, fontSize: 7, letterSpacing: '0.2em', color: 'rgba(106,112,72,0.35)' }}>© 2026 Loona! Designs</div>
+      <div style={stampStyle('right')}>TOP SECRET // CO-Δ-0.1.0-ALPHA</div>
+
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ marginBottom: 48, textAlign: 'center' }}>
+          <div style={{ fontFamily: "'Saira Condensed', sans-serif", fontWeight: 900, fontSize: 13, letterSpacing: '0.3em', color: '#e05418' }}>
+            Δ COVERT OPERATIONS
+          </div>
+        </div>
+
+        <div style={{ fontFamily: "'Saira Condensed', sans-serif", fontWeight: 900, fontSize: 'clamp(36px, 6vw, 56px)', letterSpacing: '0.18em', color: 'rgba(224,220,200,0.9)', marginBottom: 4, textShadow: '0 0 40px rgba(224,84,24,0.15)' }}>
+          MISSIONEN
+        </div>
+        <div style={{ width: 320, height: 1, background: 'rgba(224,84,24,0.5)', marginBottom: 40 }} />
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, width: 'min(92vw, 440px)' }}>
+          {MISSIONS.map((m) => {
+            const isHov = hovered === m.mode
+            return (
+              <div
+                key={m.mode}
+                onMouseEnter={() => { setHovered(m.mode); playHover() }}
+                onMouseLeave={() => setHovered(null)}
+                onClick={() => launch(m.mode)}
+                style={{
+                  padding: '16px 0', borderBottom: '1px solid rgba(138,154,98,0.1)',
+                  cursor: 'pointer', transition: 'all 0.15s', position: 'relative',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 6 }}>
+                  <span style={{
+                    fontFamily: "'Saira Condensed', sans-serif", fontWeight: 900, fontSize: 11, color: '#e05418',
+                    opacity: isHov ? 1 : 0, transform: isHov ? 'translateX(0)' : 'translateX(-6px)',
+                    transition: 'opacity 0.15s, transform 0.15s', width: 12, display: 'inline-block', flexShrink: 0, marginTop: 2,
+                  }}>Δ</span>
+                  <div>
+                    <div style={{
+                      fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
+                      fontSize: 14, letterSpacing: isHov ? '0.22em' : '0.16em',
+                      textTransform: 'uppercase', color: isHov ? '#f4f0e4' : 'rgba(220,216,200,0.8)',
+                      transition: 'color 0.15s, letter-spacing 0.15s', marginBottom: 4,
+                    }}>{m.title}</div>
+                    <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 8, letterSpacing: '0.25em', color: 'rgba(106,112,72,0.6)' }}>
+                      {m.sub}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ paddingLeft: 24, fontFamily: "'Share Tech Mono', monospace", fontSize: 9, letterSpacing: '0.12em', color: 'rgba(106,112,72,0.5)', lineHeight: 1.6 }}>
+                  {m.desc}
+                </div>
+                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 1, background: isHov ? 'rgba(224,84,24,0.4)' : 'transparent', transition: 'background 0.15s' }} />
+              </div>
+            )
+          })}
+        </div>
 
         <button
-          style={{
-            background: 'transparent', border: '1px solid #1a2a35', color: '#445566',
-            fontSize: 12, letterSpacing: 4, padding: '11px', cursor: 'pointer',
-            fontFamily: "'Courier New', monospace", textTransform: 'uppercase', transition: 'all 0.12s',
-            marginTop: 8,
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = '#aabbcc'; e.currentTarget.style.borderColor = '#334455' }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = '#445566'; e.currentTarget.style.borderColor = '#1a2a35' }}
-          onClick={() => setPhase('singleplayer_menu')}
-        >
-          ← Zurück
-        </button>
+          onClick={() => { playClick(); setPhase('singleplayer_menu') }}
+          style={{ marginTop: 48, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Share Tech Mono', monospace", fontSize: 10, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'rgba(106,112,72,0.6)', transition: 'color 0.15s' }}
+          onMouseEnter={(e) => { playHover(); (e.currentTarget as HTMLButtonElement).style.color = 'rgba(224,84,24,0.8)' }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(106,112,72,0.6)' }}
+        >← ZURÜCK</button>
       </div>
     </div>
   )
 }
+
+const stampStyle = (side: 'left' | 'right'): React.CSSProperties => ({
+  position: 'absolute', top: 22, [side]: 64,
+  fontFamily: "'Share Tech Mono', monospace",
+  fontSize: 8, letterSpacing: '0.3em', textTransform: 'uppercase',
+  color: 'rgba(106,112,72,0.5)', pointerEvents: 'none',
+})

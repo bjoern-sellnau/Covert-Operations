@@ -13,7 +13,8 @@ export function CharacterSelectScreen() {
       position: 'absolute', inset: 0,
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       background: 'radial-gradient(ellipse at 50% 30%, rgba(30,36,20,0.95) 0%, rgba(8,9,6,1) 65%)',
-      fontFamily: "'Courier New', monospace", userSelect: 'none', overflow: 'hidden',
+      fontFamily: "'DM Sans', sans-serif", userSelect: 'none', overflow: 'hidden',
+      animation: 'menuFadeIn 0.35s cubic-bezier(0.2,0.8,0.3,1) both',
     }}>
 
       {/* Grid overlay */}
@@ -25,15 +26,17 @@ export function CharacterSelectScreen() {
 
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: 32 }}>
-        <div style={{ color: 'rgba(224,84,24,0.4)', fontSize: 9, letterSpacing: 6, marginBottom: 8 }}>
-          AUSRÜSTUNG
+        <div style={{ fontFamily: "'Saira Condensed', sans-serif", fontWeight: 900, fontSize: 13, letterSpacing: '0.3em', color: '#e05418', marginBottom: 8 }}>
+          Δ COVERT OPERATIONS
         </div>
         <div style={{
-          color: '#e0dcc8', fontSize: 'clamp(20px, 3.5vw, 28px)', letterSpacing: 10,
-          textShadow: '0 0 12px rgba(224,84,24,0.4)',
+          fontFamily: "'Saira Condensed', sans-serif", fontWeight: 900,
+          fontSize: 'clamp(28px, 5vw, 44px)', letterSpacing: '0.18em',
+          color: 'rgba(224,220,200,0.9)', textShadow: '0 0 40px rgba(224,84,24,0.15)',
         }}>
           CHARAKTER AUSWAHL
         </div>
+        <div style={{ width: 300, height: 1, background: 'rgba(224,84,24,0.5)', margin: '12px auto 0' }} />
       </div>
 
       {/* Skin cards */}
@@ -84,6 +87,7 @@ export function CharacterSelectScreen() {
               {/* Name */}
               <div style={{
                 color: active ? cfg.accent : 'rgba(220,216,200,0.85)',
+                fontFamily: "'Share Tech Mono', monospace",
                 fontSize: 11, letterSpacing: 3, fontWeight: 'bold',
                 textAlign: 'center', textTransform: 'uppercase',
                 textShadow: active ? `0 0 8px ${cfg.accent}88` : 'none',
@@ -118,35 +122,23 @@ export function CharacterSelectScreen() {
         <button
           onClick={() => setPhase('multiplayer_menu')}
           style={{
-            background: 'transparent', border: '1px solid rgba(138,154,98,0.18)', color: 'rgba(200,196,176,0.6)',
-            fontSize: 10, letterSpacing: 3, padding: '12px 18px', cursor: 'pointer',
-            fontFamily: 'inherit', textTransform: 'uppercase', transition: 'all 0.12s',
+            background: 'transparent', border: 'none', cursor: 'pointer',
+            fontFamily: "'Share Tech Mono', monospace", fontSize: 10, letterSpacing: '0.3em',
+            color: 'rgba(106,112,72,0.6)', textTransform: 'uppercase', transition: 'color 0.15s',
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = '#e0dcc8'; e.currentTarget.style.borderColor = 'rgba(138,154,98,0.7)' }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(200,196,176,0.6)'; e.currentTarget.style.borderColor = 'rgba(138,154,98,0.18)' }}
-        >← Zurück</button>
+          onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(224,84,24,0.8)' }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(106,112,72,0.6)' }}
+        >← ZURÜCK</button>
         <button
           onClick={() => setPhase('shop')}
           style={{
-            flex: 1,
-            background: 'linear-gradient(135deg, #1a1e0e 0%, #0a0d06 100%)',
-            border: '1px solid #e05418', color: '#f07030',
-            fontSize: 13, letterSpacing: 5, padding: '13px', cursor: 'pointer',
-            fontFamily: 'inherit', textTransform: 'uppercase',
-            boxShadow: '0 0 14px rgba(224,84,24,0.3), inset 0 0 20px rgba(224,84,24,0.06)',
-            transition: 'all 0.15s',
+            flex: 1, background: 'rgba(224,84,24,0.08)', border: '1px solid rgba(224,84,24,0.5)',
+            color: '#e05418', fontSize: 11, letterSpacing: '0.3em', padding: '13px', cursor: 'pointer',
+            fontFamily: "'Share Tech Mono', monospace", textTransform: 'uppercase', transition: 'all 0.15s',
           }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'linear-gradient(135deg, #2a3018 0%, #1a1e0e 100%)'
-            e.currentTarget.style.color = '#fff'
-            e.currentTarget.style.boxShadow = '0 0 28px rgba(224,84,24,0.5), inset 0 0 24px rgba(224,84,24,0.12)'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'linear-gradient(135deg, #1a1e0e 0%, #0a0d06 100%)'
-            e.currentTarget.style.color = '#f07030'
-            e.currentTarget.style.boxShadow = '0 0 14px rgba(224,84,24,0.3), inset 0 0 20px rgba(224,84,24,0.06)'
-          }}
-        >Weiter →</button>
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(224,84,24,0.18)'; e.currentTarget.style.color = '#f4f0e4' }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(224,84,24,0.08)'; e.currentTarget.style.color = '#e05418' }}
+        >WEITER →</button>
       </div>
     </div>
   )

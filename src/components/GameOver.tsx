@@ -1,5 +1,7 @@
 import { useGameStore } from '../store/gameStore'
 import { useLoadoutStore } from '../game/loadoutStore'
+import { Particles } from './TitleScreen/Particles'
+import { playClick, playHover } from '../game/uiSounds'
 
 export function GameOver() {
   const setPhase       = useGameStore((s) => s.setPhase)
@@ -15,147 +17,103 @@ export function GameOver() {
 
   return (
     <div style={{
-      position: 'absolute', top: 0, right: 0, bottom: 0, left: 0,
-      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      background: 'radial-gradient(ellipse at center, #1a0000 0%, #000000 70%)',
-      fontFamily: "'Courier New', monospace", userSelect: 'none',
+      position: 'absolute', inset: 0, overflow: 'hidden',
+      animation: 'menuFadeIn 0.4s ease both',
+      userSelect: 'none',
     }}>
-      <div style={{
-        color: '#ff2200', fontSize: 72, fontWeight: 'bold', letterSpacing: 6,
-        textShadow: '0 0 20px #ff2200, 0 0 60px #aa0000', marginBottom: 12,
-      }}>
-        MISSION
-      </div>
-      <div style={{
-        color: '#ff2200', fontSize: 36, letterSpacing: 12,
-        textShadow: '0 0 12px #ff4400', marginBottom: 48,
-      }}>
-        GESCHEITERT
-      </div>
+      {/* Background — darker, faint red tint */}
+      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 40%, rgba(28,8,8,0.98) 0%, rgba(4,4,4,1) 70%)' }} />
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse at 50% 50%, transparent 30%, rgba(0,0,0,0.8) 100%)' }} />
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent, rgba(180,20,20,0.7), transparent)' }} />
+      <Particles />
 
-      {/* Stats */}
-      <div style={{ display: 'flex', gap: 0, marginBottom: 48, border: '1px solid #221111', borderRadius: 4, overflow: 'hidden' }}>
-        <div style={{ padding: '20px 36px', textAlign: 'center', background: '#0a0505' }}>
-          <div style={{ fontSize: 10, letterSpacing: 3, marginBottom: 8, color: '#554444' }}>WAVE</div>
-          <div style={{ fontSize: 42, fontWeight: 'bold', color: '#00aaff', textShadow: '0 0 12px #00aaff' }}>{wave}</div>
+      {/* Corner brackets */}
+      {([['top','left'],['top','right'],['bottom','left'],['bottom','right']] as const).map(([v,h]) => (
+        <div key={v+h} style={{
+          position: 'absolute', [v]: 20, [h]: 24, width: 28, height: 28,
+          [`border${v.charAt(0).toUpperCase()+v.slice(1)}`]: '1.5px solid rgba(138,80,80,0.5)',
+          [`border${h.charAt(0).toUpperCase()+h.slice(1)}`]: '1.5px solid rgba(138,80,80,0.5)',
+          opacity: 0.5, pointerEvents: 'none',
+        }} />
+      ))}
+
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+
+        {/* Title */}
+        <div style={{ textAlign: 'center', marginBottom: 48 }}>
+          <div style={{
+            fontFamily: "'Saira Condensed', sans-serif", fontWeight: 900,
+            fontSize: 'clamp(48px, 10vw, 80px)', letterSpacing: '0.12em',
+            color: 'rgba(200,60,60,0.95)',
+            textShadow: '0 0 40px rgba(200,40,40,0.4), 0 0 80px rgba(160,20,20,0.2)',
+            lineHeight: 1, marginBottom: 6,
+          }}>MISSION</div>
+          <div style={{
+            fontFamily: "'Saira Condensed', sans-serif", fontWeight: 900,
+            fontSize: 'clamp(24px, 5vw, 40px)', letterSpacing: '0.28em',
+            color: 'rgba(180,80,80,0.8)',
+            textShadow: '0 0 20px rgba(180,40,40,0.3)',
+          }}>GESCHEITERT</div>
+          <div style={{ width: 200, height: 1, background: 'rgba(180,40,40,0.4)', margin: '16px auto 0' }} />
         </div>
 
-        <div style={{ width: 1, background: '#221111' }} />
-
-        <div style={{ padding: '20px 36px', textAlign: 'center', background: '#0a0505' }}>
-          <div style={{ fontSize: 10, letterSpacing: 3, marginBottom: 8, color: '#554444' }}>PUNKTE</div>
-          <div style={{ fontSize: 42, fontWeight: 'bold', color: '#ffee00', textShadow: '0 0 12px #ffcc00' }}>
-            {score.toString().padStart(6, '0')}
-          </div>
+        {/* Stats */}
+        <div style={{ display: 'flex', gap: 0, marginBottom: 48, border: '1px solid rgba(138,80,80,0.2)', overflow: 'hidden' }}>
+          {[
+            { label: 'WAVE',            value: String(wave),              color: 'rgba(224,220,200,0.85)' },
+            { label: 'PUNKTE',          value: score.toString().padStart(6,'0'), color: 'rgba(224,200,80,0.85)' },
+            { label: 'CREDITS EARNED',  value: `+${creditsEarned}`,        color: 'rgba(224,140,60,0.85)' },
+          ].map(({ label, value, color }, i) => (
+            <div key={label} style={{ display: 'flex' }}>
+              {i > 0 && <div style={{ width: 1, background: 'rgba(138,80,80,0.2)' }} />}
+              <div style={{ padding: '20px 36px', textAlign: 'center', background: 'rgba(20,6,6,0.6)' }}>
+                <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 9, letterSpacing: '0.3em', marginBottom: 10, color: 'rgba(138,80,80,0.6)', textTransform: 'uppercase' }}>{label}</div>
+                <div style={{ fontFamily: "'Saira Condensed', sans-serif", fontWeight: 900, fontSize: 'clamp(28px, 5vw, 40px)', color, letterSpacing: '0.05em' }}>{value}</div>
+                {label === 'CREDITS EARNED' && (
+                  <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 8, color: 'rgba(138,80,80,0.5)', marginTop: 6, letterSpacing: '0.2em' }}>GESAMT: {credits}</div>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
 
-        <div style={{ width: 1, background: '#221111' }} />
-
-        {/* Credits earned */}
-        <div style={{ padding: '20px 36px', textAlign: 'center', background: '#0a0805' }}>
-          <div style={{ fontSize: 10, letterSpacing: 3, marginBottom: 8, color: '#554433' }}>CREDITS VERDIENT</div>
-          <div style={{ fontSize: 42, fontWeight: 'bold', color: '#ffaa00', textShadow: '0 0 12px #ff8800' }}>
-            +{creditsEarned}
-          </div>
-          <div style={{ color: '#554433', fontSize: 11, marginTop: 4 }}>
-            Gesamt: {credits}
-          </div>
+        {/* Buttons */}
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center', paddingBottom: 'max(16px, calc(env(safe-area-inset-bottom, 0px) + 16px))' }}>
+          {isPlaytesting ? (
+            <ActionBtn label="← EDITOR" primary onClick={() => { playClick(); setPlaytesting(false); setPhase('editor') }} />
+          ) : gameMode === 'skydive' ? (
+            <>
+              <ActionBtn label="NOCHMAL" primary onClick={() => { playClick(); setGameMode('skydive'); setPhase('skydive') }} />
+              <ActionBtn label="MENÜ" onClick={() => { playClick(); setPhase('title_screen') }} />
+            </>
+          ) : (
+            <>
+              {!skipShop && <ActionBtn label="AUSRÜSTUNG" primary onClick={() => { playClick(); setPhase('shop') }} />}
+              <ActionBtn label={skipShop ? 'NOCHMAL' : 'WIEDERHOLEN'} primary={skipShop} onClick={() => { playClick(); setPhase(skipShop ? 'briefing' : 'playing') }} />
+              <ActionBtn label="MENÜ" onClick={() => { playClick(); setPhase('title_screen') }} />
+            </>
+          )}
         </div>
-      </div>
-
-      {/* Buttons */}
-      <div style={{ display: 'flex', gap: 16, paddingBottom: 'max(16px, calc(env(safe-area-inset-bottom, 0px) + 16px))' }}>
-        {isPlaytesting ? (
-          <button
-            onClick={() => { setPlaytesting(false); setPhase('editor') }}
-            style={{
-              background: '#00ff8822', border: '2px solid #00ff88', color: '#00ff88',
-              fontSize: 14, letterSpacing: 4, padding: '14px 32px', cursor: 'pointer',
-              fontFamily: 'inherit', textTransform: 'uppercase', transition: 'all 0.15s',
-              boxShadow: '0 0 14px #00ff8844',
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = '#00ff8844'; e.currentTarget.style.color = '#ffffff' }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = '#00ff8822'; e.currentTarget.style.color = '#00ff88' }}
-          >
-            Zurück zum Editor
-          </button>
-        ) : gameMode === 'skydive' ? (
-          <>
-            <button
-              onClick={() => { setGameMode('skydive'); setPhase('skydive') }}
-              style={{
-                background: '#ff880022', border: '2px solid #ff8800', color: '#ff8800',
-                fontSize: 14, letterSpacing: 4, padding: '14px 32px', cursor: 'pointer',
-                fontFamily: 'inherit', textTransform: 'uppercase', transition: 'all 0.15s',
-                boxShadow: '0 0 14px #ff880044',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = '#ff880044'; e.currentTarget.style.color = '#ffffff' }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = '#ff880022'; e.currentTarget.style.color = '#ff8800' }}
-            >
-              Nochmal
-            </button>
-            <button
-              onClick={() => setPhase('title_screen')}
-              style={{
-                background: 'transparent', border: '1px solid #332222', color: '#443333',
-                fontSize: 14, letterSpacing: 4, padding: '14px 32px', cursor: 'pointer',
-                fontFamily: 'inherit', textTransform: 'uppercase', transition: 'all 0.15s',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = '#776666'; e.currentTarget.style.borderColor = '#554444' }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = '#443333'; e.currentTarget.style.borderColor = '#332222' }}
-            >
-              Menü
-            </button>
-          </>
-        ) : (
-          <>
-            {!skipShop && (
-              <button
-                onClick={() => setPhase('shop')}
-                style={{
-                  background: '#00aaff22', border: '2px solid #00aaff', color: '#00aaff',
-                  fontSize: 14, letterSpacing: 4, padding: '14px 32px', cursor: 'pointer',
-                  fontFamily: 'inherit', textTransform: 'uppercase', transition: 'all 0.15s',
-                  boxShadow: '0 0 14px #00aaff44',
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = '#00aaff44'; e.currentTarget.style.color = '#ffffff' }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = '#00aaff22'; e.currentTarget.style.color = '#00aaff' }}
-              >
-                Ausrüstung
-              </button>
-            )}
-
-            <button
-              onClick={() => setPhase(skipShop ? 'briefing' : 'playing')}
-              style={{
-                background: skipShop ? '#00aaff22' : 'transparent',
-                border: `2px solid ${skipShop ? '#00aaff' : '#445566'}`,
-                color: skipShop ? '#00aaff' : '#667788',
-                fontSize: 14, letterSpacing: 4, padding: '14px 32px', cursor: 'pointer',
-                fontFamily: 'inherit', textTransform: 'uppercase', transition: 'all 0.15s',
-                boxShadow: skipShop ? '0 0 14px #00aaff44' : 'none',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = skipShop ? '#00aaff44' : '#22334422'; e.currentTarget.style.color = skipShop ? '#ffffff' : '#aabbcc' }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = skipShop ? '#00aaff22' : 'transparent'; e.currentTarget.style.color = skipShop ? '#00aaff' : '#667788' }}
-            >
-              {skipShop ? 'Nochmal' : 'Wiederholen'}
-            </button>
-
-            <button
-              onClick={() => setPhase('title_screen')}
-              style={{
-                background: 'transparent', border: '1px solid #332222', color: '#443333',
-                fontSize: 14, letterSpacing: 4, padding: '14px 32px', cursor: 'pointer',
-                fontFamily: 'inherit', textTransform: 'uppercase', transition: 'all 0.15s',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = '#776666'; e.currentTarget.style.borderColor = '#554444' }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = '#443333'; e.currentTarget.style.borderColor = '#332222' }}
-            >
-              Menü
-            </button>
-          </>
-        )}
       </div>
     </div>
+  )
+}
+
+function ActionBtn({ label, onClick, primary = false }: { label: string; onClick: () => void; primary?: boolean }) {
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={(e) => { playHover(); (e.currentTarget as HTMLButtonElement).style.opacity = '1' }}
+      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = primary ? '0.9' : '0.7' }}
+      style={{
+        background: primary ? 'rgba(180,40,40,0.12)' : 'transparent',
+        border: `1px solid ${primary ? 'rgba(180,40,40,0.6)' : 'rgba(138,80,80,0.25)'}`,
+        cursor: 'pointer', padding: '12px 28px',
+        fontFamily: "'Share Tech Mono', monospace", fontSize: 10, letterSpacing: '0.3em',
+        color: primary ? 'rgba(200,80,80,0.95)' : 'rgba(138,80,80,0.6)',
+        textTransform: 'uppercase', transition: 'opacity 0.15s',
+        opacity: primary ? 0.9 : 0.7,
+      }}
+    >{label}</button>
   )
 }
