@@ -6,7 +6,7 @@ import { useLoadoutStore } from '../game/loadoutStore'
 import { previewTrack, stopMusic, playCustomTrack } from '../game/music'
 import { useCustomTracksStore } from '../store/customTracksStore'
 
-type PreviewId = 'game1' | 'game2' | 'game3' | 'game4' | 'game5' | 'game6' | 'game7' | 'game8' | 'game9' | 'game10' | 'game11' | 'game12' | 'game13' | 'game14' | 'game15' | 'game16' | 'game17' | 'game18' | 'game19' | 'game20' | 'game21' | 'game22' | 'game23' | 'game24' | 'game25' | 'game26' | 'game27' | 'game28' | 'game29' | 'game30' | 'game31'
+type PreviewId = 'game1' | 'game2' | 'game3' | 'game4' | 'game5' | 'game6' | 'game7' | 'game8' | 'game9' | 'game10' | 'game11' | 'game12' | 'game13' | 'game14' | 'game15' | 'game16' | 'game17' | 'game18' | 'game19' | 'game20' | 'game21' | 'game22' | 'game23' | 'game24' | 'game25' | 'game26' | 'game27' | 'game28' | 'game29' | 'game30' | 'game31' | 'game32'
 
 const tracks: Array<[PreviewId, string, string, string]> = [
   ['game1',  'TRACK 1',  '#00aaff', 'D-Moll 138 BPM'],
@@ -40,6 +40,7 @@ const tracks: Array<[PreviewId, string, string, string]> = [
   ['game29', 'TRACK 29', '#ff6600', 'D-Moll 165 BPM Jungle'],
   ['game30', 'TRACK 30', '#aaddff', 'E-Moll 125 BPM Hybrid Orchestral'],
   ['game31', 'TRACK 31', '#00ffcc', 'E-Moll 128 BPM Agent Techno'],
+  ['game32', 'TRACK 32', '#e05418', 'D-Moll 138 BPM Classic Menu'],
 ]
 
 export function OptionsScreen() {

@@ -4,7 +4,7 @@ import { useNetStore } from './net/netStore'
 import { useSettingsStore } from './store/settingsStore'
 import { useMutatorsStore } from './store/mutatorsStore'
 import { socket } from './net/socket'
-import { startMenuMusic, startGameMusic, startGameMusic2, startGameMusic3, startGameMusic4, startGameMusic5, startGameMusic6, startGameMusic7, startGameMusic8, startGameMusic9, startGameMusic10, startGameMusic11, startGameMusic12, startGameMusic13, startGameMusic14, startGameMusic15, startGameMusic16, startGameMusic17, startGameMusic18, startGameMusic19, startGameMusic20, startGameMusic21, startGameMusic22, startGameMusic23, startGameMusic24, startGameMusic25, startGameMusic26, startGameMusic27, startGameMusic28, startGameMusic29, startGameMusic30, startGameMusic31, startSkydiveMusic, stopMusic, playCustomTrack } from './game/music'
+import { startMenuMusic, startGameMusic, startGameMusic2, startGameMusic3, startGameMusic4, startGameMusic5, startGameMusic6, startGameMusic7, startGameMusic8, startGameMusic9, startGameMusic10, startGameMusic11, startGameMusic12, startGameMusic13, startGameMusic14, startGameMusic15, startGameMusic16, startGameMusic17, startGameMusic18, startGameMusic19, startGameMusic20, startGameMusic21, startGameMusic22, startGameMusic23, startGameMusic24, startGameMusic25, startGameMusic26, startGameMusic27, startGameMusic28, startGameMusic29, startGameMusic30, startGameMusic31, startGameMusic32, startSkydiveMusic, stopMusic, playCustomTrack } from './game/music'
 import { useCustomTracksStore } from './store/customTracksStore'
 import { Game } from './game/Game'
 import { HUD } from './components/HUD'
@@ -25,6 +25,7 @@ import { HelpScreen } from './components/HelpScreen'
 import { DemoViewer } from './components/DemoViewer'
 import { CharacterSelectScreen } from './components/CharacterSelectScreen'
 import { CutscenePlayer } from './components/CutscenePlayer'
+import { SplashScreen } from './components/SplashScreen'
 import { TitleScreen } from './components/TitleScreen'
 import { SingleplayerMenu } from './components/TitleScreen/SingleplayerMenu'
 import { MultiplayerMenu } from './components/TitleScreen/MultiplayerMenu'
@@ -116,6 +117,7 @@ export function App() {
     else if (musicTrack === 'game29') startGameMusic29()
     else if (musicTrack === 'game30') startGameMusic30()
     else if (musicTrack === 'game31') startGameMusic31()
+    else if (musicTrack === 'game32') startGameMusic32()
     else if (musicTrack === 'custom') {
       const url = customTracks.find((t) => t.id === customTrackId)?.url
       if (url) playCustomTrack(url)
@@ -208,6 +210,7 @@ export function App() {
         }} />
       )}
 
+      {phase === 'splash'                      && <SplashScreen />}
       {phase === 'title_screen'               && <TitleScreen />}
       {phase === 'singleplayer_menu'          && <SingleplayerMenu />}
       {phase === 'multiplayer_menu'           && <MultiplayerMenu />}

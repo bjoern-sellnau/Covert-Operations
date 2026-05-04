@@ -9,7 +9,7 @@ let _trackGain: GainNode | null = null
 let _scheduler: ReturnType<typeof setInterval> | null = null
 let _padOscs: OscillatorNode[] = []
 let _nextBar = 0
-let _track: 'menu' | 'game' | 'game2' | 'game3' | 'game4' | 'skydive' | 'game5' | 'game6' | 'game7' | 'game8' | 'game9' | 'game10' | 'game11' | 'game12' | 'game13' | 'game14' | 'game15' | 'game16' | 'game17' | 'game18' | 'game19' | 'game20' | 'game21' | 'game22' | 'game23' | 'game24' | 'game25' | 'game26' | 'game27' | 'game28' | 'game29' | 'game30' | 'game31' | null = null
+let _track: 'menu' | 'game' | 'game2' | 'game3' | 'game4' | 'skydive' | 'game5' | 'game6' | 'game7' | 'game8' | 'game9' | 'game10' | 'game11' | 'game12' | 'game13' | 'game14' | 'game15' | 'game16' | 'game17' | 'game18' | 'game19' | 'game20' | 'game21' | 'game22' | 'game23' | 'game24' | 'game25' | 'game26' | 'game27' | 'game28' | 'game29' | 'game30' | 'game31' | 'game32' | null = null
 let _previewTimer: ReturnType<typeof setTimeout> | null = null
 
 function master(): GainNode {
@@ -349,12 +349,90 @@ function startScheduler(barLen: number, scheduleFn: (t: number) => void) {
   }, 80)
 }
 
-export function startMenuMusic() {
-  if (_track === 'menu') return
+// ── Game track 32 — Classic menu (D minor, 138 BPM) — former menu music ──────
+
+export function startGameMusic32() {
+  if (_track === 'game32') return
   _menuMelBar = 0
   startScheduler(MENU_BAR, scheduleMenuBar)
-  // Epic Dm pad: D1 F1 A1 D2 F2 A2 (orchestral swell foundation)
   startPad([36.71, 43.65, 55, 73.42, 87.31, 110], 'sawtooth', 380, 0.011)
+  _track = 'game32'
+}
+
+// ── Ambient note helpers for new menu music ───────────────────────────────────
+
+function noteAmb(freq: number, when: number, dur: number, vol: number) {
+  const c = ctx()
+  const osc  = c.createOscillator()
+  const filt = c.createBiquadFilter()
+  const env  = c.createGain()
+  osc.type = 'sine'; osc.frequency.value = freq
+  filt.type = 'lowpass'; filt.frequency.value = 3200
+  env.gain.setValueAtTime(0, when)
+  env.gain.linearRampToValueAtTime(vol, when + 0.09)
+  env.gain.setValueAtTime(vol * 0.8, when + dur * 0.6)
+  env.gain.exponentialRampToValueAtTime(0.0001, when + dur)
+  osc.connect(filt); filt.connect(env); env.connect(tgain())
+  osc.start(when); osc.stop(when + dur + 0.05)
+}
+
+function bassAmb(freq: number, when: number, dur: number, vol: number) {
+  const c = ctx()
+  const osc  = c.createOscillator()
+  const filt = c.createBiquadFilter()
+  const env  = c.createGain()
+  osc.type = 'sawtooth'; osc.frequency.value = freq
+  filt.type = 'lowpass'; filt.frequency.value = 170; filt.Q.value = 0.7
+  env.gain.setValueAtTime(0, when)
+  env.gain.linearRampToValueAtTime(vol, when + 0.4)
+  env.gain.setValueAtTime(vol * 0.65, when + dur - 0.5)
+  env.gain.exponentialRampToValueAtTime(0.001, when + dur)
+  osc.connect(filt); filt.connect(env); env.connect(tgain())
+  osc.start(when); osc.stop(when + dur + 0.05)
+}
+
+// ── New Menu music (C minor, 60 BPM, ambient — inspired by MGS1) ─────────────
+//   Descending Cm melody: G4 Eb4 / F4 D4 / Eb4 C4 / D4 C4
+//   Bass: Cm → Ab → Eb → G (i–VI–III–V)
+//   No percussion — pure atmosphere
+
+const AMENU_BEAT = 1.0         // 60 BPM
+const AMENU_BAR  = AMENU_BEAT * 4   // 4.0 s per bar
+const AMENU_HALF = AMENU_BEAT * 2
+
+const AMENU_MEL: [number, number][] = [
+  [392,    311.13],   // G4,  Eb4
+  [349.23, 293.66],   // F4,  D4
+  [311.13, 261.63],   // Eb4, C4
+  [293.66, 261.63],   // D4,  C4  (resolve)
+]
+const AMENU_BASS = [65.41, 51.91, 77.78, 49.00]  // C2, Ab1, Eb2, G1
+
+let _amenuBar = 0
+
+function scheduleAmbientMenuBar(t: number) {
+  const bar = _amenuBar % 4
+  const [f0, f1] = AMENU_MEL[bar]
+
+  // Melody — sine, slow attack, two half-notes
+  noteAmb(f0,        t,              AMENU_HALF * 0.92, 0.09)
+  noteAmb(f1,        t + AMENU_HALF, AMENU_HALF * 0.92, 0.07)
+  // Octave below for warmth
+  noteAmb(f0 * 0.5,  t,              AMENU_HALF * 0.95, 0.04)
+  noteAmb(f1 * 0.5,  t + AMENU_HALF, AMENU_HALF * 0.95, 0.03)
+
+  // Bass — one deep sustained note per bar
+  bassAmb(AMENU_BASS[bar], t, AMENU_BAR * 0.97, 0.28)
+
+  _amenuBar++
+}
+
+export function startMenuMusic() {
+  if (_track === 'menu') return
+  _amenuBar = 0
+  startScheduler(AMENU_BAR, scheduleAmbientMenuBar)
+  // Cm pad: C1 Eb1 G1 C2 Eb2 G2
+  startPad([32.70, 38.89, 49, 65.41, 77.78, 98], 'sawtooth', 270, 0.009)
   _track = 'menu'
 }
 
@@ -1259,7 +1337,7 @@ export function startGameMusic31() {
 
 // ── Preview ───────────────────────────────────────────────────────────────────
 
-export function previewTrack(track: 'game1' | 'game2' | 'game3' | 'game4' | 'game5' | 'game6' | 'game7' | 'game8' | 'game9' | 'game10' | 'game11' | 'game12' | 'game13' | 'game14' | 'game15' | 'game16' | 'game17' | 'game18' | 'game19' | 'game20' | 'game21' | 'game22' | 'game23' | 'game24' | 'game25' | 'game26' | 'game27' | 'game28' | 'game29' | 'game30' | 'game31', durationMs = 7000) {
+export function previewTrack(track: 'game1' | 'game2' | 'game3' | 'game4' | 'game5' | 'game6' | 'game7' | 'game8' | 'game9' | 'game10' | 'game11' | 'game12' | 'game13' | 'game14' | 'game15' | 'game16' | 'game17' | 'game18' | 'game19' | 'game20' | 'game21' | 'game22' | 'game23' | 'game24' | 'game25' | 'game26' | 'game27' | 'game28' | 'game29' | 'game30' | 'game31' | 'game32', durationMs = 7000) {
   stopMusic()  // clears _track so the start guards pass, cancels any existing preview timer
   if      (track === 'game1')  startGameMusic()
   else if (track === 'game2')  startGameMusic2()
@@ -1291,7 +1369,8 @@ export function previewTrack(track: 'game1' | 'game2' | 'game3' | 'game4' | 'gam
   else if (track === 'game28') startGameMusic28()
   else if (track === 'game29') startGameMusic29()
   else if (track === 'game30') startGameMusic30()
-  else                         startGameMusic31()
+  else if (track === 'game31') startGameMusic31()
+  else                         startGameMusic32()
   _previewTimer = setTimeout(() => {
     _previewTimer = null
     stopMusic()
