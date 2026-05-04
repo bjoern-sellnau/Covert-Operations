@@ -84,28 +84,28 @@ export function OptionsScreen() {
   const wrap: React.CSSProperties = {
     position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
     alignItems: 'center', overflowY: 'auto',
-    background: 'radial-gradient(ellipse at center, #0e1038 0%, #080814 70%)',
+    background: 'radial-gradient(ellipse at 50% 30%, rgba(30,36,20,0.95) 0%, rgba(8,9,6,1) 65%)',
     fontFamily: "'Courier New', monospace", userSelect: 'none',
     paddingBottom: 'max(24px, calc(env(safe-area-inset-bottom, 0px) + 24px))',
   }
   const section: React.CSSProperties = {
     display: 'flex', flexDirection: 'column', gap: 10,
-    padding: '16px 20px', background: '#04050f',
-    border: '1px solid #141e2a', borderRadius: 4, width: '100%',
+    padding: '16px 20px', background: 'rgba(10,12,7,0.85)',
+    border: '1px solid rgba(138,154,98,0.18)', borderRadius: 4, width: '100%',
   }
   const labelStyle: React.CSSProperties = {
-    color: '#8899aa', fontSize: 10, letterSpacing: 3, textTransform: 'uppercase',
+    color: 'rgba(200,196,176,0.45)', fontSize: 10, letterSpacing: 3, textTransform: 'uppercase',
   }
   const tog = (active: boolean, color: string): React.CSSProperties => ({
     background: active ? `${color}28` : 'transparent',
-    border: `1px solid ${active ? color : '#1a2a35'}`,
-    color: active ? color : '#667788',
+    border: `1px solid ${active ? color : 'rgba(138,154,98,0.18)'}`,
+    color: active ? color : 'rgba(138,154,98,0.55)',
     fontSize: 11, letterSpacing: 3, padding: '7px 18px', cursor: 'pointer',
     fontFamily: "'Courier New', monospace", textTransform: 'uppercase', transition: 'all 0.12s',
     boxShadow: active ? `0 0 10px ${color}44` : 'none',
   })
   const backBtn: React.CSSProperties = {
-    background: 'transparent', border: '1px solid #1a2a35', color: '#7799aa',
+    background: 'transparent', border: '1px solid rgba(138,154,98,0.18)', color: 'rgba(200,196,176,0.6)',
     fontSize: 12, letterSpacing: 4, padding: '11px', cursor: 'pointer',
     fontFamily: "'Courier New', monospace", textTransform: 'uppercase', transition: 'all 0.12s',
   }
@@ -119,10 +119,10 @@ export function OptionsScreen() {
   if (view === 'music') {
     return (
       <div style={wrap}>
-        <div style={{ color: '#00ccff', fontSize: 22, fontWeight: 'bold', letterSpacing: 6, marginTop: 24, marginBottom: 4, textShadow: '0 0 14px #00aaff88' }}>
+        <div style={{ color: '#e05418', fontSize: 22, fontWeight: 'bold', letterSpacing: 6, marginTop: 24, marginBottom: 4, textShadow: '0 0 14px rgba(224,84,24,0.4)' }}>
           KAMPF-MUSIK
         </div>
-        <div style={{ color: '#445566', fontSize: 10, letterSpacing: 4, marginBottom: 20 }}>TRACK AUSWÄHLEN</div>
+        <div style={{ color: 'rgba(138,154,98,0.4)', fontSize: 10, letterSpacing: 4, marginBottom: 20 }}>TRACK AUSWÄHLEN</div>
 
         <input
           ref={fileInputRef}
@@ -136,11 +136,11 @@ export function OptionsScreen() {
           {/* AUTO */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <button style={tog(musicTrack === 'auto', '#ffaa00')} onClick={() => setMusicTrack('auto')}>AUTO</button>
-            <span style={{ color: '#667788', fontSize: 9, letterSpacing: 1 }}>Jeder Level hat seinen eigenen Track</span>
+            <span style={{ color: 'rgba(138,154,98,0.55)', fontSize: 9, letterSpacing: 1 }}>Jeder Level hat seinen eigenen Track</span>
           </div>
 
           {/* Custom tracks */}
-          <div style={{ color: '#445566', fontSize: 9, letterSpacing: 4, marginTop: 6 }}>EIGENE TRACKS</div>
+          <div style={{ color: 'rgba(138,154,98,0.4)', fontSize: 9, letterSpacing: 4, marginTop: 6 }}>EIGENE TRACKS</div>
           {customTracks.map((ct) => (
             <div key={ct.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <button
@@ -159,7 +159,7 @@ export function OptionsScreen() {
                   if (customTrackId === ct.id) setMusicTrack('auto')
                 }}
                 style={{
-                  background: 'transparent', border: '1px solid #3a1520', color: '#884444',
+                  background: 'transparent', border: '1px solid rgba(138,154,98,0.18)', color: 'rgba(200,196,176,0.6)',
                   fontSize: 10, padding: '5px 10px', cursor: 'pointer', fontFamily: 'inherit',
                   transition: 'all 0.12s', flexShrink: 0,
                 }}
@@ -169,7 +169,7 @@ export function OptionsScreen() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <button
               style={{
-                background: 'transparent', border: '1px dashed #2a4a35', color: '#44aa66',
+                background: 'transparent', border: '1px dashed rgba(138,154,98,0.25)', color: 'rgba(138,154,98,0.7)',
                 fontSize: 10, letterSpacing: 2, padding: '7px 14px', cursor: 'pointer',
                 fontFamily: 'inherit', transition: 'all 0.12s',
               }}
@@ -177,11 +177,11 @@ export function OptionsScreen() {
             >
               + DATEI IMPORTIEREN
             </button>
-            <span style={{ color: '#445566', fontSize: 9, letterSpacing: 1 }}>MP3, WAV, OGG, WEBM</span>
+            <span style={{ color: 'rgba(138,154,98,0.4)', fontSize: 9, letterSpacing: 1 }}>MP3, WAV, OGG, WEBM</span>
           </div>
 
-          <div style={{ borderBottom: '1px solid #1a2535', margin: '4px 0' }} />
-          <div style={{ color: '#445566', fontSize: 9, letterSpacing: 4 }}>EINGEBAUTE TRACKS</div>
+          <div style={{ borderBottom: '1px solid rgba(138,154,98,0.18)', margin: '4px 0' }} />
+          <div style={{ color: 'rgba(138,154,98,0.4)', fontSize: 9, letterSpacing: 4 }}>EINGEBAUTE TRACKS</div>
 
           {/* Tracks */}
           {tracks.map(([val, lbl, col, desc]) => (
@@ -191,8 +191,8 @@ export function OptionsScreen() {
                 onClick={() => handlePreview(val)}
                 style={{
                   background: previewing === val ? `${col}33` : 'transparent',
-                  border: `1px solid ${previewing === val ? col : '#223344'}`,
-                  color: previewing === val ? col : '#556677',
+                  border: `1px solid ${previewing === val ? col : 'rgba(138,154,98,0.18)'}`,
+                  color: previewing === val ? col : 'rgba(138,154,98,0.45)',
                   fontSize: 10, letterSpacing: 1, padding: '6px 10px', cursor: 'pointer',
                   fontFamily: 'inherit', transition: 'all 0.12s', flexShrink: 0,
                   boxShadow: previewing === val ? `0 0 8px ${col}44` : 'none',
@@ -200,14 +200,14 @@ export function OptionsScreen() {
               >
                 {previewing === val ? '■ STOP' : '▶ PREVIEW'}
               </button>
-              <span style={{ color: '#556677', fontSize: 9, letterSpacing: 1 }}>{desc}</span>
+              <span style={{ color: 'rgba(138,154,98,0.45)', fontSize: 9, letterSpacing: 1 }}>{desc}</span>
             </div>
           ))}
 
           <button
             style={backBtn}
-            onMouseEnter={(e) => { e.currentTarget.style.color = '#cce4ff'; e.currentTarget.style.borderColor = '#334455' }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = '#7799aa'; e.currentTarget.style.borderColor = '#1a2a35' }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = '#e0dcc8'; e.currentTarget.style.borderColor = 'rgba(138,154,98,0.7)' }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(200,196,176,0.6)'; e.currentTarget.style.borderColor = 'rgba(138,154,98,0.18)' }}
             onClick={() => { stopMusic(); setPreviewing(null); setView('main') }}
           >
             ← Zurück zu Optionen
@@ -220,10 +220,10 @@ export function OptionsScreen() {
   // ── Main options screen ──────────────────────────────────────────────────────
   return (
     <div style={wrap}>
-      <div style={{ color: '#00ccff', fontSize: 26, fontWeight: 'bold', letterSpacing: 6, marginBottom: 4, marginTop: 20, textShadow: '0 0 14px #00aaff88' }}>
+      <div style={{ color: '#e05418', fontSize: 26, fontWeight: 'bold', letterSpacing: 6, marginBottom: 4, marginTop: 20, textShadow: '0 0 14px rgba(224,84,24,0.4)' }}>
         OPTIONEN
       </div>
-      <div style={{ color: '#445566', fontSize: 10, letterSpacing: 4, marginBottom: 28 }}>
+      <div style={{ color: 'rgba(138,154,98,0.4)', fontSize: 10, letterSpacing: 4, marginBottom: 28 }}>
         COVERT OPERATIONS
       </div>
 
@@ -245,7 +245,7 @@ export function OptionsScreen() {
               )
             })}
           </div>
-          <div style={{ color: '#667788', fontSize: 9, letterSpacing: 1 }}>
+          <div style={{ color: 'rgba(138,154,98,0.55)', fontSize: 9, letterSpacing: 1 }}>
             {`Gegner-HP ×${DIFFICULTY_MULTS[difficulty][0]} · Schaden ×${DIFFICULTY_MULTS[difficulty][1]} · Speed ×${DIFFICULTY_MULTS[difficulty][2]} · Spieler-HP ×${DIFFICULTY_MULTS[difficulty][3]}`}
           </div>
         </div>
@@ -276,12 +276,12 @@ export function OptionsScreen() {
               </span>
               <button
                 style={{
-                  background: 'transparent', border: '1px solid #223344', color: '#7799aa',
+                  background: 'transparent', border: '1px solid rgba(138,154,98,0.18)', color: 'rgba(200,196,176,0.6)',
                   fontSize: 10, letterSpacing: 2, padding: '6px 14px', cursor: 'pointer',
                   fontFamily: "'Courier New', monospace", transition: 'all 0.12s',
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.color = '#00ccff'; e.currentTarget.style.borderColor = '#00aaff' }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = '#7799aa'; e.currentTarget.style.borderColor = '#223344' }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = '#e05418'; e.currentTarget.style.borderColor = 'rgba(224,84,24,0.4)' }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(200,196,176,0.6)'; e.currentTarget.style.borderColor = 'rgba(138,154,98,0.18)' }}
                 onClick={() => setView('music')}
               >
                 TRACKS AUSWÄHLEN →
@@ -294,11 +294,11 @@ export function OptionsScreen() {
         <div style={section}>
           <div style={labelStyle}>Mobile Steuerung (Touch)</div>
           <div style={{ display: 'flex', gap: 6 }}>
-            <button style={tog(mobileControls, '#00aaff')} onClick={() => setMobileControls(true)}>Ein</button>
+            <button style={tog(mobileControls, '#e05418')} onClick={() => setMobileControls(true)}>Ein</button>
             <button style={tog(!mobileControls, '#667788')} onClick={() => setMobileControls(false)}>Aus</button>
           </div>
           {mobileControls && (
-            <div style={{ color: '#7799aa', fontSize: 10, letterSpacing: 1, lineHeight: 1.6 }}>
+            <div style={{ color: 'rgba(200,196,176,0.6)', fontSize: 10, letterSpacing: 1, lineHeight: 1.6 }}>
               Virtueller Joystick links · FIRE / GRN / DIVE / BT rechts<br />
               Automatisches Zielen auf nächsten Gegner
             </div>
@@ -319,7 +319,7 @@ export function OptionsScreen() {
               )
             })}
           </div>
-          <div style={{ color: '#667788', fontSize: 9, letterSpacing: 1 }}>
+          <div style={{ color: 'rgba(138,154,98,0.55)', fontSize: 9, letterSpacing: 1 }}>
             Niedrig: nur globales Licht, keine Schatten, keine Reflexionen · Hoch: volle Beleuchtung + Schatten
           </div>
         </div>
@@ -332,9 +332,9 @@ export function OptionsScreen() {
               type="range" min={0.5} max={2.0} step={0.1}
               value={charScale}
               onChange={(e) => setCharScale(parseFloat(e.target.value))}
-              style={{ flex: 1, accentColor: '#00aaff' }}
+              style={{ flex: 1, accentColor: '#e05418' }}
             />
-            <span style={{ color: '#00aaff', fontSize: 13, fontWeight: 'bold', letterSpacing: 2, minWidth: 36, textAlign: 'right' }}>
+            <span style={{ color: '#e05418', fontSize: 13, fontWeight: 'bold', letterSpacing: 2, minWidth: 36, textAlign: 'right' }}>
               {charScale.toFixed(1)}×
             </span>
           </div>
@@ -344,10 +344,10 @@ export function OptionsScreen() {
         <div style={section}>
           <div style={labelStyle}>Ego-Perspektive: Waffe anzeigen</div>
           <div style={{ display: 'flex', gap: 6 }}>
-            <button style={tog(showFPSWeapon, '#00aaff')} onClick={() => setShowFPSWeapon(true)}>Ein</button>
-            <button style={tog(!showFPSWeapon, '#667788')} onClick={() => setShowFPSWeapon(false)}>Aus</button>
+            <button style={tog(showFPSWeapon, '#e05418')} onClick={() => setShowFPSWeapon(true)}>Ein</button>
+            <button style={tog(!showFPSWeapon, 'rgba(138,154,98,0.55)')} onClick={() => setShowFPSWeapon(false)}>Aus</button>
           </div>
-          <div style={{ color: '#667788', fontSize: 9, letterSpacing: 1 }}>
+          <div style={{ color: 'rgba(138,154,98,0.55)', fontSize: 9, letterSpacing: 1 }}>
             Zeigt den Waffenarm in der Ego-Perspektive (Taste F)
           </div>
         </div>
@@ -357,9 +357,9 @@ export function OptionsScreen() {
           <div style={labelStyle}>Feind-Marker (außerhalb Sicht)</div>
           <div style={{ display: 'flex', gap: 6 }}>
             <button style={tog(showEnemyMarkers, '#ff4422')} onClick={() => setShowEnemyMarkers(true)}>Ein</button>
-            <button style={tog(!showEnemyMarkers, '#667788')} onClick={() => setShowEnemyMarkers(false)}>Aus</button>
+            <button style={tog(!showEnemyMarkers, 'rgba(138,154,98,0.55)')} onClick={() => setShowEnemyMarkers(false)}>Aus</button>
           </div>
-          <div style={{ color: '#667788', fontSize: 9, letterSpacing: 1 }}>
+          <div style={{ color: 'rgba(138,154,98,0.55)', fontSize: 9, letterSpacing: 1 }}>
             Pfeil am Bildschirmrand zeigt Richtung nicht sichtbarer Feinde
           </div>
         </div>
@@ -369,9 +369,9 @@ export function OptionsScreen() {
           <div style={labelStyle}>Minikarte</div>
           <div style={{ display: 'flex', gap: 6 }}>
             <button style={tog(showMinimap, '#00ccaa')} onClick={() => setShowMinimap(true)}>Ein</button>
-            <button style={tog(!showMinimap, '#667788')} onClick={() => setShowMinimap(false)}>Aus</button>
+            <button style={tog(!showMinimap, 'rgba(138,154,98,0.55)')} onClick={() => setShowMinimap(false)}>Aus</button>
           </div>
-          <div style={{ color: '#667788', fontSize: 9, letterSpacing: 1 }}>
+          <div style={{ color: 'rgba(138,154,98,0.55)', fontSize: 9, letterSpacing: 1 }}>
             Kleine Übersichtskarte mit Spieler- und Feinddots (unten rechts)
           </div>
         </div>
@@ -389,7 +389,7 @@ export function OptionsScreen() {
               </button>
             ))}
           </div>
-          <div style={{ color: '#667788', fontSize: 10, letterSpacing: 1 }}>
+          <div style={{ color: 'rgba(138,154,98,0.55)', fontSize: 10, letterSpacing: 1 }}>
             Betrag setzen um alle Waffen zu testen
           </div>
         </div>
@@ -397,7 +397,7 @@ export function OptionsScreen() {
         {/* ── Controls reference ── */}
         <div style={section}>
           <div style={labelStyle}>Tastatur-Steuerung</div>
-          <div style={{ color: '#8899aa', fontSize: 10, letterSpacing: 1, lineHeight: 1.8 }}>
+          <div style={{ color: 'rgba(200,196,176,0.45)', fontSize: 10, letterSpacing: 1, lineHeight: 1.8 }}>
             WASD — Bewegen &nbsp;·&nbsp; Maus — Zielen &nbsp;·&nbsp; LMT — Schießen<br />
             G — Gun Kata (Mutator) &nbsp;·&nbsp; Space — Dive &nbsp;·&nbsp; Shift — Bullet Time<br />
             Q/E — Bullet Ballet (Akimbo) &nbsp;·&nbsp; Slot 7 — Granate<br />
@@ -409,9 +409,9 @@ export function OptionsScreen() {
 
         <button
           style={backBtn}
-          onMouseEnter={(e) => { e.currentTarget.style.color = '#cce4ff'; e.currentTarget.style.borderColor = '#334455' }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = '#7799aa'; e.currentTarget.style.borderColor = '#1a2a35' }}
-          onClick={() => setPhase('menu')}
+          onMouseEnter={(e) => { e.currentTarget.style.color = '#e0dcc8'; e.currentTarget.style.borderColor = 'rgba(138,154,98,0.7)' }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(200,196,176,0.6)'; e.currentTarget.style.borderColor = 'rgba(138,154,98,0.18)' }}
+          onClick={() => setPhase('title_screen')}
         >
           ← Zurück
         </button>

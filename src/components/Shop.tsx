@@ -25,7 +25,7 @@ function StatBar({ value, max = 5, color }: { value: number; max?: number; color
             width: 16,
             height: 6,
             borderRadius: 1,
-            background: i < value ? color : '#1a1a2e',
+            background: i < value ? color : 'rgba(8,9,6,1)',
             boxShadow: i < value ? `0 0 4px ${color}` : 'none',
           }}
         />
@@ -53,31 +53,31 @@ function WeaponCard({ id }: { id: WeaponId }) {
   return (
     <div
       style={{
-        background: selected ? '#0a1a2e' : '#080812',
-        border: `1px solid ${selected ? '#00aaff' : owned ? '#223344' : '#111122'}`,
+        background: selected ? 'rgba(224,84,24,0.08)' : 'rgba(10,12,7,0.85)',
+        border: `1px solid ${selected ? '#e05418' : owned ? 'rgba(138,154,98,0.18)' : 'rgba(8,9,6,1)'}`,
         borderRadius: 4,
         padding: '14px 16px',
         cursor: 'pointer',
         transition: 'border-color 0.15s, background 0.15s',
-        boxShadow: selected ? '0 0 12px #00aaff33, inset 0 0 20px #00aaff11' : 'none',
+        boxShadow: selected ? '0 0 12px rgba(224,84,24,0.3), inset 0 0 20px rgba(224,84,24,0.06)' : 'none',
       }}
       onClick={handleClick}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
         <div>
-          <div style={{ color: selected ? '#00ccff' : '#cceeff', fontSize: 14, fontWeight: 'bold', letterSpacing: 1 }}>
+          <div style={{ color: selected ? '#f07030' : '#e0dcc8', fontSize: 14, fontWeight: 'bold', letterSpacing: 1 }}>
             {cfg.name}
           </div>
-          <div style={{ color: '#445566', fontSize: 11, marginTop: 2 }}>{cfg.shortName}</div>
+          <div style={{ color: 'rgba(138,154,98,0.4)', fontSize: 11, marginTop: 2 }}>{cfg.shortName}</div>
         </div>
         <div style={{ textAlign: 'right' }}>
           {owned && !akimboEligible ? (
             <div style={{
-              color: selected ? '#00ffaa' : '#336655',
+              color: selected ? '#00ffaa' : 'rgba(138,154,98,0.7)',
               fontSize: 11,
               letterSpacing: 2,
               padding: '3px 8px',
-              border: `1px solid ${selected ? '#00ffaa' : '#223344'}`,
+              border: `1px solid ${selected ? '#00ffaa' : 'rgba(138,154,98,0.18)'}`,
               borderRadius: 2,
             }}>
               {selected ? 'AKTIV' : 'BESESSEN'}
@@ -96,22 +96,22 @@ function WeaponCard({ id }: { id: WeaponId }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginBottom: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ color: '#445566', fontSize: 10, width: 60, letterSpacing: 1 }}>SCHADEN</div>
+          <div style={{ color: 'rgba(138,154,98,0.4)', fontSize: 10, width: 60, letterSpacing: 1 }}>SCHADEN</div>
           <StatBar value={cfg.statDamage} color="#ff4444" />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ color: '#445566', fontSize: 10, width: 60, letterSpacing: 1 }}>FEUER</div>
+          <div style={{ color: 'rgba(138,154,98,0.4)', fontSize: 10, width: 60, letterSpacing: 1 }}>FEUER</div>
           <StatBar value={cfg.statRate} color="#ffaa00" />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ color: '#445566', fontSize: 10, width: 60, letterSpacing: 1 }}>REICHW.</div>
-          <StatBar value={cfg.statRange} color="#00aaff" />
+          <div style={{ color: 'rgba(138,154,98,0.4)', fontSize: 10, width: 60, letterSpacing: 1 }}>REICHW.</div>
+          <StatBar value={cfg.statRange} color="#e05418" />
         </div>
       </div>
 
-      <div style={{ color: '#445566', fontSize: 11, lineHeight: 1.4 }}>{cfg.description}</div>
+      <div style={{ color: 'rgba(138,154,98,0.4)', fontSize: 11, lineHeight: 1.4 }}>{cfg.description}</div>
 
-      <div style={{ display: 'flex', gap: 16, marginTop: 8, color: '#334455', fontSize: 10 }}>
+      <div style={{ display: 'flex', gap: 16, marginTop: 8, color: 'rgba(138,154,98,0.25)', fontSize: 10 }}>
         <span>MUNITION: {cfg.baseAmmo}</span>
         {cfg.pellets > 1 && <span>PELLETS: {cfg.pellets}</span>}
       </div>
@@ -142,8 +142,8 @@ function EquipmentCard({ id }: { id: EquipmentId }) {
   return (
     <div
       style={{
-        background: owned ? '#0a1a0e' : '#080812',
-        border: `1px solid ${owned ? '#226633' : '#111122'}`,
+        background: owned ? 'rgba(10,12,7,0.85)' : 'rgba(10,12,7,0.85)',
+        border: `1px solid ${owned ? '#226633' : 'rgba(8,9,6,1)'}`,
         borderRadius: 4,
         padding: '14px 16px',
         cursor: owned ? 'default' : 'pointer',
@@ -154,10 +154,10 @@ function EquipmentCard({ id }: { id: EquipmentId }) {
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
         <div>
-          <div style={{ color: owned ? '#00ff88' : '#cceeff', fontSize: 14, fontWeight: 'bold', letterSpacing: 1 }}>
+          <div style={{ color: owned ? '#00ff88' : '#e0dcc8', fontSize: 14, fontWeight: 'bold', letterSpacing: 1 }}>
             {cfg.name}
           </div>
-          <div style={{ color: '#445566', fontSize: 10, marginTop: 2, letterSpacing: 2 }}>{slotLabel}</div>
+          <div style={{ color: 'rgba(138,154,98,0.4)', fontSize: 10, marginTop: 2, letterSpacing: 2 }}>{slotLabel}</div>
         </div>
         {owned ? (
           <div style={{ color: '#00ff88', fontSize: 11, letterSpacing: 2, padding: '3px 8px', border: '1px solid #226633', borderRadius: 2 }}>
@@ -173,7 +173,7 @@ function EquipmentCard({ id }: { id: EquipmentId }) {
       <div style={{ color: '#00ff88', fontSize: 13, fontWeight: 'bold', marginBottom: 6 }}>
         +{Math.round(cfg.ammoMultBonus * 100)}% Kapazität
       </div>
-      <div style={{ color: '#445566', fontSize: 11, lineHeight: 1.4 }}>{cfg.description}</div>
+      <div style={{ color: 'rgba(138,154,98,0.4)', fontSize: 11, lineHeight: 1.4 }}>{cfg.description}</div>
 
       {!owned && !canAfford && (
         <div style={{ color: '#442200', fontSize: 10, marginTop: 6, letterSpacing: 1 }}>
@@ -201,8 +201,8 @@ function AmmoCard({ id }: { id: AmmoId }) {
   return (
     <div
       style={{
-        background: selected ? '#0a0f1a' : '#080812',
-        border: `1px solid ${selected ? cfg.color : owned ? '#223344' : '#111122'}`,
+        background: selected ? 'rgba(10,12,7,0.85)' : 'rgba(10,12,7,0.85)',
+        border: `1px solid ${selected ? cfg.color : owned ? 'rgba(138,154,98,0.18)' : 'rgba(8,9,6,1)'}`,
         borderRadius: 4,
         padding: '14px 16px',
         cursor: 'pointer',
@@ -215,17 +215,17 @@ function AmmoCard({ id }: { id: AmmoId }) {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 10, height: 10, borderRadius: '50%', background: cfg.color, boxShadow: `0 0 6px ${cfg.color}` }} />
-            <div style={{ color: selected ? cfg.color : '#cceeff', fontSize: 14, fontWeight: 'bold', letterSpacing: 1 }}>
+            <div style={{ color: selected ? cfg.color : '#e0dcc8', fontSize: 14, fontWeight: 'bold', letterSpacing: 1 }}>
               {cfg.name}
             </div>
           </div>
-          <div style={{ color: '#445566', fontSize: 10, marginTop: 2, letterSpacing: 2 }}>{cfg.shortName}</div>
+          <div style={{ color: 'rgba(138,154,98,0.4)', fontSize: 10, marginTop: 2, letterSpacing: 2 }}>{cfg.shortName}</div>
         </div>
         {id === 'standard' || owned ? (
           <div style={{
-            color: selected ? cfg.color : '#334455',
+            color: selected ? cfg.color : 'rgba(138,154,98,0.4)',
             fontSize: 11, letterSpacing: 2, padding: '3px 8px',
-            border: `1px solid ${selected ? cfg.color : '#223344'}`, borderRadius: 2,
+            border: `1px solid ${selected ? cfg.color : 'rgba(138,154,98,0.18)'}`, borderRadius: 2,
           }}>
             {selected ? 'GELADEN' : 'BESESSEN'}
           </div>
@@ -241,7 +241,7 @@ function AmmoCard({ id }: { id: AmmoId }) {
           +{cfg.damageBonus} Schaden pro Schuss
         </div>
       )}
-      <div style={{ color: '#445566', fontSize: 11, lineHeight: 1.4 }}>{cfg.description}</div>
+      <div style={{ color: 'rgba(138,154,98,0.4)', fontSize: 11, lineHeight: 1.4 }}>{cfg.description}</div>
     </div>
   )
 }
@@ -260,8 +260,8 @@ function MeleeCard({ id }: { id: WeaponId }) {
   return (
     <div
       style={{
-        background: selected ? '#1a0800' : '#080812',
-        border: `1px solid ${selected ? '#ff8800' : owned ? '#443322' : '#111122'}`,
+        background: selected ? '#1a0800' : 'rgba(10,12,7,0.85)',
+        border: `1px solid ${selected ? '#ff8800' : owned ? '#443322' : 'rgba(8,9,6,1)'}`,
         borderRadius: 4, padding: '14px 16px', cursor: 'pointer',
         transition: 'all 0.15s',
         boxShadow: selected ? '0 0 12px #ff880033' : 'none',
@@ -273,7 +273,7 @@ function MeleeCard({ id }: { id: WeaponId }) {
           <div style={{ color: selected ? '#ff9933' : '#ffccaa', fontSize: 14, fontWeight: 'bold', letterSpacing: 1 }}>
             {cfg.name}
           </div>
-          <div style={{ color: '#445566', fontSize: 11, marginTop: 2 }}>{cfg.shortName} · NAHKAMPF</div>
+          <div style={{ color: 'rgba(138,154,98,0.4)', fontSize: 11, marginTop: 2 }}>{cfg.shortName} · NAHKAMPF</div>
         </div>
         <div style={{ textAlign: 'right' }}>
           {owned ? (
@@ -293,16 +293,16 @@ function MeleeCard({ id }: { id: WeaponId }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginBottom: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ color: '#445566', fontSize: 10, width: 60, letterSpacing: 1 }}>SCHADEN</div>
+          <div style={{ color: 'rgba(138,154,98,0.4)', fontSize: 10, width: 60, letterSpacing: 1 }}>SCHADEN</div>
           <StatBar value={cfg.statDamage} color="#ff8844" />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ color: '#445566', fontSize: 10, width: 60, letterSpacing: 1 }}>TEMPO</div>
+          <div style={{ color: 'rgba(138,154,98,0.4)', fontSize: 10, width: 60, letterSpacing: 1 }}>TEMPO</div>
           <StatBar value={cfg.statRate} color="#ffaa00" />
         </div>
       </div>
 
-      <div style={{ color: '#445566', fontSize: 11, lineHeight: 1.4, marginBottom: 8 }}>{cfg.description}</div>
+      <div style={{ color: 'rgba(138,154,98,0.4)', fontSize: 11, lineHeight: 1.4, marginBottom: 8 }}>{cfg.description}</div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         {cfg.stackable ? (
@@ -352,10 +352,10 @@ function CharacterPanel() {
 
   const equipStyle = (equipped: boolean, color = '#00ff88'): React.CSSProperties => ({
     padding: '7px 10px',
-    border: `1px solid ${equipped ? color : '#1a1a2e'}`,
+    border: `1px solid ${equipped ? color : 'rgba(138,154,98,0.18)'}`,
     borderRadius: 3,
-    background: equipped ? `${color}11` : '#08080f',
-    color: equipped ? color : '#334455',
+    background: equipped ? `${color}11` : 'rgba(10,12,7,0.85)',
+    color: equipped ? color : 'rgba(138,154,98,0.4)',
     fontSize: 11,
     letterSpacing: 1,
     display: 'flex',
@@ -375,13 +375,13 @@ function CharacterPanel() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <div style={{ color: '#445566', fontSize: 10, letterSpacing: 3, marginBottom: 2 }}>
+      <div style={{ color: 'rgba(138,154,98,0.4)', fontSize: 10, letterSpacing: 3, marginBottom: 2 }}>
         WAFFEN ({ownedWeapons.length})
       </div>
 
       {usedSlots.map(slot => (
         <div key={slot}>
-          <div style={{ color: '#223344', fontSize: 9, letterSpacing: 2, marginBottom: 2 }}>
+          <div style={{ color: 'rgba(138,154,98,0.25)', fontSize: 9, letterSpacing: 2, marginBottom: 2 }}>
             [{slot === 0 ? '0' : slot}] {Object.entries(WEAPON_SLOT_WEAPONS).find(([k]) => Number(k) === slot)?.[1].map(w => WEAPON_CONFIGS[w]?.shortName).filter(Boolean).join(' / ')}
           </div>
           {ownedBySlot.get(slot)!.map(wid => {
@@ -390,16 +390,16 @@ function CharacterPanel() {
             const ammoCount = isActive ? entityStore.ammo : (weaponAmmo.get(wid) ?? wCfg.baseAmmo)
             const ammoMax = wCfg.baseAmmo
             const ammoPct = wCfg.isMelee ? 100 : Math.min(100, (ammoCount / ammoMax) * 100)
-            const ammoColor = ammoPct > 40 ? '#00ccff' : ammoPct > 15 ? '#ffaa00' : '#ff3300'
+            const ammoColor = ammoPct > 40 ? '#e05418' : ammoPct > 15 ? '#ffaa00' : '#ff3300'
             return (
               <div
                 key={wid}
                 style={{
                   padding: '5px 10px',
-                  border: `1px solid ${isActive ? '#00aaff88' : '#1a1a2e'}`,
+                  border: `1px solid ${isActive ? 'rgba(224,84,24,0.4)' : 'rgba(138,154,98,0.18)'}`,
                   borderRadius: 3,
-                  background: isActive ? '#00aaff11' : '#08080f',
-                  color: isActive ? '#00aaff' : '#556677',
+                  background: isActive ? 'rgba(224,84,24,0.06)' : 'rgba(10,12,7,0.85)',
+                  color: isActive ? '#e05418' : 'rgba(138,154,98,0.45)',
                   fontSize: 11,
                   letterSpacing: 1,
                   display: 'flex',
@@ -410,7 +410,7 @@ function CharacterPanel() {
                 }}
                 onClick={() => selectWeapon(wid)}
               >
-                <span style={{ fontSize: 9, color: isActive ? '#00aaff' : '#334455' }}>{isActive ? '▶' : '·'}</span>
+                <span style={{ fontSize: 9, color: isActive ? '#e05418' : 'rgba(138,154,98,0.25)' }}>{isActive ? '▶' : '·'}</span>
                 <span style={{ flex: 1 }}>{wCfg.shortName}</span>
                 {!wCfg.isMelee && (
                   <span style={{ color: ammoColor, fontSize: 10, fontWeight: 'bold' }}>{ammoCount}</span>
@@ -421,37 +421,37 @@ function CharacterPanel() {
         </div>
       ))}
 
-      <div style={{ color: '#445566', fontSize: 10, letterSpacing: 3, marginTop: 4, marginBottom: 2 }}>AUSRÜSTUNG</div>
+      <div style={{ color: 'rgba(138,154,98,0.4)', fontSize: 10, letterSpacing: 3, marginTop: 4, marginBottom: 2 }}>AUSRÜSTUNG</div>
 
       <div style={equipStyle(hasChest)}>
-        <span style={{ color: '#445566', minWidth: 36 }}>BRUST</span>
+        <span style={{ color: 'rgba(138,154,98,0.4)', minWidth: 36 }}>BRUST</span>
         <span>{hasChest ? 'Brusttasche' : 'Leer'}</span>
       </div>
       <div style={equipStyle(hasBackpack)}>
-        <span style={{ color: '#445566', minWidth: 36 }}>RÜCKEN</span>
+        <span style={{ color: 'rgba(138,154,98,0.4)', minWidth: 36 }}>RÜCKEN</span>
         <span>{hasBackpack ? 'Taktikrucksack' : 'Leer'}</span>
       </div>
       <div style={equipStyle(hasLegs)}>
-        <span style={{ color: '#445566', minWidth: 36 }}>BEINE</span>
+        <span style={{ color: 'rgba(138,154,98,0.4)', minWidth: 36 }}>BEINE</span>
         <span>{hasLegs ? 'Beintasche' : 'Leer'}</span>
       </div>
       <div style={{ ...equipStyle(selectedAmmo !== 'standard', ammoCfg.color), marginTop: 4 }}>
         <div style={{ width: 8, height: 8, borderRadius: '50%', background: ammoCfg.color, flexShrink: 0 }} />
-        <span style={{ color: '#445566' }}>MUN.</span>
+        <span style={{ color: 'rgba(138,154,98,0.4)' }}>MUN.</span>
         <span style={{ color: ammoCfg.color }}>{ammoCfg.shortName}</span>
       </div>
 
-      <div style={{ marginTop: 8, padding: '10px 12px', background: '#08080f', border: '1px solid #1a1a2e', borderRadius: 3 }}>
-        <div style={{ color: '#445566', fontSize: 10, letterSpacing: 2, marginBottom: 6 }}>MAGAZIN-KAPAZITÄT</div>
-        <div style={{ height: 6, background: '#111122', borderRadius: 3, overflow: 'hidden', marginBottom: 4 }}>
+      <div style={{ marginTop: 8, padding: '10px 12px', background: 'rgba(10,12,7,0.85)', border: '1px solid rgba(138,154,98,0.18)', borderRadius: 3 }}>
+        <div style={{ color: 'rgba(138,154,98,0.4)', fontSize: 10, letterSpacing: 2, marginBottom: 6 }}>MAGAZIN-KAPAZITÄT</div>
+        <div style={{ height: 6, background: 'rgba(8,9,6,1)', borderRadius: 3, overflow: 'hidden', marginBottom: 4 }}>
           <div style={{
             height: '100%',
             width: `${Math.min(100, (maxAmmo / (WEAPON_CONFIGS[selectedWeapon].baseAmmo * 2.2)) * 100)}%`,
-            background: 'linear-gradient(90deg, #0066cc, #00ccff)',
-            boxShadow: '0 0 8px #00aaff',
+            background: 'linear-gradient(90deg, #e05418, #f07030)',
+            boxShadow: '0 0 8px rgba(224,84,24,0.4)',
           }} />
         </div>
-        <div style={{ color: '#00ccff', fontSize: 13, fontWeight: 'bold' }}>{maxAmmo} Schuss</div>
+        <div style={{ color: '#f07030', fontSize: 13, fontWeight: 'bold' }}>{maxAmmo} Schuss</div>
       </div>
     </div>
   )
@@ -624,9 +624,9 @@ export function Shop() {
 
   const tabStyle = (active: boolean): React.CSSProperties => ({
     padding: mob ? '10px 14px' : '10px 20px',
-    background: active ? '#00aaff22' : 'transparent',
-    border: `1px solid ${active ? '#00aaff' : '#1a1a2e'}`,
-    color: active ? '#00ccff' : '#445566',
+    background: active ? 'rgba(224,84,24,0.12)' : 'transparent',
+    border: `1px solid ${active ? '#e05418' : 'rgba(138,154,98,0.18)'}`,
+    color: active ? '#f07030' : 'rgba(200,196,176,0.55)',
     cursor: 'pointer',
     fontFamily: 'inherit',
     fontSize: 11,
@@ -641,7 +641,7 @@ export function Shop() {
   return (
     <div style={{
       position: 'absolute', top: 0, right: 0, bottom: 0, left: 0,
-      background: 'radial-gradient(ellipse at 30% 20%, #12122e 0%, #060614 70%)',
+      background: 'radial-gradient(ellipse at 50% 30%, rgba(30,36,20,0.95) 0%, rgba(8,9,6,1) 65%)',
       fontFamily: "'Courier New', monospace",
       userSelect: 'none',
       display: 'flex',
@@ -650,7 +650,7 @@ export function Shop() {
       {/* Bot mode block banner */}
       {isBlockedMode && (
         <div style={{
-          background: '#1a0000', borderBottom: '1px solid #cc220044',
+          background: 'rgba(10,12,7,0.85)', borderBottom: '1px solid rgba(224,84,24,0.25)',
           padding: '10px 20px', textAlign: 'center',
           color: '#cc2200', fontSize: 10, letterSpacing: 4,
         }}>
@@ -665,19 +665,19 @@ export function Shop() {
         flexDirection: mob ? 'column' : 'row',
         justifyContent: 'space-between',
         padding: mob ? '10px 14px 8px' : '16px 28px',
-        borderBottom: '1px solid #111122',
+        borderBottom: '1px solid rgba(138,154,98,0.18)',
         gap: mob ? 4 : 0,
         opacity: isBlockedMode ? 0.4 : 1,
         pointerEvents: isBlockedMode ? 'none' : 'auto',
       }}>
         <div>
-          <div style={{ color: '#00aaff', fontSize: mob ? 15 : 20, fontWeight: 'bold', letterSpacing: mob ? 3 : 6, textShadow: '0 0 12px #00aaff' }}>
+          <div style={{ color: '#e05418', fontSize: mob ? 15 : 20, fontWeight: 'bold', letterSpacing: mob ? 3 : 6, textShadow: '0 0 12px rgba(224,84,24,0.4)' }}>
             COVERT OPERATIONS
           </div>
-          <div style={{ color: '#334455', fontSize: 10, letterSpacing: 3, marginTop: 2 }}>AUSRÜSTUNG & WAFFEN</div>
+          <div style={{ color: 'rgba(138,154,98,0.4)', fontSize: 10, letterSpacing: 3, marginTop: 2 }}>AUSRÜSTUNG & WAFFEN</div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ color: '#445566', fontSize: 11, letterSpacing: 2 }}>CREDITS</div>
+          <div style={{ color: 'rgba(138,154,98,0.4)', fontSize: 11, letterSpacing: 2 }}>CREDITS</div>
           <div style={{ color: '#ffee00', fontSize: mob ? 20 : 26, fontWeight: 'bold', letterSpacing: 2, textShadow: '0 0 10px #ffcc00' }}>
             {credits.toString().padStart(5, '0')}
           </div>
@@ -688,7 +688,7 @@ export function Shop() {
       {mob && (
         <div style={{
           display: 'flex', gap: 6, padding: '8px 12px',
-          borderBottom: '1px solid #111122', overflowX: 'auto',
+          borderBottom: '1px solid rgba(138,154,98,0.18)', overflowX: 'auto',
           opacity: isBlockedMode ? 0.3 : 1, pointerEvents: isBlockedMode ? 'none' : 'auto',
         }}>
           <button style={tabStyle(category === 'waffen')}      onClick={() => setCategory('waffen')}>Waffen</button>
@@ -704,26 +704,26 @@ export function Shop() {
         {/* Desktop: Left sidebar */}
         {!mob && (
           <div style={{
-            width: 180, borderRight: '1px solid #111122', padding: '20px 16px',
+            width: 180, borderRight: '1px solid rgba(138,154,98,0.18)', padding: '20px 16px',
             display: 'flex', flexDirection: 'column', gap: 8,
           }}>
-            <div style={{ color: '#334455', fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>KATEGORIE</div>
+            <div style={{ color: 'rgba(138,154,98,0.4)', fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>KATEGORIE</div>
             <button style={tabStyle(category === 'waffen')}      onClick={() => setCategory('waffen')}>Waffen</button>
             <button style={tabStyle(category === 'nahkampf')}    onClick={() => setCategory('nahkampf')}>Nahkampf</button>
             <button style={tabStyle(category === 'ausruestung')} onClick={() => setCategory('ausruestung')}>Ausrüstung</button>
             <button style={tabStyle(category === 'munition')}    onClick={() => setCategory('munition')}>Munition</button>
             {category === 'ausruestung' && (
-              <div style={{ marginTop: 16, padding: '10px', background: '#080812', border: '1px solid #1a1a2e', borderRadius: 3, color: '#334455', fontSize: 10, lineHeight: 1.6 }}>
+              <div style={{ marginTop: 16, padding: '10px', background: 'rgba(10,12,7,0.85)', border: '1px solid rgba(138,154,98,0.18)', borderRadius: 3, color: 'rgba(138,154,98,0.4)', fontSize: 10, lineHeight: 1.6 }}>
                 Ausrüstung erhöht die Munitionskapazität dauerhaft. Einmal gekauft, immer aktiv.
               </div>
             )}
             {category === 'waffen' && (
-              <div style={{ marginTop: 16, padding: '10px', background: '#080812', border: '1px solid #1a1a2e', borderRadius: 3, color: '#334455', fontSize: 10, lineHeight: 1.6 }}>
+              <div style={{ marginTop: 16, padding: '10px', background: 'rgba(10,12,7,0.85)', border: '1px solid rgba(138,154,98,0.18)', borderRadius: 3, color: 'rgba(138,154,98,0.4)', fontSize: 10, lineHeight: 1.6 }}>
                 Einmal freigeschaltet permanent verfügbar. Klick zum Wechseln.
               </div>
             )}
             {category === 'munition' && (
-              <div style={{ marginTop: 16, padding: '10px', background: '#080812', border: '1px solid #1a1a2e', borderRadius: 3, color: '#334455', fontSize: 10, lineHeight: 1.6 }}>
+              <div style={{ marginTop: 16, padding: '10px', background: 'rgba(10,12,7,0.85)', border: '1px solid rgba(138,154,98,0.18)', borderRadius: 3, color: 'rgba(138,154,98,0.4)', fontSize: 10, lineHeight: 1.6 }}>
                 Einmaliger Kauf schaltet dauerhaft frei. Typ jederzeit wechselbar.
               </div>
             )}
@@ -736,23 +736,23 @@ export function Shop() {
 
           {category === 'waffen' && (
             <>
-              <div style={{ color: '#334455', fontSize: 10, letterSpacing: 3, marginBottom: 4 }}>STANDARD</div>
+              <div style={{ color: 'rgba(138,154,98,0.4)', fontSize: 10, letterSpacing: 3, marginBottom: 4 }}>STANDARD</div>
               {(['pistol', 'smg', 'shotgun', 'rifle'] as WeaponId[]).map((id) => (
                 <WeaponCard key={id} id={id} />
               ))}
-              <div style={{ color: '#334455', fontSize: 10, letterSpacing: 3, marginTop: 8, marginBottom: 4 }}>AUTOMATISCH / BURST</div>
+              <div style={{ color: 'rgba(138,154,98,0.4)', fontSize: 10, letterSpacing: 3, marginTop: 8, marginBottom: 4 }}>AUTOMATISCH / BURST</div>
               {(['uzi', 'mp5', 'm16'] as WeaponId[]).map((id) => (
                 <WeaponCard key={id} id={id} />
               ))}
-              <div style={{ color: '#223355', fontSize: 10, letterSpacing: 3, marginTop: 8, marginBottom: 4 }}>ENERGIE / SPEZIAL</div>
+              <div style={{ color: 'rgba(138,154,98,0.4)', fontSize: 10, letterSpacing: 3, marginTop: 8, marginBottom: 4 }}>ENERGIE / SPEZIAL</div>
               {(['blaster', 'flak'] as WeaponId[]).map((id) => (
                 <WeaponCard key={id} id={id} />
               ))}
-              <div style={{ color: '#553322', fontSize: 10, letterSpacing: 3, marginTop: 8, marginBottom: 4 }}>SCHWERE WAFFEN</div>
+              <div style={{ color: 'rgba(138,154,98,0.4)', fontSize: 10, letterSpacing: 3, marginTop: 8, marginBottom: 4 }}>SCHWERE WAFFEN</div>
               {(['plasma', 'bazooka', 'banana', 'bfg'] as WeaponId[]).map((id) => (
                 <WeaponCard key={id} id={id} />
               ))}
-              <div style={{ color: '#553322', fontSize: 10, letterSpacing: 3, marginTop: 8, marginBottom: 4 }}>SPEZIALWAFFEN</div>
+              <div style={{ color: 'rgba(138,154,98,0.4)', fontSize: 10, letterSpacing: 3, marginTop: 8, marginBottom: 4 }}>SPEZIALWAFFEN</div>
               <VernichterCard />
               <LaserCard />
               <IonCard />
@@ -761,7 +761,7 @@ export function Shop() {
 
           {category === 'nahkampf' && (
             <>
-              <div style={{ color: '#553322', fontSize: 10, letterSpacing: 3, marginBottom: 4 }}>NAHKAMPFWAFFEN</div>
+              <div style={{ color: 'rgba(138,154,98,0.4)', fontSize: 10, letterSpacing: 3, marginBottom: 4 }}>NAHKAMPFWAFFEN</div>
               {(['knife', 'bat', 'stick'] as WeaponId[]).map((id) => (
                 <MeleeCard key={id} id={id} />
               ))}
@@ -770,7 +770,7 @@ export function Shop() {
 
           {category === 'ausruestung' && (
             <>
-              <div style={{ color: '#334455', fontSize: 10, letterSpacing: 3, marginBottom: 4 }}>AUSRÜSTUNG</div>
+              <div style={{ color: 'rgba(138,154,98,0.4)', fontSize: 10, letterSpacing: 3, marginBottom: 4 }}>AUSRÜSTUNG</div>
               {(['palantir_suit', 'backpack', 'chest_pouch', 'leg_pouch'] as EquipmentId[]).map((id) => (
                 <EquipmentCard key={id} id={id} />
               ))}
@@ -779,7 +779,7 @@ export function Shop() {
 
           {category === 'munition' && (
             <>
-              <div style={{ color: '#334455', fontSize: 10, letterSpacing: 3, marginBottom: 4 }}>MUNITIONSTYPEN</div>
+              <div style={{ color: 'rgba(138,154,98,0.4)', fontSize: 10, letterSpacing: 3, marginBottom: 4 }}>MUNITIONSTYPEN</div>
               {(['standard', 'hollow_point', 'ap'] as AmmoId[]).map((id) => (
                 <AmmoCard key={id} id={id} />
               ))}
@@ -789,7 +789,7 @@ export function Shop() {
 
         {/* Desktop: Right character panel */}
         {!mob && (
-          <div style={{ width: 220, borderLeft: '1px solid #111122', padding: '20px 16px', overflowY: 'auto' }}>
+          <div style={{ width: 220, borderLeft: '1px solid rgba(138,154,98,0.18)', padding: '20px 16px', overflowY: 'auto' }}>
             <CharacterPanel />
           </div>
         )}
@@ -799,7 +799,7 @@ export function Shop() {
       <div style={{
         padding: mob ? '10px 12px' : '16px 28px',
         paddingBottom: mob ? 'max(12px, calc(env(safe-area-inset-bottom, 0px) + 12px))' : '16px',
-        borderTop: '1px solid #111122',
+        borderTop: '1px solid rgba(138,154,98,0.18)',
         display: 'flex',
         flexDirection: mob ? 'column' : 'row',
         alignItems: mob ? 'stretch' : 'center',
@@ -809,12 +809,12 @@ export function Shop() {
         <button
           onClick={() => setPhase('menu')}
           style={{
-            background: 'transparent', border: '1px solid #223344', color: '#445566',
+            background: 'transparent', border: '1px solid rgba(138,154,98,0.18)', color: 'rgba(138,154,98,0.4)',
             fontSize: mob ? 14 : 12, letterSpacing: 3, padding: mob ? '14px' : '10px 24px',
             cursor: 'pointer', fontFamily: 'inherit', textTransform: 'uppercase', transition: 'all 0.15s',
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = '#aabbcc'; e.currentTarget.style.borderColor = '#445566' }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = '#445566'; e.currentTarget.style.borderColor = '#223344' }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = '#e0dcc8'; e.currentTarget.style.borderColor = 'rgba(138,154,98,0.7)' }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(138,154,98,0.4)'; e.currentTarget.style.borderColor = 'rgba(138,154,98,0.18)' }}
         >
           Hauptmenü
         </button>
@@ -825,20 +825,20 @@ export function Shop() {
             else { setPhase('mutators') }
           }}
           style={{
-            background: '#00aaff22', border: '2px solid #00aaff', color: '#00ccff',
+            background: 'rgba(224,84,24,0.12)', border: '2px solid #e05418', color: '#f07030',
             fontSize: mob ? 16 : 14, letterSpacing: 4, padding: mob ? '16px' : '12px 36px',
             cursor: 'pointer', fontFamily: 'inherit', textTransform: 'uppercase', fontWeight: 'bold',
-            boxShadow: '0 0 20px #00aaff44', transition: 'all 0.15s',
+            boxShadow: '0 0 20px rgba(224,84,24,0.3)', transition: 'all 0.15s',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#00aaff44'
-            e.currentTarget.style.boxShadow = '0 0 30px #00aaffaa'
+            e.currentTarget.style.background = 'rgba(224,84,24,0.25)'
+            e.currentTarget.style.boxShadow = '0 0 30px rgba(224,84,24,0.5)'
             e.currentTarget.style.color = '#ffffff'
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.background = '#00aaff22'
-            e.currentTarget.style.boxShadow = '0 0 20px #00aaff44'
-            e.currentTarget.style.color = '#00ccff'
+            e.currentTarget.style.background = 'rgba(224,84,24,0.12)'
+            e.currentTarget.style.boxShadow = '0 0 20px rgba(224,84,24,0.3)'
+            e.currentTarget.style.color = '#f07030'
           }}
         >
           Mission Starten

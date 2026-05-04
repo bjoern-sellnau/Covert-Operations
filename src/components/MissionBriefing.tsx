@@ -111,20 +111,20 @@ export function MissionBriefing() {
 
   const accentColor = gameMode === 'skydive' ? '#ff8800'
     : gameMode === 'shooting_range'           ? '#00ff88'
-    : '#00aaff'
+    : '#e05418'
 
   return (
     <div style={{
       position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',
-      background: 'radial-gradient(ellipse at center, #10103a 0%, #080814 80%)',
+      background: 'radial-gradient(ellipse at 50% 30%, rgba(30,36,20,0.95) 0%, rgba(8,9,6,1) 65%)',
       fontFamily: "'Courier New', monospace", userSelect: 'none',
     }}>
       {/* Header */}
       <div style={{ color: accentColor, fontSize: 11, letterSpacing: 5, marginBottom: 6, opacity: 0.7 }}>
         MISSION BRIEFING
       </div>
-      <div style={{ color: '#445566', fontSize: 10, letterSpacing: 3, marginBottom: 36 }}>
+      <div style={{ color: 'rgba(138,154,98,0.4)', fontSize: 10, letterSpacing: 3, marginBottom: 36 }}>
         {page + 1} / {cards.length}
       </div>
 
@@ -145,7 +145,7 @@ export function MissionBriefing() {
         {/* FPV special card */}
         {card.title === 'FPV-KAMERA' ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div style={{ color: '#7799aa', fontSize: 12, letterSpacing: 1, lineHeight: 1.6 }}>
+            <div style={{ color: 'rgba(200,196,176,0.6)', fontSize: 12, letterSpacing: 1, lineHeight: 1.6 }}>
               Erlebe den freien Fall aus der Ego-Perspektive.<br />
               Die Kamera sitzt direkt am Helm — vollständiges Eintauchen.
             </div>
@@ -154,14 +154,14 @@ export function MissionBriefing() {
               style={{
                 display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer',
                 padding: '14px 18px',
-                background: skyFPV ? `${accentColor}22` : '#0a0a1a',
-                border: `1px solid ${skyFPV ? accentColor : '#223344'}`,
+                background: skyFPV ? `${accentColor}22` : 'rgba(10,12,7,0.85)',
+                border: `1px solid ${skyFPV ? accentColor : 'rgba(138,154,98,0.18)'}`,
                 borderRadius: 6, transition: 'all 0.15s',
               }}
             >
               <div style={{
                 width: 42, height: 24, borderRadius: 12,
-                background: skyFPV ? accentColor : '#223344',
+                background: skyFPV ? accentColor : 'rgba(138,154,98,0.18)',
                 position: 'relative', transition: 'background 0.2s', flexShrink: 0,
               }}>
                 <div style={{
@@ -171,10 +171,10 @@ export function MissionBriefing() {
                 }} />
               </div>
               <div>
-                <div style={{ color: skyFPV ? accentColor : '#556677', fontSize: 13, fontWeight: 'bold', letterSpacing: 2 }}>
+                <div style={{ color: skyFPV ? accentColor : 'rgba(138,154,98,0.45)', fontSize: 13, fontWeight: 'bold', letterSpacing: 2 }}>
                   FPV-MODUS {skyFPV ? 'EIN' : 'AUS'}
                 </div>
-                <div style={{ color: '#445566', fontSize: 10, marginTop: 2 }}>
+                <div style={{ color: 'rgba(138,154,98,0.4)', fontSize: 10, marginTop: 2 }}>
                   {skyFPV ? 'Ego-Perspektive aktiviert' : 'Top-Down Perspektive'}
                 </div>
               </div>
@@ -183,7 +183,7 @@ export function MissionBriefing() {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {card.body.map((line, i) => (
-              <div key={i} style={{ color: '#7799aa', fontSize: 12, letterSpacing: 1, lineHeight: 1.5, display: 'flex', gap: 8 }}>
+              <div key={i} style={{ color: 'rgba(200,196,176,0.6)', fontSize: 12, letterSpacing: 1, lineHeight: 1.5, display: 'flex', gap: 8 }}>
                 <span style={{ color: accentColor, opacity: 0.6 }}>›</span>
                 {line}
               </div>
@@ -200,7 +200,7 @@ export function MissionBriefing() {
             onClick={() => setPage(i)}
             style={{
               width: i === page ? 20 : 8, height: 8, borderRadius: 4,
-              background: i === page ? accentColor : '#223344',
+              background: i === page ? accentColor : 'rgba(138,154,98,0.18)',
               transition: 'all 0.2s', cursor: 'pointer',
             }}
           />
@@ -213,7 +213,7 @@ export function MissionBriefing() {
           <button
             onClick={() => setPage(page - 1)}
             style={{
-              flex: 1, background: 'transparent', border: '1px solid #1a2a35', color: '#445566',
+              flex: 1, background: 'transparent', border: '1px solid rgba(138,154,98,0.18)', color: 'rgba(138,154,98,0.4)',
               fontSize: 12, letterSpacing: 3, padding: '12px', cursor: 'pointer',
               fontFamily: 'inherit', textTransform: 'uppercase', transition: 'all 0.12s',
             }}
@@ -250,9 +250,9 @@ export function MissionBriefing() {
       </div>
 
       <button
-        onClick={() => setPhase('menu')}
+        onClick={() => setPhase('title_screen')}
         style={{
-          background: 'transparent', border: 'none', color: '#334455',
+          background: 'transparent', border: 'none', color: 'rgba(138,154,98,0.4)',
           fontSize: 10, letterSpacing: 2, padding: '12px', cursor: 'pointer',
           fontFamily: 'inherit', textTransform: 'uppercase', marginTop: 8,
           paddingBottom: 'max(12px, calc(env(safe-area-inset-bottom, 0px) + 12px))',

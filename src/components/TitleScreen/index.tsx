@@ -119,12 +119,12 @@ export function TitleScreen() {
         <span style={{
           fontFamily: "'Share Tech Mono', monospace",
           fontSize: 9, letterSpacing: '0.25em', textTransform: 'uppercase',
-          color: 'rgba(106,112,72,0.7)',
+          color: 'rgba(138,154,98,0.9)',
         }}>© 2026 Loona! Designs · All Rights Reserved</span>
         <span style={{
           fontFamily: "'Share Tech Mono', monospace",
           fontSize: 9, letterSpacing: '0.2em',
-          color: 'rgba(224,84,24,0.5)',
+          color: 'rgba(224,84,24,0.85)',
         }}>BUILD 0.1.0-ALPHA // CO-Δ</span>
       </div>
 

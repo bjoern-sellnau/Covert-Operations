@@ -1,22 +1,35 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
+import { useSettingsStore } from '../../store/settingsStore'
 import { Particles } from './Particles'
 
-interface Item {
-  label: string
-  sub?: string
-  disabled?: boolean
-  action?: () => void
-}
-
-export function SingleplayerMenu() {
-  const setPhase = useGameStore((s) => s.setPhase)
+export function DebugMenu() {
+  const setPhase          = useGameStore((s) => s.setPhase)
+  const showBoundingBoxes = useSettingsStore((s) => s.showBoundingBoxes)
+  const setShowBoundingBoxes = useSettingsStore((s) => s.setShowBoundingBoxes)
+  const resetSettings     = useSettingsStore((s) => s.resetSettings)
   const [hovered, setHovered] = useState<string | null>(null)
+  const [resetDone, setResetDone] = useState(false)
 
-  const items: Item[] = [
-    { label: 'Story',     sub: 'BALD',      disabled: true },
-    { label: 'Missionen', sub: 'SOLO',      action: () => setPhase('missions') },
-    { label: 'Optionen',  sub: 'SETTINGS',  action: () => setPhase('options') },
+  function handleReset() {
+    resetSettings()
+    setResetDone(true)
+    setTimeout(() => setResetDone(false), 1500)
+  }
+
+  type RowConfig = { label: string; sub: string; action: () => void; toggle?: boolean; toggleOn?: boolean }
+  const rows: RowConfig[] = [
+    {
+      label: 'Bounding Boxes',
+      sub: showBoundingBoxes ? 'EIN' : 'AUS',
+      action: () => setShowBoundingBoxes(!showBoundingBoxes),
+      toggle: true, toggleOn: showBoundingBoxes,
+    },
+    {
+      label: 'Settings zurücksetzen',
+      sub: resetDone ? 'DONE ✓' : 'RESET',
+      action: handleReset,
+    },
   ]
 
   return (
@@ -47,7 +60,6 @@ export function SingleplayerMenu() {
         }} />
       ))}
 
-      {/* stamps */}
       <div style={stampStyle('left')}>CLASSIFIED</div>
       <div style={stampStyle('right')}>TOP SECRET // CO-Δ-001</div>
 
@@ -55,9 +67,7 @@ export function SingleplayerMenu() {
       <div style={{
         position: 'absolute', inset: 0,
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        gap: 0,
       }}>
-        {/* wordmark */}
         <div style={{ marginBottom: 48, textAlign: 'center' }}>
           <div style={{
             fontFamily: "'Saira Condensed', sans-serif", fontWeight: 900,
@@ -65,35 +75,29 @@ export function SingleplayerMenu() {
           }}>Δ COVERT OPERATIONS</div>
         </div>
 
-        {/* section title */}
         <div style={{
           fontFamily: "'Saira Condensed', sans-serif", fontWeight: 900,
           fontSize: 'clamp(36px, 6vw, 56px)', letterSpacing: '0.18em',
           color: 'rgba(224,220,200,0.9)', marginBottom: 4,
           textShadow: '0 0 40px rgba(224,84,24,0.15)',
-        }}>SINGLEPLAYER</div>
+        }}>DEBUG</div>
 
-        {/* orange rule */}
         <div style={{ width: 320, height: 1, background: 'rgba(224,84,24,0.5)', marginBottom: 40 }} />
 
-        {/* menu items */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, width: 320 }}>
-          {items.map((item) => {
-            const isHov = !item.disabled && hovered === item.label
+          {rows.map((row) => {
+            const isHov = hovered === row.label
             return (
               <div
-                key={item.label}
-                onMouseEnter={() => !item.disabled && setHovered(item.label)}
+                key={row.label}
+                onMouseEnter={() => setHovered(row.label)}
                 onMouseLeave={() => setHovered(null)}
-                onClick={() => !item.disabled && item.action?.()}
+                onClick={row.action}
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   padding: '12px 0',
                   borderBottom: '1px solid rgba(138,154,98,0.1)',
-                  cursor: item.disabled ? 'default' : 'pointer',
-                  opacity: item.disabled ? 0.3 : 1,
-                  transition: 'all 0.15s',
-                  position: 'relative',
+                  cursor: 'pointer', transition: 'all 0.15s', position: 'relative',
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -111,14 +115,14 @@ export function SingleplayerMenu() {
                     textTransform: 'uppercase',
                     color: isHov ? '#f4f0e4' : 'rgba(220,216,200,0.8)',
                     transition: 'color 0.15s, letter-spacing 0.15s',
-                  }}>{item.label}</span>
+                  }}>{row.label}</span>
                 </div>
                 <span style={{
                   fontFamily: "'Share Tech Mono', monospace",
                   fontSize: 8, letterSpacing: '0.25em',
-                  color: item.disabled ? 'rgba(224,84,24,0.7)' : 'rgba(106,112,72,0.6)',
-                }}>{item.sub}</span>
-                {/* underline */}
+                  color: row.toggleOn ? '#e05418' : 'rgba(106,112,72,0.6)',
+                  transition: 'color 0.15s',
+                }}>{row.sub}</span>
                 <div style={{
                   position: 'absolute', bottom: 0, left: 0, right: 0, height: 1,
                   background: isHov ? 'rgba(224,84,24,0.4)' : 'transparent',
@@ -129,7 +133,6 @@ export function SingleplayerMenu() {
           })}
         </div>
 
-        {/* back */}
         <button
           onClick={() => setPhase('title_screen')}
           style={{
@@ -143,7 +146,6 @@ export function SingleplayerMenu() {
         >← ZURÜCK</button>
       </div>
 
-      {/* bottom bar */}
       <div style={bottomBarStyle}>
         <span style={barTextStyle}>© 2026 Loona! Designs · All Rights Reserved</span>
         <span style={barVersionStyle}>BUILD 0.1.0-ALPHA // CO-Δ</span>

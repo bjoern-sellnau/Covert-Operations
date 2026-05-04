@@ -175,10 +175,10 @@ const bottomBarStyle: React.CSSProperties = {
 const barTextStyle: React.CSSProperties = {
   fontFamily: "'Share Tech Mono', monospace",
   fontSize: 9, letterSpacing: '0.25em', textTransform: 'uppercase',
-  color: 'rgba(106,112,72,0.7)',
+  color: 'rgba(138,154,98,0.9)',
 }
 const barVersionStyle: React.CSSProperties = {
   fontFamily: "'Share Tech Mono', monospace",
   fontSize: 9, letterSpacing: '0.2em',
-  color: 'rgba(224,84,24,0.5)',
+  color: 'rgba(224,84,24,0.85)',
 }

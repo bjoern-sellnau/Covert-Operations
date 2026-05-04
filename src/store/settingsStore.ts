@@ -40,6 +40,7 @@ interface SettingsStore {
   showFPSWeapon: boolean     // show weapon arm in FPS mode
   showEnemyMarkers: boolean  // show off-screen enemy direction arrows
   showMinimap: boolean       // show minimap overlay
+  showBoundingBoxes: boolean // debug: render entity collision rings
   playerSkin: SkinId
   customTrackId: string           // id from customTracksStore when musicTrack === 'custom'
   setPlayerSkin: (v: SkinId) => void
@@ -56,6 +57,8 @@ interface SettingsStore {
   setShowFPSWeapon: (v: boolean) => void
   setShowEnemyMarkers: (v: boolean) => void
   setShowMinimap: (v: boolean) => void
+  setShowBoundingBoxes: (v: boolean) => void
+  resetSettings: () => void
 }
 
 export const useSettingsStore = create<SettingsStore>()(
@@ -86,9 +89,17 @@ export const useSettingsStore = create<SettingsStore>()(
       setDifficulty:      (difficulty)      => set({ difficulty }),
       setGraphicsQuality: (graphicsQuality) => set({ graphicsQuality }),
       setCharScale:       (charScale)       => set({ charScale: Math.round(charScale * 10) / 10 }),
+      showBoundingBoxes:       false,
       setShowFPSWeapon:        (showFPSWeapon)        => set({ showFPSWeapon }),
       setShowEnemyMarkers:     (showEnemyMarkers)     => set({ showEnemyMarkers }),
       setShowMinimap:          (showMinimap)          => set({ showMinimap }),
+      setShowBoundingBoxes:    (showBoundingBoxes)    => set({ showBoundingBoxes }),
+      resetSettings: () => set({
+        bloodIntensity: 2, mobileControls: false, musicEnabled: true, skyFPV: false,
+        musicTrack: 'auto', cameraFollow: false, difficulty: 'normal', graphicsQuality: 'medium',
+        charScale: 1.0, showFPSWeapon: true, showEnemyMarkers: true, showMinimap: false,
+        showBoundingBoxes: false, playerSkin: 'palantir' as SkinId, customTrackId: '',
+      }),
     }),
     { name: 'covert-ops-settings-v2' },
   ),

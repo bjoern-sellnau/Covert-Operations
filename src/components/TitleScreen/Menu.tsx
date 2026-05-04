@@ -7,7 +7,7 @@ const ITEMS = [
   { label: 'Level Editor', testId: 'menu-level-editor', phase: 'editor'            as const },
   { label: 'Track Player', testId: 'menu-track-player', phase: 'options'           as const },
   { label: 'Demos',        testId: 'menu-demos',        phase: 'demo_viewer'       as const },
-  { label: 'Debug',        testId: 'menu-debug',        phase: null },
+  { label: 'Debug',        testId: 'menu-debug',        phase: 'debug_menu' as const },
 ]
 
 // Build interleaved items+dividers array; nth-child index = position in this array
