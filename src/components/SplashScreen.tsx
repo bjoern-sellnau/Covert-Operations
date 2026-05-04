@@ -6,7 +6,7 @@ interface Card { label?: string; title: string; sub?: string; useDelta?: boolean
 const CARDS: Card[] = [
   { isLoader: true,                                 title: 'Loading Mission Data' },
   { label: 'Coded by',                              title: 'Claude Code' },
-  { label: 'Published by',                          title: 'Loona! Designs', useDelta: true },
+  { label: 'Idea by',                               title: 'Loona! Designs', useDelta: true },
   { label: 'Based on the Flash Games by Loona! Designs', title: '"Covert Operations"', sub: '& "Covert Operations Tournament"' },
 ]
 

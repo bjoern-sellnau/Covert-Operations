@@ -3,6 +3,7 @@ import { useGameStore } from './store/gameStore'
 import { useNetStore } from './net/netStore'
 import { useSettingsStore } from './store/settingsStore'
 import { useMutatorsStore } from './store/mutatorsStore'
+import { getCtx } from './game/audioCore'
 import { socket } from './net/socket'
 import { startMenuMusic, startGameMusic, startGameMusic2, startGameMusic3, startGameMusic4, startGameMusic5, startGameMusic6, startGameMusic7, startGameMusic8, startGameMusic9, startGameMusic10, startGameMusic11, startGameMusic12, startGameMusic13, startGameMusic14, startGameMusic15, startGameMusic16, startGameMusic17, startGameMusic18, startGameMusic19, startGameMusic20, startGameMusic21, startGameMusic22, startGameMusic23, startGameMusic24, startGameMusic25, startGameMusic26, startGameMusic27, startGameMusic28, startGameMusic29, startGameMusic30, startGameMusic31, startGameMusic32, startSkydiveMusic, stopMusic, playCustomTrack } from './game/music'
 import { useCustomTracksStore } from './store/customTracksStore'
@@ -63,13 +64,25 @@ export function App() {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
-  // Unlock AudioContext on first user interaction (browser autoplay policy)
+  // Unlock AudioContext on first user interaction; restart music if context was suspended
   useEffect(() => {
     function unlock() {
-      import('./game/audioCore').then(({ getCtx }) => getCtx())
-      document.removeEventListener('click',   unlock)
-      document.removeEventListener('keydown', unlock)
+      const ctx = getCtx()
+      document.removeEventListener('click',      unlock)
+      document.removeEventListener('keydown',    unlock)
       document.removeEventListener('touchstart', unlock)
+      if (ctx.state !== 'suspended') return
+      ctx.resume().then(() => {
+        // Context was suspended — music may have been queued but silent; restart it
+        const p       = useGameStore.getState().phase
+        const enabled = useSettingsStore.getState().musicEnabled
+        const MENU_PHASES = ['title_screen','singleplayer_menu','multiplayer_menu','debug_menu',
+          'menu','character_select','missions','briefing','mutators','options','lobby','shop']
+        if (enabled && MENU_PHASES.includes(p)) {
+          stopMusic()
+          startMenuMusic()
+        }
+      }).catch(() => {})
     }
     document.addEventListener('click',      unlock)
     document.addEventListener('keydown',    unlock)
