@@ -178,3 +178,26 @@ Die aktuelle Reihenfolge ist falsch. Neue Reihenfolge:
 - [x] Dynamische Arena-Größe (arenaHalf, 18–60, Editor-Slider)
 - [x] Hilfe-Menü EDITOR-Tab
 - [x] Distinct Kill-Streak-Jingles (Spree→Godlike) + Kill-Combo-Jingles
+
+---
+
+## Title Screen (CO-Δ)
+
+Build the title screen as `<TitleScreen />` composed of sub-components. Read the two HTML reference files before writing any code:
+- `Covert Operations Title Screen.html` — locked-in design with full intro animation
+- `Covert Operations Logo Final.html` — standalone logo
+
+**Sub-components** (`TitleScreen/{index.tsx, BootSequence.tsx, Logo.tsx, Menu.tsx, Particles.tsx, styles.module.css}`):
+
+- [ ] **`<BootSequence />`** — full-screen black overlay, 7 terminal lines typing in sequentially, green scanline sweeps 2×, fades out at ~3.6s
+- [ ] **`<Logo />`** — SVG with orange `Δ` (SVG feGaussianBlur glow filter, no CSS drop-shadow), white `COVERT OPERATIONS`, orange tagline. Glitches in via clip-path + skew + blur at ~3.85s. Ambient opacity pulse loops.
+- [ ] **`<Menu />`** — 6 items (Singleplayer · Multiplayer · Level Editor · Track Player · Demos · Debug) with orange dividers, all neutral style (no pre-selection), left-to-right fade-in stagger from 4.3s. Hover: orange Δ pip + underline + letter-spacing. `data-testid` on each item. `onClick` no-ops for now.
+- [ ] **HUD chrome** — corner brackets (olive `#8a9a62`), `CLASSIFIED` / `TOP SECRET // CO-Δ-001` stamps, bottom bar with copyright + build string. Fade in at ~4.4–4.6s.
+- [ ] **Atmosphere** — radial dark-olive vignette, drifting fog layers, ~50 floating particles (canvas or animated divs), top-edge orange glow line. Always live, no animation gating.
+- [ ] **`?skipIntro=1`** query param skips boot sequence and lands in final state
+
+**Color tokens:** `--orange` `#e05418`, `--cream` `#e0dcc8`, `--olive` `#8a9a62`, `--terminal-green` `#8aaa30`, bg radial `rgba(30,36,20,0.95)→rgba(8,9,6,1)`
+
+**Fonts (Google Fonts):** `Saira Condensed` 700/800/900, `DM Sans` 400/500/600, `Share Tech Mono`
+
+**Stack:** React + TypeScript, pure CSS keyframes (no animation library), CSS modules matching codebase style. Do not `dangerouslySetInnerHTML` the reference HTML.
