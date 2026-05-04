@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Particles }     from './Particles'
 import { BootSequence }  from './BootSequence'
 import { Logo }          from './Logo'
@@ -8,7 +8,10 @@ import { Menu }          from './Menu'
 let introShown = false
 
 export function TitleScreen() {
-  const skipIntro = introShown || new URLSearchParams(window.location.search).get('skipIntro') === '1'
+  // Capture once at mount — prevents re-renders from flipping this mid-animation
+  const [skipIntro] = useState(() =>
+    introShown || new URLSearchParams(window.location.search).get('skipIntro') === '1'
+  )
 
   useEffect(() => {
     introShown = true

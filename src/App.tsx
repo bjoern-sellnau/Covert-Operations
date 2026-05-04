@@ -63,6 +63,24 @@ export function App() {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
+  // Unlock AudioContext on first user interaction (browser autoplay policy)
+  useEffect(() => {
+    function unlock() {
+      import('./game/audioCore').then(({ getCtx }) => getCtx())
+      document.removeEventListener('click',   unlock)
+      document.removeEventListener('keydown', unlock)
+      document.removeEventListener('touchstart', unlock)
+    }
+    document.addEventListener('click',      unlock)
+    document.addEventListener('keydown',    unlock)
+    document.addEventListener('touchstart', unlock)
+    return () => {
+      document.removeEventListener('click',      unlock)
+      document.removeEventListener('keydown',    unlock)
+      document.removeEventListener('touchstart', unlock)
+    }
+  }, [])
+
   const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch(() => {})
@@ -76,7 +94,7 @@ export function App() {
   // Split into two effects: menu-phase music (no musicTrack dep) and playing-phase music
   useEffect(() => {
     if (!musicEnabled) { stopMusic(); return }
-    if (phase === 'title_screen' || phase === 'singleplayer_menu' || phase === 'multiplayer_menu' || phase === 'debug_menu' || phase === 'menu' || phase === 'character_select' || phase === 'missions' || phase === 'briefing' || phase === 'mutators' || phase === 'options' || phase === 'lobby' || phase === 'shop') {
+    if (phase === 'splash' || phase === 'title_screen' || phase === 'singleplayer_menu' || phase === 'multiplayer_menu' || phase === 'debug_menu' || phase === 'menu' || phase === 'character_select' || phase === 'missions' || phase === 'briefing' || phase === 'mutators' || phase === 'options' || phase === 'lobby' || phase === 'shop') {
       startMenuMusic()
     } else if (phase === 'skydive') {
       startSkydiveMusic()

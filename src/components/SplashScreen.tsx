@@ -22,14 +22,18 @@ export function SplashScreen() {
   const [visible, setVis]  = useState(false)
   const [dots, setDots]    = useState('')
 
-  const skip = splashShown
+  // Capture skip value once at mount — never recompute, so re-renders don't flip it
+  const [skip] = useState(() =>
+    splashShown
     || new URLSearchParams(window.location.search).get('skipSplash') === '1'
     || new URLSearchParams(window.location.search).get('skipIntro')  === '1'
+  )
 
   function done() { setPhase('title_screen') }
 
   useEffect(() => {
     if (skip) { done(); return }
+    if (splashShown) return   // StrictMode double-fire guard
     splashShown = true
     const timers: ReturnType<typeof setTimeout>[] = []
     const at = (ms: number, fn: () => void) => timers.push(setTimeout(fn, ms))
