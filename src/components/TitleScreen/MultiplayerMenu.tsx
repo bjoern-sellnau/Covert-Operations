@@ -34,7 +34,7 @@ export function MultiplayerMenu() {
     {
       label: 'Optionen',
       sub: 'SETTINGS',
-      action: () => { playClick(); setPhase('options') },
+      action: () => { playClick(); useGameStore.getState().setOptionsReturnTo('multiplayer_menu'); setPhase('options') },
     },
   ]
 

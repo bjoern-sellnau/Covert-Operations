@@ -6,7 +6,7 @@ import { useLoadoutStore } from '../game/loadoutStore'
 import { previewTrack, stopMusic, playCustomTrack } from '../game/music'
 import { useCustomTracksStore } from '../store/customTracksStore'
 
-type PreviewId = 'game1' | 'game2' | 'game3' | 'game4' | 'game5' | 'game6' | 'game7' | 'game8' | 'game9' | 'game10' | 'game11' | 'game12' | 'game13' | 'game14' | 'game15' | 'game16' | 'game17' | 'game18' | 'game19' | 'game20' | 'game21' | 'game22' | 'game23' | 'game24' | 'game25' | 'game26' | 'game27' | 'game28' | 'game29' | 'game30' | 'game31' | 'game32'
+type PreviewId = 'game1' | 'game2' | 'game3' | 'game4' | 'game5' | 'game6' | 'game7' | 'game8' | 'game9' | 'game10' | 'game11' | 'game12' | 'game13' | 'game14' | 'game15' | 'game16' | 'game17' | 'game18' | 'game19' | 'game20' | 'game21' | 'game22' | 'game23' | 'game24' | 'game25' | 'game26' | 'game27' | 'game28' | 'game29' | 'game30' | 'game31' | 'game32' | 'game33' | 'game34'
 
 const tracks: Array<[PreviewId, string, string, string]> = [
   ['game1',  'TRACK 1',  '#00aaff', 'D-Moll 138 BPM'],
@@ -41,10 +41,13 @@ const tracks: Array<[PreviewId, string, string, string]> = [
   ['game30', 'TRACK 30', '#aaddff', 'E-Moll 125 BPM Hybrid Orchestral'],
   ['game31', 'TRACK 31', '#00ffcc', 'E-Moll 128 BPM Agent Techno'],
   ['game32', 'TRACK 32', '#e05418', 'D-Moll 138 BPM Classic Menu'],
+  ['game33', 'TRACK 33', '#c8e0ff', 'C-Dur  76 BPM MGS2 Hymn'],
+  ['game34', 'TRACK 34', '#ff4444', 'D-Moll 152 BPM MGS1 Alert'],
 ]
 
 export function OptionsScreen() {
-  const setPhase = useGameStore((s) => s.setPhase)
+  const setPhase          = useGameStore((s) => s.setPhase)
+  const optionsReturnTo   = useGameStore((s) => s.optionsReturnTo)
   const { bloodIntensity, setBloodIntensity, mobileControls, setMobileControls,
           musicEnabled, setMusicEnabled, musicTrack, setMusicTrack,
           customTrackId, setCustomTrackId,
@@ -412,7 +415,7 @@ export function OptionsScreen() {
           style={backBtn}
           onMouseEnter={(e) => { e.currentTarget.style.color = '#e0dcc8'; e.currentTarget.style.borderColor = 'rgba(138,154,98,0.7)' }}
           onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(200,196,176,0.6)'; e.currentTarget.style.borderColor = 'rgba(138,154,98,0.18)' }}
-          onClick={() => setPhase('title_screen')}
+          onClick={() => setPhase(optionsReturnTo)}
         >
           ← Zurück
         </button>

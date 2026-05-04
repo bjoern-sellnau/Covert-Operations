@@ -9,7 +9,7 @@ let _trackGain: GainNode | null = null
 let _scheduler: ReturnType<typeof setInterval> | null = null
 let _padOscs: OscillatorNode[] = []
 let _nextBar = 0
-let _track: 'menu' | 'game' | 'game2' | 'game3' | 'game4' | 'skydive' | 'game5' | 'game6' | 'game7' | 'game8' | 'game9' | 'game10' | 'game11' | 'game12' | 'game13' | 'game14' | 'game15' | 'game16' | 'game17' | 'game18' | 'game19' | 'game20' | 'game21' | 'game22' | 'game23' | 'game24' | 'game25' | 'game26' | 'game27' | 'game28' | 'game29' | 'game30' | 'game31' | 'game32' | null = null
+let _track: 'menu' | 'game' | 'game2' | 'game3' | 'game4' | 'skydive' | 'game5' | 'game6' | 'game7' | 'game8' | 'game9' | 'game10' | 'game11' | 'game12' | 'game13' | 'game14' | 'game15' | 'game16' | 'game17' | 'game18' | 'game19' | 'game20' | 'game21' | 'game22' | 'game23' | 'game24' | 'game25' | 'game26' | 'game27' | 'game28' | 'game29' | 'game30' | 'game31' | 'game32' | 'game33' | 'game34' | null = null
 let _previewTimer: ReturnType<typeof setTimeout> | null = null
 
 function master(): GainNode {
@@ -1335,9 +1335,157 @@ export function startGameMusic31() {
   _track = 'game31'
 }
 
+// ── Game track 33 — MGS2 Hymn inspired (C major, 76 BPM, orchestral) ─────────
+//   Heroic ascending melody over Cmaj → Fmaj → Am → Gmaj chord sequence
+//   Bars 0,2: quarter-note rising lines  |  Bars 1,3: sustained half-note pairs
+//   Strings (sawtooth+lowpass, slow attack) + brass melody (square+lowpass)
+
+const G33_BEAT = 60 / 76        // 0.789 s
+const G33_BAR  = G33_BEAT * 4
+const G33_HALF = G33_BEAT * 2
+
+function strNote33(freq: number, when: number, dur: number, vol: number) {
+  const c = ctx()
+  const osc  = c.createOscillator(); const filt = c.createBiquadFilter(); const env = c.createGain()
+  osc.type = 'sawtooth'; osc.frequency.value = freq
+  filt.type = 'lowpass'; filt.frequency.value = 550; filt.Q.value = 0.4
+  env.gain.setValueAtTime(0, when)
+  env.gain.linearRampToValueAtTime(vol, when + 0.32)
+  env.gain.setValueAtTime(vol * 0.72, when + dur - 0.3)
+  env.gain.exponentialRampToValueAtTime(0.001, when + dur)
+  osc.connect(filt); filt.connect(env); env.connect(tgain())
+  osc.start(when); osc.stop(when + dur + 0.1)
+}
+
+function brassNote33(freq: number, when: number, dur: number, vol: number) {
+  const c = ctx()
+  const osc  = c.createOscillator(); const filt = c.createBiquadFilter(); const env = c.createGain()
+  osc.type = 'square'; osc.frequency.value = freq
+  filt.type = 'lowpass'; filt.frequency.value = Math.min(freq * 2.8, 3200); filt.Q.value = 1.2
+  env.gain.setValueAtTime(0, when)
+  env.gain.linearRampToValueAtTime(vol, when + 0.065)
+  env.gain.setValueAtTime(vol * 0.68, when + dur - 0.12)
+  env.gain.exponentialRampToValueAtTime(0.001, when + dur)
+  osc.connect(filt); filt.connect(env); env.connect(tgain())
+  osc.start(when); osc.stop(when + dur + 0.05)
+}
+
+const G33_CHORDS = [
+  [261.63, 329.63, 392],     // Cmaj: C4 E4 G4
+  [261.63, 349.23, 392],     // Fmaj/C: C4 F4 G4
+  [220,    261.63, 329.63],  // Am:   A3 C4 E4
+  [196,    293.66, 392],     // Gmaj: G3 D4 G4
+]
+const G33_BASS = [65.41, 87.31, 55, 98]  // C2 E2 A1 G2
+
+let _g33Bar = 0
+
+function scheduleG33Bar(t: number) {
+  const bar = _g33Bar % 4
+
+  if (bar === 0) {
+    // Rising: C4 E4 G4 A4 (quarter notes)
+    for (const [i, f] of [[0, 261.63],[1, 329.63],[2, 392],[3, 440]] as [number,number][]) {
+      brassNote33(f, t + i * G33_BEAT, G33_BEAT * 0.84, 0.065)
+      strNote33(f * 0.794, t + i * G33_BEAT, G33_BEAT * 0.9, 0.024)
+    }
+  } else if (bar === 1) {
+    // G4 (half) → F4 (half)
+    brassNote33(392,    t,            G33_HALF * 0.88, 0.065)
+    brassNote33(349.23, t + G33_HALF, G33_HALF * 0.88, 0.060)
+    strNote33(311.13, t,            G33_HALF * 0.92, 0.024)  // Eb4 harmony
+    strNote33(293.66, t + G33_HALF, G33_HALF * 0.92, 0.022)
+  } else if (bar === 2) {
+    // Rising: E4 G4 A4 C5 (quarter notes)
+    for (const [i, f] of [[0, 329.63],[1, 392],[2, 440],[3, 523.25]] as [number,number][]) {
+      brassNote33(f, t + i * G33_BEAT, G33_BEAT * 0.84, 0.065)
+      strNote33(f * 0.794, t + i * G33_BEAT, G33_BEAT * 0.9, 0.024)
+    }
+  } else {
+    // B4 (half) → A4 (half) — resolve
+    brassNote33(493.88, t,            G33_HALF * 0.88, 0.065)
+    brassNote33(440,    t + G33_HALF, G33_HALF * 0.88, 0.060)
+    strNote33(392,    t,            G33_HALF * 0.92, 0.024)  // G4 harmony
+    strNote33(349.23, t + G33_HALF, G33_HALF * 0.92, 0.022)
+  }
+
+  // Bass (whole-note, two octaves)
+  strNote33(G33_BASS[bar],     t, G33_BAR * 0.97, 0.20)
+  strNote33(G33_BASS[bar] * 2, t, G33_BAR * 0.97, 0.10)
+
+  // Chord pad (3 voices, string texture)
+  for (const f of G33_CHORDS[bar]) strNote33(f, t, G33_BAR * 0.97, 0.020)
+
+  _g33Bar++
+}
+
+export function startGameMusic33() {
+  if (_track === 'game33') return
+  _g33Bar = 0
+  startScheduler(G33_BAR, scheduleG33Bar)
+  startPad([65.41, 98, 130.81, 196, 261.63], 'sawtooth', 380, 0.007)
+  _track = 'game33'
+}
+
+// ── Game track 34 — MGS1 Alert inspired (D minor, 152 BPM, tense/electronic) ──
+//   Driving kick+snare pattern, syncopated bass in Dm, urgent square melody
+//   2-bar loop: bar 0 = tension, bar 1 = answer phrase
+
+const G34_BEAT = 60 / 152       // 0.395 s
+const G34_BAR  = G34_BEAT * 4
+const G34_8TH  = G34_BEAT / 2
+
+// Bassline: 8 eighth-note slots per bar  (null = rest/sustain previous)
+const G34_BASS: (number | null)[][] = [
+  [73.42, null, 73.42, 87.31,  98,     null,  87.31, 82.41],  // D2 . D2 F2 G2 . F2 E2
+  [110,   null, 110,   130.81, 116.54, null,  110,   98   ],  // A2 . A2 C3 Bb2 . A2 G2
+]
+// Melody: quarter notes per bar
+const G34_MEL = [
+  [440,    349.23, 293.66, 329.63],  // A4 F4 D4 E4
+  [349.23, 440,    466.16, 440   ],  // F4 A4 Bb4 A4
+]
+
+let _g34Bar = 0
+
+function scheduleG34Bar(t: number) {
+  const bar = _g34Bar % 2
+
+  // Drums — kick + snare + rapid hi-hat
+  kick(t,                             0.52)
+  kick(t + G34_BEAT * 2,             0.52)
+  kick(t + G34_BEAT * 2 + G34_8TH,  0.36)  // syncopated
+  snare(t + G34_BEAT,                0.22)
+  snare(t + G34_BEAT * 3,            0.22)
+  for (let i = 0; i < 8; i++) hihat(t + i * G34_8TH, 0.045, 0.022)
+
+  // Bass (sawtooth, tight filter)
+  for (let i = 0; i < 8; i++) {
+    const f = G34_BASS[bar][i]
+    if (f !== null) note(f, t + i * G34_8TH, G34_8TH * 0.72, 0.22, 'sawtooth', 260)
+  }
+
+  // Melody (square, filtered)
+  for (let i = 0; i < 4; i++) {
+    note(G34_MEL[bar][i], t + i * G34_BEAT, G34_BEAT * 0.78, 0.052, 'square', 1600)
+    // harmony a minor third below on beat 1 & 3 for thickness
+    if (i % 2 === 0) note(G34_MEL[bar][i] * 0.841, t + i * G34_BEAT, G34_BEAT * 0.7, 0.025, 'square', 1200)
+  }
+
+  _g34Bar++
+}
+
+export function startGameMusic34() {
+  if (_track === 'game34') return
+  _g34Bar = 0
+  startScheduler(G34_BAR, scheduleG34Bar)
+  startPad([36.71, 43.65, 55, 73.42], 'sawtooth', 180, 0.008)
+  _track = 'game34'
+}
+
 // ── Preview ───────────────────────────────────────────────────────────────────
 
-export function previewTrack(track: 'game1' | 'game2' | 'game3' | 'game4' | 'game5' | 'game6' | 'game7' | 'game8' | 'game9' | 'game10' | 'game11' | 'game12' | 'game13' | 'game14' | 'game15' | 'game16' | 'game17' | 'game18' | 'game19' | 'game20' | 'game21' | 'game22' | 'game23' | 'game24' | 'game25' | 'game26' | 'game27' | 'game28' | 'game29' | 'game30' | 'game31' | 'game32', durationMs = 7000) {
+export function previewTrack(track: 'game1' | 'game2' | 'game3' | 'game4' | 'game5' | 'game6' | 'game7' | 'game8' | 'game9' | 'game10' | 'game11' | 'game12' | 'game13' | 'game14' | 'game15' | 'game16' | 'game17' | 'game18' | 'game19' | 'game20' | 'game21' | 'game22' | 'game23' | 'game24' | 'game25' | 'game26' | 'game27' | 'game28' | 'game29' | 'game30' | 'game31' | 'game32' | 'game33' | 'game34', durationMs = 7000) {
   stopMusic()  // clears _track so the start guards pass, cancels any existing preview timer
   if      (track === 'game1')  startGameMusic()
   else if (track === 'game2')  startGameMusic2()
@@ -1370,7 +1518,9 @@ export function previewTrack(track: 'game1' | 'game2' | 'game3' | 'game4' | 'gam
   else if (track === 'game29') startGameMusic29()
   else if (track === 'game30') startGameMusic30()
   else if (track === 'game31') startGameMusic31()
-  else                         startGameMusic32()
+  else if (track === 'game32') startGameMusic32()
+  else if (track === 'game33') startGameMusic33()
+  else                         startGameMusic34()
   _previewTimer = setTimeout(() => {
     _previewTimer = null
     stopMusic()

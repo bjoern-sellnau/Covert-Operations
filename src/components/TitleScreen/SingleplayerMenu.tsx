@@ -17,7 +17,7 @@ export function SingleplayerMenu() {
   const items: Item[] = [
     { label: 'Story',     sub: 'BALD',      disabled: true },
     { label: 'Missionen', sub: 'SOLO',      action: () => { playClick(); setPhase('missions') } },
-    { label: 'Optionen',  sub: 'SETTINGS',  action: () => { playClick(); setPhase('options') } },
+    { label: 'Optionen',  sub: 'SETTINGS',  action: () => { playClick(); useGameStore.getState().setOptionsReturnTo('singleplayer_menu'); setPhase('options') } },
   ]
 
   return (
