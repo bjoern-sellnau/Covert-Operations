@@ -227,10 +227,15 @@ export function MobileControls() {
             onUp={() => {}}
           />
         </div>
-        {/* Row 2: GRENADE + FIRE */}
+        {/* Row 2: RELOAD + GRENADE + FIRE */}
         <div style={{ display: 'flex', gap: 12, pointerEvents: 'none' }}>
           <ActionBtn
-            label="GRN" sub="G" color="#44ff66" bg="rgba(0,80,20,0.7)" size={58}
+            label="RLD" sub="R" color="#ffcc00" bg="rgba(80,60,0,0.7)" size={58}
+            onDown={() => { mobileInput.reloadJust = true }}
+            onUp={() => {}}
+          />
+          <ActionBtn
+            label="GRN" sub="7" color="#44ff66" bg="rgba(0,80,20,0.7)" size={58}
             onDown={() => { mobileInput.grenadeJust = true }}
             onUp={() => {}}
           />

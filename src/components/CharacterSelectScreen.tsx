@@ -12,7 +12,7 @@ export function CharacterSelectScreen() {
     <div style={{
       position: 'absolute', inset: 0,
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      background: 'radial-gradient(ellipse at 50% 30%, #0d1840 0%, #050512 65%, #020208 100%)',
+      background: 'radial-gradient(ellipse at 50% 30%, #142060 0%, #0c1228 65%, #080815 100%)',
       fontFamily: "'Courier New', monospace", userSelect: 'none', overflow: 'hidden',
     }}>
 

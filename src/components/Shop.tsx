@@ -641,7 +641,7 @@ export function Shop() {
   return (
     <div style={{
       position: 'absolute', top: 0, right: 0, bottom: 0, left: 0,
-      background: 'radial-gradient(ellipse at 30% 20%, #0a0a2a 0%, #000008 70%)',
+      background: 'radial-gradient(ellipse at 30% 20%, #12122e 0%, #060614 70%)',
       fontFamily: "'Courier New', monospace",
       userSelect: 'none',
       display: 'flex',

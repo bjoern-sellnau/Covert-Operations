@@ -7,6 +7,7 @@ export const mobileInput = {
   btDown:         false,
   grenadeJust:    false, // one-shot — set by touch, cleared by game loop
   diveJust:       false, // one-shot
+  reloadJust:     false, // one-shot
   weaponPrevJust: false, // one-shot
   weaponNextJust: false, // one-shot
   cameraModeJust: false, // one-shot

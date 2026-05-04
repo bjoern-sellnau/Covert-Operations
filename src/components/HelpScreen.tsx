@@ -234,13 +234,14 @@ const LOGO_PARTS: PartDef[] = [
 function ModelViewer({ parts }: { parts: PartDef[] }) {
   return (
     <Canvas
-      camera={{ position: [0, 0.8, 3], fov: 35 }}
-      style={{ width: 280, height: 280, background: 'transparent', borderRadius: 4 }}
+      camera={{ position: [0, 0.6, 2.8], fov: 38 }}
+      style={{ width: 280, height: 280, borderRadius: 4 }}
     >
-      <ambientLight intensity={3.0} />
-      <directionalLight position={[3, 6, 3]} intensity={4.0} />
-      <directionalLight position={[-3, 2, -2]} intensity={1.8} color="#88aaff" />
-      <pointLight position={[0, 0, 3]} intensity={2.5} distance={8} />
+      <color attach="background" args={['#060e1c']} />
+      <ambientLight intensity={5.0} />
+      <directionalLight position={[3, 6, 3]} intensity={6.0} />
+      <directionalLight position={[-3, 2, -2]} intensity={3.0} color="#88aaff" />
+      <pointLight position={[0, 1, 3]} intensity={4.0} distance={10} />
       <RotatingModel defs={parts} />
     </Canvas>
   )
@@ -609,7 +610,7 @@ export function HelpScreen() {
   return (
     <div style={{
       position: 'absolute', inset: 0,
-      background: 'radial-gradient(ellipse at 50% 20%, #060618 0%, #03030c 70%)',
+      background: 'radial-gradient(ellipse at 50% 20%, #0e1030 0%, #08081a 70%)',
       fontFamily: "'Courier New', monospace",
       userSelect: 'none',
       display: 'flex',
@@ -700,7 +701,7 @@ export function HelpScreen() {
                 border: '1px solid #0d1a28',
                 borderRadius: 6,
                 overflow: 'hidden',
-                background: 'radial-gradient(ellipse at center, #05101e 0%, #02040a 100%)',
+                background: 'radial-gradient(ellipse at center, #0a1a2e 0%, #060c14 100%)',
                 boxShadow: '0 0 24px #00aaff18 inset',
               }}>
                 <ModelViewer parts={modelParts} />

@@ -95,7 +95,7 @@ export function MutatorsScreen() {
     <div style={{
       position: 'absolute', top: 0, right: 0, bottom: 0, left: 0,
       display: 'flex', flexDirection: 'column', alignItems: 'center',
-      background: 'radial-gradient(ellipse at 50% 20%, #110006 0%, #020206 55%, #000003 100%)',
+      background: 'radial-gradient(ellipse at 50% 20%, #1e0010 0%, #080810 55%, #050508 100%)',
       fontFamily: "'Courier New', monospace", userSelect: 'none', overflowY: 'auto',
     }}>
       {/* Header */}

@@ -82,7 +82,21 @@ export const useGameStore = create<GameStore>((set) => ({
   inSuddenDeath: false,
   chaosActive:   false,
 
-  setPhase:        (phase)      => set({ phase }),
+  setPhase: (phase) => {
+    if (phase === 'menu') {
+      set({
+        phase,
+        health: 100, score: 0, wave: 1,
+        enemyIds: [], bulletIds: [], enemyBulletIds: [], waveMessage: '',
+        focus: 100, isBulletTime: false,
+        ammo: 48, maxAmmo: 48, creditsEarned: 0, armor: 0, cameraMode: 'topdown',
+        p2Active: false, p2Health: 100, p2Ammo: 48, p2MaxAmmo: 48,
+        roundTimer: 0, playerLives: 3, p2Lives: 3, inSuddenDeath: false, chaosActive: false,
+      })
+    } else {
+      set({ phase })
+    }
+  },
   setGameMode:     (gameMode)   => set({ gameMode }),
   setSkipShop:     (skipShop)   => set({ skipShop }),
   setBigExplosion: (bigExplosion) => set({ bigExplosion }),

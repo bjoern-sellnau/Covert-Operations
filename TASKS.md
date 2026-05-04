@@ -13,14 +13,14 @@
 - [ ] UI hat Probleme mit Fullscreen-Modus auf iPad
 - [ ] UI hat allgemeine Probleme auf iPad
 - [ ] Das Hilfe-Menü hat Probleme im Fullscreen
-- [ ] Alle Menüs sind zu dunkel, 3D-Modelle im Hilfe-Screen immer noch nicht sichtbar
-- [ ] Das HUD auf iPhone muss überarbeitet werden (z.B. kein Nachladen möglich)
+- [x] Alle Menüs sind zu dunkel, 3D-Modelle im Hilfe-Screen immer noch nicht sichtbar
+- [x] Das HUD auf iPhone muss überarbeitet werden (z.B. kein Nachladen möglich)
 - [ ] Das UI auf iPad ist zu nahe am Home-Indicator → Browser wird oft minimiert
 - [x] Akimbo funktioniert nicht mehr / Logik unklar (zweite Waffe immer sichtbar → per useFrame gesteuert)
 - [x] Bullet Ballet funktioniert nicht (isAkimbo jetzt per-Frame berechnet statt einmalig bei Start)
 - [x] Gun Kata funktioniert nicht (erfordert Mutator-Aktivierung → Hinweis in allen Hilfe-Texten ergänzt)
 - [x] Briefings und Hilfe-Screens an neue Steuerung anpassen (z.B. G = Granate stimmt nicht mehr)
-- [ ] Wenn man auf Zurück drückt werden Credits etc. nicht auf Standard zurückgesetzt
+- [x] Wenn man auf Zurück drückt werden Credits etc. nicht auf Standard zurückgesetzt
 
 ---
 

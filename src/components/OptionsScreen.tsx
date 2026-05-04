@@ -84,7 +84,7 @@ export function OptionsScreen() {
   const wrap: React.CSSProperties = {
     position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
     alignItems: 'center', overflowY: 'auto',
-    background: 'radial-gradient(ellipse at center, #070720 0%, #020208 70%)',
+    background: 'radial-gradient(ellipse at center, #0e1038 0%, #080814 70%)',
     fontFamily: "'Courier New', monospace", userSelect: 'none',
   }
   const section: React.CSSProperties = {

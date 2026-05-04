@@ -596,6 +596,7 @@ export function GameScene() {
     // Consume one-shot mobile flags at the top of the frame
     mobileInput.grenadeJust = false  // grenade now fired via slot 7 weapon
     const mobileDiveJust = mobileInput.diveJust;       mobileInput.diveJust       = false
+    mobileInput.reloadJust  = false
     const mobileWpnPrev  = mobileInput.weaponPrevJust; mobileInput.weaponPrevJust = false
     const mobileWpnNext  = mobileInput.weaponNextJust; mobileInput.weaponNextJust = false
     const mobileCamJust  = mobileInput.cameraModeJust; mobileInput.cameraModeJust = false
@@ -702,7 +703,7 @@ export function GameScene() {
     const spaceDown = keys.has('Space')
     const qDown     = keys.has('KeyQ')
     const eDown     = keys.has('KeyE')
-    const rDown     = keys.has('KeyR')
+    const rDown     = keys.has('KeyR') || mobileInput.reloadJust
     const spaceJust = (spaceDown && !spacePrev.current) || mobileDiveJust
     const qJust     = qDown && !qPrev.current
     const eJust     = eDown && !ePrev.current
