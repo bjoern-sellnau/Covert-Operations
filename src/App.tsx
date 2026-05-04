@@ -26,6 +26,8 @@ import { DemoViewer } from './components/DemoViewer'
 import { CharacterSelectScreen } from './components/CharacterSelectScreen'
 import { CutscenePlayer } from './components/CutscenePlayer'
 import { TitleScreen } from './components/TitleScreen'
+import { SingleplayerMenu } from './components/TitleScreen/SingleplayerMenu'
+import { MultiplayerMenu } from './components/TitleScreen/MultiplayerMenu'
 
 export function App() {
   const phase          = useGameStore((s) => s.phase)
@@ -61,7 +63,7 @@ export function App() {
   // Split into two effects: menu-phase music (no musicTrack dep) and playing-phase music
   useEffect(() => {
     if (!musicEnabled) { stopMusic(); return }
-    if (phase === 'title_screen' || phase === 'menu' || phase === 'character_select' || phase === 'missions' || phase === 'briefing' || phase === 'mutators' || phase === 'options' || phase === 'lobby' || phase === 'shop') {
+    if (phase === 'title_screen' || phase === 'singleplayer_menu' || phase === 'multiplayer_menu' || phase === 'menu' || phase === 'character_select' || phase === 'missions' || phase === 'briefing' || phase === 'mutators' || phase === 'options' || phase === 'lobby' || phase === 'shop') {
       startMenuMusic()
     } else if (phase === 'skydive') {
       startSkydiveMusic()
@@ -195,6 +197,8 @@ export function App() {
       )}
 
       {phase === 'title_screen'               && <TitleScreen />}
+      {phase === 'singleplayer_menu'          && <SingleplayerMenu />}
+      {phase === 'multiplayer_menu'           && <MultiplayerMenu />}
       {phase === 'playing'                    && <HUD />}
       {phase === 'playing' && mobileControls  && <MobileControls />}
       {phase === 'playing' && isNetGame        && <ChatOverlay />}

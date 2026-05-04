@@ -1,16 +1,17 @@
 import { useState } from 'react'
+import { useGameStore } from '../../store/gameStore'
 
 const ITEMS = [
-  { label: 'Singleplayer', testId: 'menu-singleplayer' },
-  { label: 'Multiplayer',  testId: 'menu-multiplayer' },
-  { label: 'Level Editor', testId: 'menu-level-editor' },
-  { label: 'Track Player', testId: 'menu-track-player' },
-  { label: 'Demos',        testId: 'menu-demos' },
-  { label: 'Debug',        testId: 'menu-debug' },
+  { label: 'Singleplayer', testId: 'menu-singleplayer', phase: 'singleplayer_menu' as const },
+  { label: 'Multiplayer',  testId: 'menu-multiplayer',  phase: 'multiplayer_menu'  as const },
+  { label: 'Level Editor', testId: 'menu-level-editor', phase: 'editor'            as const },
+  { label: 'Track Player', testId: 'menu-track-player', phase: 'options'           as const },
+  { label: 'Demos',        testId: 'menu-demos',        phase: 'demo_viewer'       as const },
+  { label: 'Debug',        testId: 'menu-debug',        phase: null },
 ]
 
 // Build interleaved items+dividers array; nth-child index = position in this array
-type Child = { type: 'item'; label: string; testId: string } | { type: 'div' }
+type Child = { type: 'item'; label: string; testId: string; phase: string | null } | { type: 'div' }
 const CHILDREN: Child[] = ITEMS.reduce<Child[]>((acc, item, i) => {
   acc.push({ type: 'item', ...item })
   if (i < ITEMS.length - 1) acc.push({ type: 'div' })
@@ -20,6 +21,7 @@ const CHILDREN: Child[] = ITEMS.reduce<Child[]>((acc, item, i) => {
 interface MenuProps { skipIntro: boolean }
 
 export function Menu({ skipIntro }: MenuProps) {
+  const setPhase = useGameStore((s) => s.setPhase)
   const [hovered, setHovered] = useState<string | null>(null)
 
   return (
@@ -60,8 +62,8 @@ export function Menu({ skipIntro }: MenuProps) {
             tabIndex={0}
             onMouseEnter={() => setHovered(child.label)}
             onMouseLeave={() => setHovered(null)}
-            onClick={() => console.log(`[TitleScreen] ${child.label}`)}
-            onKeyDown={(e) => { if (e.key === 'Enter') console.log(`[TitleScreen] ${child.label}`) }}
+            onClick={() => child.phase ? setPhase(child.phase as Parameters<typeof setPhase>[0]) : undefined}
+            onKeyDown={(e) => { if (e.key === 'Enter' && child.phase) setPhase(child.phase as Parameters<typeof setPhase>[0]) }}
             style={{
               fontFamily: "'DM Sans', sans-serif",
               fontWeight: 500,
