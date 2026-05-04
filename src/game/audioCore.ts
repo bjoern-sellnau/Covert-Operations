@@ -33,17 +33,25 @@ export function isAudioRecording(): boolean {
 export function startAudioRecording(): boolean {
   if (typeof MediaRecorder === 'undefined') return false
   if (_recorder?.state === 'recording') return true
-  const c = getCtx()
-  _dest = c.createMediaStreamDestination()
-  getBus().connect(_dest)
-  _chunks = []
-  const mime = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg'].find(m =>
-    MediaRecorder.isTypeSupported(m)
-  ) ?? ''
-  _recorder = new MediaRecorder(_dest.stream, mime ? { mimeType: mime } : {})
-  _recorder.ondataavailable = (e) => { if (e.data.size > 0) _chunks.push(e.data) }
-  _recorder.start(200)
-  return true
+  try {
+    const c = getCtx()
+    if (c.state === 'suspended') c.resume()
+    _dest = c.createMediaStreamDestination()
+    getBus().connect(_dest)
+    _chunks = []
+    const mime = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg'].find(m =>
+      MediaRecorder.isTypeSupported(m)
+    ) ?? ''
+    _recorder = new MediaRecorder(_dest.stream, mime ? { mimeType: mime } : {})
+    _recorder.ondataavailable = (e) => { if (e.data.size > 0) _chunks.push(e.data) }
+    _recorder.start(200)
+    return true
+  } catch (err) {
+    console.error('[AUD] startAudioRecording failed:', err)
+    if (_dest) { try { getBus().disconnect(_dest) } catch { /* ignore */ }; _dest = null }
+    _chunks = []
+    return false
+  }
 }
 
 export function stopAudioRecording(): Promise<Blob> {

@@ -116,6 +116,7 @@ function RecButton() {
 
 function AudioRecButton() {
   const [recording, setRecording] = useState(false)
+  const [failed,    setFailed]    = useState(false)
   const [pulse, setPulse] = useState(false)
   useEffect(() => {
     if (!recording) { setPulse(false); return }
@@ -125,7 +126,8 @@ function AudioRecButton() {
   const toggle = async () => {
     if (!recording) {
       const ok = startAudioRecording()
-      if (ok) setRecording(true)
+      if (ok) { setRecording(true); setFailed(false) }
+      else    { setFailed(true); setTimeout(() => setFailed(false), 2000) }
     } else {
       setRecording(false)
       const blob = await stopAudioRecording()
@@ -135,8 +137,10 @@ function AudioRecButton() {
         const a = document.createElement('a')
         a.href = url
         a.download = `covert-ops-${Date.now()}.${ext}`
+        a.style.display = 'none'
+        document.body.appendChild(a)
         a.click()
-        URL.revokeObjectURL(url)
+        setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url) }, 1000)
       }
     }
   }
@@ -153,12 +157,12 @@ function AudioRecButton() {
     >
       <div style={{
         width: 8, height: 8, borderRadius: 2,
-        background: recording ? (pulse ? '#ff8800' : '#aa5500') : '#556677',
-        boxShadow: recording ? `0 0 6px ${pulse ? '#ff8800' : '#663300'}` : 'none',
+        background: failed ? '#ff2200' : recording ? (pulse ? '#ff8800' : '#aa5500') : '#556677',
+        boxShadow: failed ? '0 0 6px #ff2200' : recording ? `0 0 6px ${pulse ? '#ff8800' : '#663300'}` : 'none',
         transition: 'all 0.3s',
       }} />
-      <span style={{ color: recording ? '#ff9933' : '#7799aa', fontSize: 9, letterSpacing: 2 }}>
-        AUD
+      <span style={{ color: failed ? '#ff4422' : recording ? '#ff9933' : '#7799aa', fontSize: 9, letterSpacing: 2 }}>
+        {failed ? 'ERR' : 'AUD'}
       </span>
     </div>
   )
