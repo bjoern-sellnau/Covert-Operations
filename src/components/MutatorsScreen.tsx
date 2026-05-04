@@ -15,6 +15,7 @@ export function MutatorsScreen() {
     botCount, botEnemyTypes, killMultipliers,
     balletDuration, balletBulletCount, balletSpeed,
     gunKataEnabled, gunKataDuration, gunKataTargets, gunKataSpeed,
+    autoReload,
     setGameType, setRoundTimeSec, setWeaponPickups, toggleEnemyDrop,
     setSuddenDeath, setSuddenDeathSec, setLives, setChaosMode,
     setBulletBounce, setBulletBounceCount,
@@ -23,6 +24,7 @@ export function MutatorsScreen() {
     setBotCount, toggleBotEnemyType, setKillMultipliers,
     setBalletDuration, setBalletBulletCount, setBalletSpeed,
     setGunKataEnabled, setGunKataDuration, setGunKataTargets, setGunKataSpeed,
+    setAutoReload,
   } = useMutatorsStore()
 
   function startGame() {
@@ -296,14 +298,20 @@ export function MutatorsScreen() {
           />
         </div>
 
-        {/* God Mode */}
+        {/* God Mode / Auto-Reload */}
         <div style={card}>
-          <div style={secLabel}>Spieler-Schutz</div>
+          <div style={secLabel}>Spieler-Hilfen</div>
           <Toggle
             on={godMode} color="#ffee00"
             label="GOD MODE"
             sub="Spieler nimmt keinerlei Schaden"
             onClick={() => setGodMode(!godMode)}
+          />
+          <Toggle
+            on={autoReload} color="#44aaff"
+            label="AUTO-RELOAD"
+            sub="Waffe lädt automatisch nach wenn Magazin leer ist"
+            onClick={() => setAutoReload(!autoReload)}
           />
         </div>
 

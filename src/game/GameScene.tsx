@@ -794,7 +794,9 @@ export function GameScene() {
 
     // ── R: reload ─────────────────────────────────────────────────────────────
     const gameMode2 = useGameStore.getState().gameMode
-    if (rJust && es.reloadTimer <= 0 && es.ammo < es.maxAmmo && gameMode2 !== 'shooting_range'
+    const { autoReload } = useMutatorsStore.getState()
+    const wantReload = rJust || (autoReload && es.ammo === 0)
+    if (wantReload && es.reloadTimer <= 0 && es.ammo < es.maxAmmo && gameMode2 !== 'shooting_range'
       && !WEAPON_CONFIGS[useLoadoutStore.getState().selectedWeapon].isMelee) {
       es.reloadTimer = WEAPON_CONFIGS[useLoadoutStore.getState().selectedWeapon].reloadTime
     }

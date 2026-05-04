@@ -40,7 +40,7 @@ Die aktuelle Reihenfolge ist falsch. Neue Reihenfolge:
 
 ## Neue Features
 
-- [ ] Option in Mutatoren: Autoreload aktivierbar
+- [x] Option in Mutatoren: Autoreload aktivierbar
 - [ ] Im Level-Editor kann man eingeben, in welchen Spielmodi eine Karte verfügbar ist (Standard: alle)
 
 ### Visuelle Effekte
