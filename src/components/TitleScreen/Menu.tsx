@@ -46,7 +46,7 @@ export function Menu({ skipIntro }: MenuProps) {
             <div key={i} style={{
               width: 1, height: 18,
               background: 'rgba(224,84,24,0.3)',
-              opacity: 0,
+              opacity: skipIntro ? 1 : 0,
               animation: skipIntro ? undefined : `tsFadeIn 0.4s ${delay} forwards`,
               flexShrink: 0,
             }} />
@@ -77,7 +77,7 @@ export function Menu({ skipIntro }: MenuProps) {
               transition: 'color 0.2s, letter-spacing 0.2s',
               whiteSpace: 'nowrap',
               userSelect: 'none',
-              opacity: 0,
+              opacity: skipIntro ? 1 : 0,
               animation: skipIntro ? undefined : `tsFadeIn 0.4s ${delay} forwards`,
             }}
           >
