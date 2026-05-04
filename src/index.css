@@ -59,3 +59,7 @@ canvas {
   100% { opacity: 0;                     transform: translateX(3%);  }
 }
 @keyframes tsLogoGlow { 0%, 100% { opacity: 0.85; } 50% { opacity: 1; } }
+@keyframes menuFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

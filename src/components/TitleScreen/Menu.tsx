@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
+import { playHover, playClick } from '../../game/uiSounds'
 
 const ITEMS = [
   { label: 'Singleplayer', testId: 'menu-singleplayer', phase: 'singleplayer_menu' as const },
@@ -10,7 +11,6 @@ const ITEMS = [
   { label: 'Debug',        testId: 'menu-debug',        phase: 'debug_menu' as const },
 ]
 
-// Build interleaved items+dividers array; nth-child index = position in this array
 type Child = { type: 'item'; label: string; testId: string; phase: string | null } | { type: 'div' }
 const CHILDREN: Child[] = ITEMS.reduce<Child[]>((acc, item, i) => {
   acc.push({ type: 'item', ...item })
@@ -34,11 +34,12 @@ export function Menu({ skipIntro }: MenuProps) {
       alignItems: 'center',
       gap: 0,
       transform: skipIntro ? 'translate(-50%, -50%)' : undefined,
-      opacity: skipIntro ? 1 : 0,
-      animation: skipIntro ? undefined : 'tsFadeUp 1.4s 4.3s cubic-bezier(0.2,0.8,0.3,1) both',
+      opacity: 0,
+      animation: skipIntro
+        ? 'tsFadeIn 0.35s ease both'
+        : 'tsFadeUp 1.4s 4.3s cubic-bezier(0.2,0.8,0.3,1) both',
     }}>
       {CHILDREN.map((child, i) => {
-        // animation delay: 4.3s + 0.1s per child position
         const delay = `${4.3 + i * 0.1}s`
 
         if (child.type === 'div') {
@@ -46,8 +47,8 @@ export function Menu({ skipIntro }: MenuProps) {
             <div key={i} style={{
               width: 1, height: 18,
               background: 'rgba(224,84,24,0.3)',
-              opacity: skipIntro ? 1 : 0,
-              animation: skipIntro ? undefined : `tsFadeIn 0.4s ${delay} forwards`,
+              opacity: 0,
+              animation: skipIntro ? 'tsFadeIn 0.35s ease both' : `tsFadeIn 0.4s ${delay} forwards`,
               flexShrink: 0,
             }} />
           )
@@ -60,10 +61,10 @@ export function Menu({ skipIntro }: MenuProps) {
             data-testid={child.testId}
             role="button"
             tabIndex={0}
-            onMouseEnter={() => setHovered(child.label)}
+            onMouseEnter={() => { setHovered(child.label); playHover() }}
             onMouseLeave={() => setHovered(null)}
-            onClick={() => child.phase ? setPhase(child.phase as Parameters<typeof setPhase>[0]) : undefined}
-            onKeyDown={(e) => { if (e.key === 'Enter' && child.phase) setPhase(child.phase as Parameters<typeof setPhase>[0]) }}
+            onClick={() => { if (child.phase) { playClick(); setPhase(child.phase as Parameters<typeof setPhase>[0]) } }}
+            onKeyDown={(e) => { if (e.key === 'Enter' && child.phase) { playClick(); setPhase(child.phase as Parameters<typeof setPhase>[0]) } }}
             style={{
               fontFamily: "'DM Sans', sans-serif",
               fontWeight: 500,
@@ -77,11 +78,10 @@ export function Menu({ skipIntro }: MenuProps) {
               transition: 'color 0.2s, letter-spacing 0.2s',
               whiteSpace: 'nowrap',
               userSelect: 'none',
-              opacity: skipIntro ? 1 : 0,
-              animation: skipIntro ? undefined : `tsFadeIn 0.4s ${delay} forwards`,
+              opacity: 0,
+              animation: skipIntro ? 'tsFadeIn 0.35s ease both' : `tsFadeIn 0.4s ${delay} forwards`,
             }}
           >
-            {/* Δ pip above on hover */}
             <span style={{
               position: 'absolute',
               left: '50%',
@@ -98,7 +98,6 @@ export function Menu({ skipIntro }: MenuProps) {
 
             {child.label}
 
-            {/* underline on hover */}
             <div style={{
               position: 'absolute',
               left: 0, right: 0,

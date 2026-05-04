@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useGameStore } from '../store/gameStore'
+import { getCtx } from '../game/audioCore'
 
 interface Card { label?: string; title: string; sub?: string; useDelta?: boolean; isLoader?: boolean }
 
@@ -10,19 +11,20 @@ const CARDS: Card[] = [
   { label: 'Based on the Flash Games by Loona! Designs', title: '"Covert Operations"', sub: '& "Covert Operations Tournament"' },
 ]
 
-const FADE_MS   = 500
-const HOLD_MS   = 1700
-const LOADER_MS = 2200  // loader bar fill duration
+const FADE_MS   = 400
+const HOLD_MS   = 2500
+const LOADER_MS = 2400
 
 let splashShown = false
 
 export function SplashScreen() {
-  const setPhase           = useGameStore((s) => s.setPhase)
-  const [cardIdx, setCard] = useState(0)
-  const [visible, setVis]  = useState(false)
-  const [dots, setDots]    = useState('')
+  const setPhase            = useGameStore((s) => s.setPhase)
+  const [cardIdx, setCard]  = useState(0)
+  const [visible, setVis]   = useState(false)
+  const [dots, setDots]     = useState('')
+  const [showInitBtn, setShowInitBtn] = useState(false)
+  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([])
 
-  // Capture skip value once at mount — never recompute, so re-renders don't flip it
   const [skip] = useState(() =>
     splashShown
     || new URLSearchParams(window.location.search).get('skipSplash') === '1'
@@ -31,28 +33,41 @@ export function SplashScreen() {
 
   function done() { setPhase('title_screen') }
 
-  useEffect(() => {
-    if (skip) { done(); return }
-    if (splashShown) return   // StrictMode double-fire guard
-    splashShown = true
-    const timers: ReturnType<typeof setTimeout>[] = []
-    const at = (ms: number, fn: () => void) => timers.push(setTimeout(fn, ms))
+  function handleInit() {
+    getCtx().resume().catch(() => {})
+    setShowInitBtn(false)
+    setVis(false)
 
-    let t = 300
-    CARDS.forEach((card, i) => {
-      const hold = card.isLoader ? LOADER_MS : HOLD_MS
-      at(t,              () => setVis(true))
-      at(t + hold,       () => setVis(false))
-      at(t + hold + FADE_MS, () => {
-        if (i + 1 < CARDS.length) { setCard(i + 1); setVis(false) }
+    const at = (ms: number, fn: () => void) => {
+      const id = setTimeout(fn, ms)
+      timersRef.current.push(id)
+    }
+
+    let t = FADE_MS + 150
+    CARDS.slice(1).forEach((_, i) => {
+      const idx = i + 1
+      at(t, () => { setCard(idx); setVis(true) })
+      at(t + HOLD_MS, () => setVis(false))
+      at(t + HOLD_MS + FADE_MS, () => {
+        if (idx + 1 < CARDS.length) setCard(idx + 1)
         else done()
       })
-      t += hold + FADE_MS + 150
+      t += HOLD_MS + FADE_MS + 150
     })
-    return () => timers.forEach(clearTimeout)
+  }
+
+  useEffect(() => {
+    if (skip) { done(); return }
+    if (splashShown) return
+    splashShown = true
+
+    const id1 = setTimeout(() => setVis(true), 300)
+    const id2 = setTimeout(() => setShowInitBtn(true), 300 + LOADER_MS)
+    timersRef.current = [id1, id2]
+
+    return () => timersRef.current.forEach(clearTimeout)
   }, [])
 
-  // Animated dots for loader
   useEffect(() => {
     if (!CARDS[cardIdx]?.isLoader) return
     let n = 0
@@ -65,7 +80,7 @@ export function SplashScreen() {
 
   return (
     <div
-      onClick={done}
+      onClick={!card.isLoader ? done : undefined}
       style={{
         position: 'absolute', inset: 0,
         background: '#000',
@@ -76,7 +91,6 @@ export function SplashScreen() {
       }}
     >
       {card.isLoader ? (
-        /* ── Loader card ── */
         <div style={{
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24,
           width: 'min(90vw, 420px)',
@@ -89,7 +103,6 @@ export function SplashScreen() {
             {card.title}{dots}
           </div>
 
-          {/* Progress bar */}
           <div style={{
             width: '100%', height: 2,
             background: 'rgba(138,154,98,0.12)',
@@ -111,9 +124,38 @@ export function SplashScreen() {
           }}>
             CO-Δ v0.1.0-ALPHA
           </div>
+
+          {showInitBtn && (
+            <button
+              onClick={(e) => { e.stopPropagation(); handleInit() }}
+              style={{
+                marginTop: 8,
+                padding: '10px 32px',
+                background: 'transparent',
+                border: '1px solid rgba(224,84,24,0.5)',
+                cursor: 'pointer',
+                fontFamily: "'Share Tech Mono', monospace",
+                fontSize: 10, letterSpacing: '0.35em', textTransform: 'uppercase',
+                color: '#e05418',
+                transition: 'background 0.2s, border-color 0.2s',
+                animation: 'tsFadeIn 0.5s ease both',
+              }}
+              onMouseEnter={(e) => {
+                const el = e.currentTarget as HTMLButtonElement
+                el.style.background = 'rgba(224,84,24,0.12)'
+                el.style.borderColor = 'rgba(224,84,24,0.9)'
+              }}
+              onMouseLeave={(e) => {
+                const el = e.currentTarget as HTMLButtonElement
+                el.style.background = 'transparent'
+                el.style.borderColor = 'rgba(224,84,24,0.5)'
+              }}
+            >
+              INITIALIZE SYSTEM
+            </button>
+          )}
         </div>
       ) : (
-        /* ── Publisher logo card ── */
         <div style={{
           display: 'flex', flexDirection: 'column', alignItems: 'center',
           padding: '36px 56px',
@@ -162,14 +204,16 @@ export function SplashScreen() {
         </div>
       )}
 
-      <div style={{
-        position: 'absolute', bottom: 28,
-        fontFamily: "'Share Tech Mono', monospace",
-        fontSize: 7, letterSpacing: '0.3em',
-        color: 'rgba(50,50,50,0.6)', textTransform: 'uppercase',
-      }}>
-        Klicken zum Überspringen
-      </div>
+      {!showInitBtn && (
+        <div style={{
+          position: 'absolute', bottom: 28,
+          fontFamily: "'Share Tech Mono', monospace",
+          fontSize: 7, letterSpacing: '0.3em',
+          color: 'rgba(50,50,50,0.6)', textTransform: 'uppercase',
+        }}>
+          {card.isLoader ? '' : 'Klicken zum Überspringen'}
+        </div>
+      )}
     </div>
   )
 }

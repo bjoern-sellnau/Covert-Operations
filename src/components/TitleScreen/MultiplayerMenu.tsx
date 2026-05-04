@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { Particles } from './Particles'
+import { playHover, playClick } from '../../game/uiSounds'
 
 interface Item {
   label: string
@@ -18,27 +19,27 @@ export function MultiplayerMenu() {
     {
       label: 'Offline',
       sub: 'AUSRÜSTUNG & START',
-      action: () => { setSkipShop(false); setGameMode('arena'); setPhase('character_select') },
+      action: () => { playClick(); setSkipShop(false); setGameMode('arena'); setPhase('character_select') },
     },
     {
       label: 'Gefecht',
       sub: 'DIREKT SPIELEN',
-      action: () => { setSkipShop(true); setGameMode('arena'); setPhase('briefing') },
+      action: () => { playClick(); setSkipShop(true); setGameMode('arena'); setPhase('briefing') },
     },
     {
       label: 'Online',
       sub: 'MULTIPLAYER / LOBBY',
-      action: () => setPhase('lobby'),
+      action: () => { playClick(); setPhase('lobby') },
     },
     {
       label: 'Optionen',
       sub: 'SETTINGS',
-      action: () => setPhase('options'),
+      action: () => { playClick(); setPhase('options') },
     },
   ]
 
   return (
-    <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+    <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', animation: 'menuFadeIn 0.35s cubic-bezier(0.2,0.8,0.3,1) both' }}>
       <div style={{
         position: 'absolute', inset: 0,
         background: 'radial-gradient(ellipse at 50% 30%, rgba(30,36,20,0.95) 0%, rgba(8,9,6,1) 65%)',
@@ -53,7 +54,6 @@ export function MultiplayerMenu() {
       }} />
       <Particles />
 
-      {/* corner brackets */}
       {([['top','left'],['top','right'],['bottom','left'],['bottom','right']] as const).map(([v,h]) => (
         <div key={v+h} style={{
           position: 'absolute',
@@ -69,7 +69,6 @@ export function MultiplayerMenu() {
       <div style={{ ...stampStyle('left'), top: 36, fontSize: 7, letterSpacing: '0.2em', color: 'rgba(106,112,72,0.35)' }}>© 2026 Loona! Designs</div>
       <div style={stampStyle('right')}>TOP SECRET // CO-Δ-0.1.0-ALPHA</div>
 
-      {/* content */}
       <div style={{
         position: 'absolute', inset: 0,
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
@@ -96,7 +95,7 @@ export function MultiplayerMenu() {
             return (
               <div
                 key={item.label}
-                onMouseEnter={() => setHovered(item.label)}
+                onMouseEnter={() => { setHovered(item.label); playHover() }}
                 onMouseLeave={() => setHovered(null)}
                 onClick={item.action}
                 style={{
@@ -141,14 +140,14 @@ export function MultiplayerMenu() {
         </div>
 
         <button
-          onClick={() => setPhase('title_screen')}
+          onClick={() => { playClick(); setPhase('title_screen') }}
           style={{
             marginTop: 48, background: 'transparent', border: 'none', cursor: 'pointer',
             fontFamily: "'Share Tech Mono', monospace",
             fontSize: 10, letterSpacing: '0.3em', textTransform: 'uppercase',
             color: 'rgba(106,112,72,0.6)', transition: 'color 0.15s',
           }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(224,84,24,0.8)' }}
+          onMouseEnter={(e) => { playHover(); (e.currentTarget as HTMLButtonElement).style.color = 'rgba(224,84,24,0.8)' }}
           onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(106,112,72,0.6)' }}
         >← ZURÜCK</button>
       </div>

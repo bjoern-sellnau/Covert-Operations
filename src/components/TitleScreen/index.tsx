@@ -20,7 +20,7 @@ export function TitleScreen() {
   const stampFade  = skipIntro ? undefined : 'tsFadeIn 1s 4.5s both'
 
   return (
-    <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+    <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', animation: 'menuFadeIn 0.35s cubic-bezier(0.2,0.8,0.3,1) both' }}>
 
       {/* ── background ── */}
       <div style={{
