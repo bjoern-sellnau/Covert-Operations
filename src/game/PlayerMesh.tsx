@@ -210,17 +210,19 @@ export function PlayerMesh({ player2 = false }: Props) {
         </mesh>
       </group>
 
-      {/* Health bar — outside innerRef so it never spins */}
-      <group position={[0, 0.9, 0]}>
-        <mesh>
-          <planeGeometry args={[1, 0.12]} />
-          <meshBasicMaterial color="#222222" side={THREE.DoubleSide} />
-        </mesh>
-        <mesh ref={healthBarRef} position={[0, 0, 0.001]}>
-          <planeGeometry args={[1, 0.1]} />
-          <meshBasicMaterial color="#00ff44" side={THREE.DoubleSide} />
-        </mesh>
-      </group>
+      {/* Health bar — only for P2 (P1 uses the HUD bar) */}
+      {player2 && (
+        <group position={[0, 0.9, 0]}>
+          <mesh>
+            <planeGeometry args={[1, 0.12]} />
+            <meshBasicMaterial color="#222222" side={THREE.DoubleSide} />
+          </mesh>
+          <mesh ref={healthBarRef} position={[0, 0, 0.001]}>
+            <planeGeometry args={[1, 0.1]} />
+            <meshBasicMaterial color="#00ff44" side={THREE.DoubleSide} />
+          </mesh>
+        </group>
+      )}
     </group>
   )
 }
