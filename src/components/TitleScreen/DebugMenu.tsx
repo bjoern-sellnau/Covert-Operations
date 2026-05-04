@@ -61,7 +61,8 @@ export function DebugMenu() {
       ))}
 
       <div style={stampStyle('left')}>CLASSIFIED</div>
-      <div style={stampStyle('right')}>TOP SECRET // CO-Δ-001</div>
+      <div style={{ ...stampStyle('left'), top: 36, fontSize: 7, letterSpacing: '0.2em', color: 'rgba(106,112,72,0.35)' }}>© 2026 Loona! Designs</div>
+      <div style={stampStyle('right')}>TOP SECRET // CO-Δ-0.1.0-ALPHA</div>
 
       {/* content */}
       <div style={{
@@ -146,10 +147,6 @@ export function DebugMenu() {
         >← ZURÜCK</button>
       </div>
 
-      <div style={bottomBarStyle}>
-        <span style={barTextStyle}>© 2026 Loona! Designs · All Rights Reserved</span>
-        <span style={barVersionStyle}>BUILD 0.1.0-ALPHA // CO-Δ</span>
-      </div>
     </div>
   )
 }
@@ -160,19 +157,3 @@ const stampStyle = (side: 'left' | 'right'): React.CSSProperties => ({
   fontSize: 8, letterSpacing: '0.3em', textTransform: 'uppercase',
   color: 'rgba(106,112,72,0.5)', pointerEvents: 'none',
 })
-const bottomBarStyle: React.CSSProperties = {
-  position: 'absolute', bottom: 0, left: 0, right: 0, height: 48,
-  background: 'rgba(0,0,0,0.6)', borderTop: '1px solid rgba(224,84,24,0.2)',
-  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-  padding: '0 32px', pointerEvents: 'none',
-}
-const barTextStyle: React.CSSProperties = {
-  fontFamily: "'Share Tech Mono', monospace",
-  fontSize: 9, letterSpacing: '0.25em', textTransform: 'uppercase',
-  color: 'rgba(138,154,98,0.9)',
-}
-const barVersionStyle: React.CSSProperties = {
-  fontFamily: "'Share Tech Mono', monospace",
-  fontSize: 9, letterSpacing: '0.2em',
-  color: 'rgba(224,84,24,0.85)',
-}

@@ -51,10 +51,13 @@ Die aktuelle Reihenfolge ist falsch. Neue Reihenfolge:
 - [x] Blut-Spots auf Gegnern bei Treffer → bereits via spawnDecal implementiert
 
 ### Startup-Animationen
-- [ ] Beim Start werden Animationen angezeigt:
-  1. Coded by Claude Code
-  2. Loona! Designs
-  3. Based on the Loona! Designs Flash Game "Covert Operations" & "Covert Operations Tournament"
+- [x] Ablauf: Preloader → Publisher Logos → Boot-Sequenz → Menü
+  1. [x] Preloader — "Loading Mission Data" mit Fortschrittsbalken
+  2. [x] Coded by Claude Code
+  3. [x] Loona! Designs (mit Δ-Logo)
+  4. [x] Based on the Loona! Designs Flash Game "Covert Operations" & "Covert Operations Tournament"
+- [x] Boot-Sequenz mit Terminal-Beeps und Abschluss-Chime (D-Moll Arpeggio)
+- [x] Neue Menü-Musik (C-Moll ambient, MGS1-inspiriert); alte Menü-Musik als Track 32
 
 ### Haupt-Menü Redesign
 - [ ] Modernes Design mit animiertem Hintergrund

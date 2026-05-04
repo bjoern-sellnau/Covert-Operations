@@ -15,7 +15,6 @@ export function TitleScreen() {
   }, [])
   const chromeFade = skipIntro ? undefined : 'tsFadeIn 1s 4.4s both'
   const stampFade  = skipIntro ? undefined : 'tsFadeIn 1s 4.5s both'
-  const barFade    = skipIntro ? undefined : 'tsFadeIn 1s 4.6s both'
 
   return (
     <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
@@ -89,6 +88,15 @@ export function TitleScreen() {
         pointerEvents: 'none',
       }}>CLASSIFIED</div>
       <div style={{
+        position: 'absolute', top: 36, left: 64,
+        fontFamily: "'Share Tech Mono', monospace",
+        fontSize: 7, letterSpacing: '0.2em', textTransform: 'uppercase',
+        color: 'rgba(106,112,72,0.35)',
+        opacity: skipIntro ? 1 : 0,
+        animation: stampFade,
+        pointerEvents: 'none',
+      }}>© 2026 Loona! Designs</div>
+      <div style={{
         position: 'absolute', top: 22, right: 64,
         fontFamily: "'Share Tech Mono', monospace",
         fontSize: 8, letterSpacing: '0.3em', textTransform: 'uppercase',
@@ -96,7 +104,7 @@ export function TitleScreen() {
         opacity: skipIntro ? 1 : 0,
         animation: stampFade,
         pointerEvents: 'none',
-      }}>TOP SECRET // CO-Δ-001</div>
+      }}>TOP SECRET // CO-Δ-0.1.0-ALPHA</div>
 
       {/* ── logo ── */}
       <Logo skipIntro={skipIntro} />
@@ -104,29 +112,6 @@ export function TitleScreen() {
       {/* ── menu ── */}
       <Menu skipIntro={skipIntro} />
 
-      {/* ── bottom bar ── */}
-      <div style={{
-        position: 'absolute', bottom: 0, left: 0, right: 0,
-        height: 48,
-        background: 'rgba(0,0,0,0.6)',
-        borderTop: '1px solid rgba(224,84,24,0.2)',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '0 32px',
-        opacity: skipIntro ? 1 : 0,
-        animation: barFade,
-        pointerEvents: 'none',
-      }}>
-        <span style={{
-          fontFamily: "'Share Tech Mono', monospace",
-          fontSize: 9, letterSpacing: '0.25em', textTransform: 'uppercase',
-          color: 'rgba(138,154,98,0.9)',
-        }}>© 2026 Loona! Designs · All Rights Reserved</span>
-        <span style={{
-          fontFamily: "'Share Tech Mono', monospace",
-          fontSize: 9, letterSpacing: '0.2em',
-          color: 'rgba(224,84,24,0.85)',
-        }}>BUILD 0.1.0-ALPHA // CO-Δ</span>
-      </div>
 
     </div>
   )
