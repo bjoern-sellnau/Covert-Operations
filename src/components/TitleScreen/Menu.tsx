@@ -8,6 +8,7 @@ const ITEMS = [
   { label: 'Level Editor', testId: 'menu-level-editor', phase: 'editor'            as const },
   { label: 'Track Player', testId: 'menu-track-player', phase: 'track_player'      as const },
   { label: 'Demos',        testId: 'menu-demos',        phase: 'demo_viewer'       as const },
+  { label: 'Hilfe',        testId: 'menu-hilfe',        phase: 'help'              as const },
   { label: 'Debug',        testId: 'menu-debug',        phase: 'debug_menu' as const },
 ]
 

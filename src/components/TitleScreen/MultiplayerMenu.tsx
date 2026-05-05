@@ -10,9 +10,10 @@ interface Item {
 }
 
 export function MultiplayerMenu() {
-  const setPhase    = useGameStore((s) => s.setPhase)
-  const setGameMode = useGameStore((s) => s.setGameMode)
-  const setSkipShop = useGameStore((s) => s.setSkipShop)
+  const setPhase             = useGameStore((s) => s.setPhase)
+  const setGameMode          = useGameStore((s) => s.setGameMode)
+  const setSkipShop          = useGameStore((s) => s.setSkipShop)
+  const setBriefingReturnTo  = useGameStore((s) => s.setBriefingReturnTo)
   const [hovered, setHovered] = useState<string | null>(null)
 
   const items: Item[] = [
@@ -24,7 +25,7 @@ export function MultiplayerMenu() {
     {
       label: 'Gefecht',
       sub: 'DIREKT SPIELEN',
-      action: () => { playClick(); setSkipShop(true); setGameMode('arena'); setPhase('briefing') },
+      action: () => { playClick(); setSkipShop(true); setGameMode('arena'); setBriefingReturnTo('multiplayer_menu'); setPhase('briefing') },
     },
     {
       label: 'Online',

@@ -24,6 +24,7 @@ interface GameStore {
   skipShop: boolean
   offlinePath: boolean
   bigExplosion: boolean
+  briefingReturnTo: GamePhase
   optionsReturnTo: GamePhase
   // Co-op Player 2
   p2Active: boolean
@@ -41,6 +42,7 @@ interface GameStore {
   setGameMode: (m: 'arena' | 'skydive' | 'shooting_range') => void
   setSkipShop: (v: boolean) => void
   setOfflinePath: (v: boolean) => void
+  setBriefingReturnTo: (v: GamePhase) => void
   setOptionsReturnTo: (phase: GamePhase) => void
   setBigExplosion: (v: boolean) => void
   updateHUD: (health: number, score: number, wave: number, ammo: number, maxAmmo: number, credits: number, armor: number) => void
@@ -77,6 +79,7 @@ export const useGameStore = create<GameStore>((set) => ({
   skipShop: false,
   offlinePath: false,
   bigExplosion: false,
+  briefingReturnTo: 'title_screen' as GamePhase,
   optionsReturnTo: 'title_screen' as GamePhase,
   p2Active: false,
   p2Health: 100,
@@ -109,6 +112,7 @@ export const useGameStore = create<GameStore>((set) => ({
   setGameMode:     (gameMode)   => set({ gameMode }),
   setSkipShop:         (skipShop)        => set({ skipShop }),
   setOfflinePath:      (offlinePath)     => set({ offlinePath }),
+  setBriefingReturnTo: (briefingReturnTo) => set({ briefingReturnTo }),
   setOptionsReturnTo:  (optionsReturnTo) => set({ optionsReturnTo }),
   setBigExplosion: (bigExplosion) => set({ bigExplosion }),
   updateHUD: (health, score, wave, ammo, maxAmmo, creditsEarned, armor) =>

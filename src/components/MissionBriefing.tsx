@@ -91,9 +91,10 @@ const RANGE_CARDS: Card[] = [
 ]
 
 export function MissionBriefing() {
-  const setPhase      = useGameStore((s) => s.setPhase)
-  const gameMode      = useGameStore((s) => s.gameMode)
-  const offlinePath   = useGameStore((s) => s.offlinePath)
+  const setPhase            = useGameStore((s) => s.setPhase)
+  const gameMode            = useGameStore((s) => s.gameMode)
+  const offlinePath         = useGameStore((s) => s.offlinePath)
+  const briefingReturnTo    = useGameStore((s) => s.briefingReturnTo)
   const { skyFPV, setSkyFPV } = useSettingsStore()
   const [page, setPage] = useState(0)
 
@@ -257,7 +258,7 @@ export function MissionBriefing() {
       </div>
 
       <button
-        onClick={() => setPhase(offlinePath ? 'map_select' : 'title_screen')}
+        onClick={() => setPhase(offlinePath ? 'map_select' : briefingReturnTo)}
         style={{
           background: 'transparent', border: 'none', color: 'rgba(138,154,98,0.4)',
           fontSize: 10, letterSpacing: 2, padding: '12px', cursor: 'pointer',
@@ -265,7 +266,7 @@ export function MissionBriefing() {
           paddingBottom: 'max(12px, calc(env(safe-area-inset-bottom, 0px) + 12px))',
         }}
       >
-        {offlinePath ? '← Zurück' : 'Abbrechen'}
+        {offlinePath ? '← Zurück' : '← Abbrechen'}
       </button>
     </div>
   )
