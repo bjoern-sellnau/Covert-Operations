@@ -22,6 +22,7 @@ interface LoadoutStore {
   laserStock: number
   ionStock: number
   meleeStacks: Partial<Record<WeaponId, number>>
+  weaponAmmoRefills: Partial<Record<WeaponId, number>>
   activeSlot: number
   slotIndices: Partial<Record<number, number>>
 
@@ -38,6 +39,8 @@ interface LoadoutStore {
   buyVernichterAmmo: () => boolean
   buyLaserAmmo: () => boolean
   buyIonAmmo: () => boolean
+  buyWeaponAmmo: (id: WeaponId) => boolean
+  consumeAmmoRefills: () => Partial<Record<WeaponId, number>>
   getMaxAmmo: () => number
   getMaxAmmoFor: (id: WeaponId) => number
   getDamageBonus: () => number
@@ -57,6 +60,7 @@ export const useLoadoutStore = create<LoadoutStore>()(
       laserStock: 0,
       ionStock: 0,
       meleeStacks: {},
+      weaponAmmoRefills: {},
       activeSlot: 2,
       slotIndices: {},
 
@@ -207,6 +211,27 @@ export const useLoadoutStore = create<LoadoutStore>()(
         if (s.credits < ION_AMMO_PRICE) return false
         set((st) => ({ credits: st.credits - ION_AMMO_PRICE, ionStock: st.ionStock + 1 }))
         return true
+      },
+
+      buyWeaponAmmo: (id) => {
+        const s   = get()
+        const cfg = WEAPON_CONFIGS[id]
+        if (cfg.isMelee || cfg.isVernichter || cfg.isLaser || cfg.isIon || cfg.isGrenade) return false
+        const current = s.weaponAmmoRefills[id] ?? 0
+        if (current >= 3) return false
+        const price = Math.max(15, Math.round(cfg.price * 0.12))
+        if (s.credits < price) return false
+        set((st) => ({
+          credits: st.credits - price,
+          weaponAmmoRefills: { ...st.weaponAmmoRefills, [id]: current + 1 },
+        }))
+        return true
+      },
+
+      consumeAmmoRefills: () => {
+        const refills = get().weaponAmmoRefills
+        set({ weaponAmmoRefills: {} })
+        return refills
       },
 
       getMaxAmmo: () => {

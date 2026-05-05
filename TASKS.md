@@ -60,44 +60,44 @@ Die aktuelle Reihenfolge ist falsch. Neue Reihenfolge:
 - [x] Neue Menü-Musik (C-Moll ambient, MGS1-inspiriert); alte Menü-Musik als Track 32
 
 ### Haupt-Menü Redesign
-- [ ] Modernes Design mit animiertem Hintergrund
-- [ ] Menüelemente:
-  - [ ] Singleplayer → Singleplayer-Menü
-  - [ ] Multiplayer → Multiplayer-Menü
-  - [ ] Level Editor
-  - [ ] Demos
-  - [ ] Track Player
-  - [ ] Debug → Debug-Menü
+- [x] Modernes Design mit animiertem Hintergrund
+- [x] Menüelemente:
+  - [x] Singleplayer → Singleplayer-Menü
+  - [x] Multiplayer → Multiplayer-Menü
+  - [x] Level Editor
+  - [x] Demos
+  - [x] Track Player
+  - [x] Debug → Debug-Menü
 
 ### Singleplayer-Menü
-- [ ] Modernes Design mit animiertem Hintergrund
-- [ ] Menüelemente:
-  - [ ] Story (folgt)
-  - [ ] Missionen
-  - [ ] Optionen
-  - [ ] Zurück → Haupt-Menü
+- [x] Modernes Design mit animiertem Hintergrund
+- [x] Menüelemente:
+  - [x] Story (folgt)
+  - [x] Missionen
+  - [x] Optionen
+  - [x] Zurück → Haupt-Menü
 
 ### Multiplayer-Menü
-- [ ] Modernes Design mit animiertem Hintergrund
-- [ ] Menüelemente:
-  - [ ] Offline → (Ausrüstung & Start)
-  - [ ] Gefecht → (Direkt Spielen)
-  - [ ] Online → (Multiplayer/Lobby)
-  - [ ] Optionen
-  - [ ] Zurück → Haupt-Menü
+- [x] Modernes Design mit animiertem Hintergrund
+- [x] Menüelemente:
+  - [x] Offline → (Ausrüstung & Start)
+  - [x] Gefecht → (Direkt Spielen)
+  - [x] Online → (Multiplayer/Lobby)
+  - [x] Optionen
+  - [x] Zurück → Haupt-Menü
 
 ### Debug-Menü
-- [ ] Modernes Design mit animiertem Hintergrund
-- [ ] Menüelemente:
-  - [ ] Show Bounding Boxes
-  - [ ] Cleanup Settings
-  - [ ] Reset
-  - [ ] Zurück → Haupt-Menü (Debug bleibt aktiv bis manuell deaktiviert)
+- [x] Modernes Design mit animiertem Hintergrund
+- [x] Menüelemente:
+  - [x] Show Bounding Boxes
+  - [x] Cleanup Settings
+  - [x] Reset
+  - [x] Zurück → Haupt-Menü (Debug bleibt aktiv bis manuell deaktiviert)
 
 ### Kauf-Menü 2.0
-- [ ] Grundprinzip: Waffen einmalig kaufen → freischalten
-  - [ ] Ausnahme: Pistole max. 2×, UZI max. 2×
-- [ ] Unter "Munition": für alle Waffen Munition kaufen
+- [x] Grundprinzip: Waffen einmalig kaufen → freischalten
+  - [x] Ausnahme: Pistole max. 2×, UZI max. 2×
+- [x] Unter "Munition": für alle Waffen Munition kaufen
 
 ### Game-Modi
 - [x] **Arena-Modus**:

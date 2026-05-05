@@ -415,6 +415,23 @@ export function GameScene() {
     entityStore.maxAmmo2       = entityStore.ammo2
     entityStore.grenadeCount2  = isRange ? 99 : 3
 
+    // Apply purchased ammo refills (consumed once at game start)
+    if (!isRange) {
+      const refills = useLoadoutStore.getState().consumeAmmoRefills()
+      let eqMult = 1.0
+      for (const eq of loadout.ownedEquipment) eqMult += EQUIPMENT_CONFIGS[eq].ammoMultBonus
+      for (const [wid, count] of Object.entries(refills)) {
+        const id    = wid as WeaponId
+        const extra = Math.round(WEAPON_CONFIGS[id].baseAmmo * eqMult * count)
+        const cur   = entityStore.weaponAmmo.get(id) ?? 0
+        entityStore.weaponAmmo.set(id, cur + extra)
+        if (id === loadout.selectedWeapon) {
+          entityStore.ammo    += extra
+          entityStore.maxAmmo += extra
+        }
+      }
+    }
+
     activeLevelRef.current = useEditorStore.getState().activePlayLevel
 
     // Mutator initialization

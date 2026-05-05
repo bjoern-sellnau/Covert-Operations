@@ -457,6 +457,74 @@ function CharacterPanel() {
   )
 }
 
+// ── Weapon ammo refill row ────────────────────────────────────────────────────
+
+const REFILL_SKIP: Set<WeaponId> = new Set(['vernichter', 'deathlas', 'ioncan', 'grenade', 'knife', 'bat', 'stick'])
+
+function refillPrice(id: WeaponId): number {
+  return Math.max(15, Math.round(WEAPON_CONFIGS[id].price * 0.12))
+}
+
+function RefillSection() {
+  const { ownedWeapons } = useLoadoutStore()
+  const refillable = ownedWeapons.filter(id => !REFILL_SKIP.has(id))
+  if (refillable.length === 0) return null
+  return (
+    <>
+      <div style={{ color: 'rgba(138,154,98,0.4)', fontSize: 10, letterSpacing: 3, marginTop: 16, marginBottom: 4 }}>NACHFÜLLUNG</div>
+      <div style={{ color: 'rgba(138,154,98,0.3)', fontSize: 9, letterSpacing: 1, marginBottom: 8 }}>
+        Extra-Magazine kaufen — werden beim Spielstart verbraucht. Max. 3 pro Waffe.
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {refillable.map(id => <WeaponRefillCard key={id} id={id} />)}
+      </div>
+    </>
+  )
+}
+
+function WeaponRefillCard({ id }: { id: WeaponId }) {
+  const cfg = WEAPON_CONFIGS[id]
+  const { credits, weaponAmmoRefills, buyWeaponAmmo } = useLoadoutStore()
+  const count    = weaponAmmoRefills[id] ?? 0
+  const price    = refillPrice(id)
+  const canBuy   = count < 3 && credits >= price
+
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      padding: '9px 12px',
+      background: count > 0 ? 'rgba(224,84,24,0.06)' : 'rgba(5,4,8,0.6)',
+      border: `1px solid ${count > 0 ? 'rgba(224,84,24,0.25)' : 'rgba(138,154,98,0.12)'}`,
+      borderRadius: 3,
+    }}>
+      <div>
+        <span style={{ color: 'rgba(200,196,176,0.85)', fontSize: 12, letterSpacing: 1 }}>{cfg.shortName}</span>
+        <span style={{ color: 'rgba(138,154,98,0.5)', fontSize: 10, marginLeft: 8 }}>+{cfg.baseAmmo} Schuss / Magazin</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {count > 0 && (
+          <span style={{ color: '#e05418', fontSize: 10, letterSpacing: 1 }}>×{count}</span>
+        )}
+        <button
+          disabled={!canBuy}
+          onClick={() => buyWeaponAmmo(id)}
+          style={{
+            background: canBuy ? 'rgba(224,84,24,0.15)' : 'transparent',
+            border: `1px solid ${canBuy ? 'rgba(224,84,24,0.5)' : 'rgba(138,154,98,0.15)'}`,
+            color: canBuy ? '#e05418' : 'rgba(138,154,98,0.3)',
+            fontSize: 10, letterSpacing: 2, padding: '4px 10px',
+            cursor: canBuy ? 'pointer' : 'default',
+            fontFamily: 'inherit', textTransform: 'uppercase',
+            transition: 'all 0.12s',
+          }}
+        >
+          {count >= 3 ? 'MAX' : `+1 MAG  ${price} CR`}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ── Vernichter card ──────────────────────────────────────────────────────────
 
 function VernichterCard() {
@@ -783,6 +851,7 @@ export function Shop() {
               {(['standard', 'hollow_point', 'ap'] as AmmoId[]).map((id) => (
                 <AmmoCard key={id} id={id} />
               ))}
+              <RefillSection />
             </>
           )}
         </div>
