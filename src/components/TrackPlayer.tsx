@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useGameStore } from '../store/gameStore'
 import { useSettingsStore } from '../store/settingsStore'
 import { useCustomTracksStore } from '../store/customTracksStore'
-import { previewTrack, stopMusic, playCustomTrack } from '../game/music'
+import { previewTrack, stopMusic, startMenuMusic, playCustomTrack } from '../game/music'
 import { getCtx, getBus, startAudioRecording, stopAudioRecording } from '../game/audioCore'
 import { Particles } from './TitleScreen/Particles'
 import { playHover, playClick } from '../game/uiSounds'
@@ -481,7 +481,16 @@ function MusicBoxTab() {
 
 export function TrackPlayer() {
   const setPhase = useGameStore((s) => s.setPhase)
+  const musicEnabled = useSettingsStore((s) => s.musicEnabled)
   const [tab, setTab] = useState<Tab>('studio')
+
+  useEffect(() => {
+    if (tab === 'studio') {
+      stopMusic()
+    } else if (musicEnabled) {
+      startMenuMusic()
+    }
+  }, [tab, musicEnabled])
 
   function handleBack() {
     playClick()
