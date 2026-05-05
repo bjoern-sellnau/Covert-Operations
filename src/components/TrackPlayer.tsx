@@ -164,6 +164,54 @@ function synthClap(when: number, vol = 0.4) {
   }
 }
 
+// ── Melody synthesis ──────────────────────────────────────────────────────────
+
+function midiToFreq(m: number) { return 440 * Math.pow(2, (m - 69) / 12) }
+const NOTE_LABELS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B']
+
+function makeScaleNotes(rootMidi: number, intervals: number[]) {
+  const notes: Array<{ name: string; freq: number }> = []
+  for (let oct = 0; oct < 2; oct++) {
+    for (const iv of intervals) {
+      const m = rootMidi + oct * 12 + iv
+      notes.push({ name: NOTE_LABELS[m % 12] + (Math.floor(m / 12) - 1), freq: midiToFreq(m) })
+    }
+  }
+  return notes.reverse()
+}
+
+const MINOR = [0, 2, 3, 5, 7, 8, 10]
+
+const SCALES: Record<string, { label: string; root: string; notes: Array<{ name: string; freq: number }> }> = {
+  d_minor: { label: 'D-Moll',  root: 'D',  notes: makeScaleNotes(50, MINOR) },
+  a_minor: { label: 'A-Moll',  root: 'A',  notes: makeScaleNotes(45, MINOR) },
+  e_minor: { label: 'E-Moll',  root: 'E',  notes: makeScaleNotes(52, MINOR) },
+  g_minor: { label: 'G-Moll',  root: 'G',  notes: makeScaleNotes(55, MINOR) },
+  c_minor: { label: 'C-Moll',  root: 'C',  notes: makeScaleNotes(48, MINOR) },
+  b_minor: { label: 'H-Moll',  root: 'B',  notes: makeScaleNotes(47, MINOR) },
+}
+
+function synthMelody(when: number, freq: number, dur: number, wave: OscillatorType = 'sawtooth', vol = 0.32) {
+  const ctx    = getCtx()
+  const bus    = getBus()
+  const osc    = ctx.createOscillator()
+  const filter = ctx.createBiquadFilter()
+  const g      = ctx.createGain()
+  osc.type = wave
+  osc.frequency.value = freq
+  filter.type = 'lowpass'
+  filter.frequency.setValueAtTime(600, when)
+  filter.frequency.exponentialRampToValueAtTime(2800, when + 0.04)
+  filter.Q.value = 3.5
+  const rel = Math.min(dur * 0.55, 0.2)
+  g.gain.setValueAtTime(0, when)
+  g.gain.linearRampToValueAtTime(vol, when + 0.015)
+  g.gain.setValueAtTime(vol, when + dur - rel)
+  g.gain.exponentialRampToValueAtTime(0.001, when + dur)
+  osc.connect(filter); filter.connect(g); g.connect(bus)
+  osc.start(when); osc.stop(when + dur + 0.05)
+}
+
 // ── Studio tab ───────────────────────────────────────────────────────────────
 
 let _studioTrackCount = 0
@@ -171,22 +219,31 @@ let _studioTrackCount = 0
 function StudioTab() {
   const { addTrack } = useCustomTracksStore()
 
-  const [pattern, setPattern]     = useState<Pattern>(structuredClone(DEFAULT_PATTERN))
-  const [bpm, setBpm]             = useState(120)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [isRec, setIsRec]         = useState(false)
-  const [curStep, setCurStep]     = useState(-1)
-  const [savedMsg, setSavedMsg]   = useState<string | null>(null)
+  const [pattern, setPattern]         = useState<Pattern>(structuredClone(DEFAULT_PATTERN))
+  const [melodyPattern, setMelodyPattern] = useState<(number | null)[]>(Array(16).fill(null))
+  const [scaleName, setScaleName]     = useState('d_minor')
+  const [waveType, setWaveType]       = useState<OscillatorType>('sawtooth')
+  const [bpm, setBpm]                 = useState(120)
+  const [isPlaying, setIsPlaying]     = useState(false)
+  const [isRec, setIsRec]             = useState(false)
+  const [curStep, setCurStep]         = useState(-1)
+  const [savedMsg, setSavedMsg]       = useState<string | null>(null)
 
-  const patternRef    = useRef(pattern)
-  const bpmRef        = useRef(bpm)
-  const nextTimeRef   = useRef(0)
-  const curStepRef    = useRef(0)
-  const schedulerTimer = useRef<ReturnType<typeof setInterval> | null>(null)
-  const isPlayingRef  = useRef(false)
+  const patternRef      = useRef(pattern)
+  const melodyPatRef    = useRef(melodyPattern)
+  const scaleNameRef    = useRef(scaleName)
+  const waveTypeRef     = useRef(waveType)
+  const bpmRef          = useRef(bpm)
+  const nextTimeRef     = useRef(0)
+  const curStepRef      = useRef(0)
+  const schedulerTimer  = useRef<ReturnType<typeof setInterval> | null>(null)
+  const isPlayingRef    = useRef(false)
 
-  useEffect(() => { patternRef.current = pattern }, [pattern])
-  useEffect(() => { bpmRef.current = bpm }, [bpm])
+  useEffect(() => { patternRef.current = pattern },         [pattern])
+  useEffect(() => { melodyPatRef.current = melodyPattern }, [melodyPattern])
+  useEffect(() => { scaleNameRef.current = scaleName },     [scaleName])
+  useEffect(() => { waveTypeRef.current = waveType },       [waveType])
+  useEffect(() => { bpmRef.current = bpm },                 [bpm])
 
   const scheduleNext = useCallback(() => {
     const ctx      = getCtx()
@@ -202,6 +259,11 @@ function StudioTab() {
       if (p.hihat[step]) synthHihat(t, 0.3)
       if (p.open[step])  synthHihat(t, 0.3, true)
       if (p.clap[step])  synthClap(t)
+      const noteIdx = melodyPatRef.current[step]
+      if (noteIdx !== null) {
+        const note = SCALES[scaleNameRef.current].notes[noteIdx]
+        synthMelody(t, note.freq, stepDur * 0.82, waveTypeRef.current)
+      }
       const msUntil = Math.max(0, (t - ctx.currentTime) * 1000)
       const s = step
       setTimeout(() => { if (isPlayingRef.current) setCurStep(s) }, msUntil)
@@ -264,11 +326,22 @@ function StudioTab() {
   function clearPattern() {
     playClick()
     setPattern(makeEmpty())
+    setMelodyPattern(Array(16).fill(null))
   }
 
   function loadDefault() {
     playClick()
     setPattern(structuredClone(DEFAULT_PATTERN))
+    setMelodyPattern(Array(16).fill(null))
+  }
+
+  function toggleMelody(step: number, noteIdx: number) {
+    playClick()
+    setMelodyPattern((p) => {
+      const next = [...p]
+      next[step] = next[step] === noteIdx ? null : noteIdx
+      return next
+    })
   }
 
   const channels: ChannelId[] = ['kick', 'snare', 'hihat', 'open', 'clap']
@@ -357,6 +430,82 @@ function StudioTab() {
               })}
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Melody section */}
+      <div style={{ borderTop: '1px solid rgba(68,170,255,0.1)', paddingTop: 12 }}>
+        {/* Header row */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
+          <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 9, letterSpacing: '0.3em', color: 'rgba(68,170,255,0.6)', marginRight: 4 }}>MELODIE</span>
+          {Object.entries(SCALES).map(([key, sc]) => (
+            <button
+              key={key}
+              onClick={() => { playClick(); setScaleName(key) }}
+              style={{
+                background:  key === scaleName ? 'rgba(68,170,255,0.15)' : 'transparent',
+                border:      `1px solid ${key === scaleName ? 'rgba(68,170,255,0.7)' : 'rgba(68,170,255,0.18)'}`,
+                color:       key === scaleName ? '#44aaff' : 'rgba(68,170,255,0.45)',
+                fontFamily:  "'Share Tech Mono', monospace",
+                fontSize: 8, letterSpacing: '0.15em', padding: '4px 8px',
+                cursor: 'pointer', transition: 'all 0.1s',
+              }}
+            >{sc.label}</button>
+          ))}
+          <div style={{ flex: 1 }} />
+          {(['sine', 'triangle', 'sawtooth', 'square'] as const).map((w) => (
+            <button
+              key={w}
+              onClick={() => { playClick(); setWaveType(w) }}
+              title={w}
+              style={{
+                background:  w === waveType ? 'rgba(68,170,255,0.15)' : 'transparent',
+                border:      `1px solid ${w === waveType ? 'rgba(68,170,255,0.7)' : 'rgba(68,170,255,0.18)'}`,
+                color:       w === waveType ? '#44aaff' : 'rgba(68,170,255,0.45)',
+                fontFamily:  "'Share Tech Mono', monospace",
+                fontSize: 12, padding: '3px 8px',
+                cursor: 'pointer', transition: 'all 0.1s',
+              }}
+            >{w === 'sine' ? '∿' : w === 'triangle' ? '△' : w === 'sawtooth' ? '⟋' : '⊓'}</button>
+          ))}
+        </div>
+
+        {/* Piano roll */}
+        <div style={{ overflowX: 'auto', paddingBottom: 4 }}>
+          <div style={{ minWidth: 540 }}>
+            {SCALES[scaleName].notes.map((note, noteIdx) => {
+              const isRoot = note.name.replace(/\d+$/, '') === SCALES[scaleName].root
+              return (
+                <div key={noteIdx} style={{ display: 'grid', gridTemplateColumns: '64px repeat(16, 1fr)', gap: 2, marginBottom: 2 }}>
+                  <div style={{
+                    fontFamily: "'Share Tech Mono', monospace", fontSize: 8,
+                    color: isRoot ? '#44aaff' : 'rgba(68,170,255,0.4)',
+                    fontWeight: isRoot ? 'bold' : 'normal',
+                    display: 'flex', alignItems: 'center',
+                  }}>{note.name}</div>
+                  {Array.from({ length: 16 }, (_, step) => {
+                    const active = melodyPattern[step] === noteIdx
+                    const isCur  = curStep === step
+                    return (
+                      <button
+                        key={step}
+                        onClick={() => toggleMelody(step, noteIdx)}
+                        style={{
+                          height: 20,
+                          background: active
+                            ? isCur ? '#ffffff' : '#44aaff'
+                            : isCur ? 'rgba(255,255,255,0.06)' : step % 4 === 0 ? 'rgba(68,170,255,0.04)' : 'rgba(10,12,7,0.7)',
+                          border: `1px solid ${active ? '#44aaff' : isRoot ? 'rgba(68,170,255,0.18)' : 'rgba(68,170,255,0.08)'}`,
+                          cursor: 'pointer', transition: 'background 0.06s',
+                          boxShadow: active && isCur ? '0 0 6px #44aaff' : 'none',
+                        }}
+                      />
+                    )
+                  })}
+                </div>
+              )
+            })}
+          </div>
         </div>
       </div>
 
