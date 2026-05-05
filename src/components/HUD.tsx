@@ -17,7 +17,7 @@ function P2Panel() {
   if (!p2Active) {
     return (
       <div style={{
-        position: 'absolute', bottom: 20, left: 20,
+        position: 'absolute', bottom: 'max(20px, calc(env(safe-area-inset-bottom, 0px) + 20px))', left: 'max(20px, calc(env(safe-area-inset-left, 0px) + 20px))',
         color: '#334455', fontSize: 10, letterSpacing: 2,
       }}>
         PFEILTASTEN / GAMEPAD = SPIELER 2
@@ -30,7 +30,7 @@ function P2Panel() {
 
   return (
     <div style={{
-      position: 'absolute', bottom: 20, left: 20,
+      position: 'absolute', bottom: 'max(20px, calc(env(safe-area-inset-bottom, 0px) + 20px))', left: 'max(20px, calc(env(safe-area-inset-left, 0px) + 20px))',
       background: '#08080fcc', border: '1px solid #ff440044',
       borderRadius: 4, padding: '10px 14px', minWidth: 160,
       backdropFilter: 'blur(4px)',
@@ -557,7 +557,7 @@ export function HUD() {
         /* ── Landscape: horizontal bar at bottom ── */
         <div style={{
           position: 'absolute',
-          bottom: 'max(10px, calc(env(safe-area-inset-bottom, 0px) + 10px))',
+          bottom: 'max(16px, calc(env(safe-area-inset-bottom, 0px) + 16px))',
           left: '50%', transform: 'translateX(-50%)',
           display: 'flex', gap: 4, alignItems: 'flex-end',
           pointerEvents: 'auto',

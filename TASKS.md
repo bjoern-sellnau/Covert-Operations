@@ -10,12 +10,12 @@
 - [x] Änderungen für Flak-Waffe sind wieder raus (Regression)
 - [x] Low-Graphics-Modus sieht wieder wie vorher aus (Regression)
 - [x] Skalierung führt zu Problemen mit dem Level
-- [ ] UI hat Probleme mit Fullscreen-Modus auf iPad
-- [ ] UI hat allgemeine Probleme auf iPad
-- [ ] Das Hilfe-Menü hat Probleme im Fullscreen
+- [x] UI hat Probleme mit Fullscreen-Modus auf iPad
+- [x] UI hat allgemeine Probleme auf iPad
+- [x] Das Hilfe-Menü hat Probleme im Fullscreen
 - [x] Alle Menüs sind zu dunkel, 3D-Modelle im Hilfe-Screen immer noch nicht sichtbar
 - [x] Das HUD auf iPhone muss überarbeitet werden (z.B. kein Nachladen möglich)
-- [ ] Das UI auf iPad ist zu nahe am Home-Indicator → Browser wird oft minimiert
+- [x] Das UI auf iPad ist zu nahe am Home-Indicator → Browser wird oft minimiert
 - [x] Akimbo funktioniert nicht mehr / Logik unklar (zweite Waffe immer sichtbar → per useFrame gesteuert)
 - [x] Bullet Ballet funktioniert nicht (isAkimbo jetzt per-Frame berechnet statt einmalig bei Start)
 - [x] Gun Kata funktioniert nicht (erfordert Mutator-Aktivierung → Hinweis in allen Hilfe-Texten ergänzt)

@@ -153,7 +153,7 @@ export function MobileControls() {
         ref={baseRef}
         style={{
           position: 'absolute',
-          bottom: `calc(24px + ${safeArea})`,
+          bottom: `calc(28px + ${safeArea})`,
           left: 24,
           width: 130, height: 130, borderRadius: '50%',
           background: 'rgba(0,0,0,0.45)',
@@ -206,8 +206,8 @@ export function MobileControls() {
       {/* ── Right action buttons ── */}
       <div style={{
         position: 'absolute',
-        bottom: `calc(20px + ${safeArea})`,
-        right: 20,
+        bottom: `calc(28px + ${safeArea})`,
+        right: 24,
         display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 12,
         pointerEvents: 'none',
       }}>

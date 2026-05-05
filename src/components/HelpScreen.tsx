@@ -622,6 +622,8 @@ export function HelpScreen() {
       <div style={{
         display: 'flex', alignItems: 'center', gap: 16,
         padding: '12px 24px',
+        paddingTop: 'max(12px, calc(env(safe-area-inset-top, 0px) + 12px))',
+        paddingLeft: 'max(24px, calc(env(safe-area-inset-left, 0px) + 24px))',
         borderBottom: '1px solid #0d1520',
         flexShrink: 0,
       }}>
@@ -720,7 +722,7 @@ export function HelpScreen() {
           <div style={{
             borderTop: '1px solid #0d1520',
             padding: '10px 16px',
-            paddingBottom: 'max(10px, env(safe-area-inset-bottom, 10px))',
+            paddingBottom: 'max(12px, calc(env(safe-area-inset-bottom, 0px) + 12px))',
             background: '#03030b',
             flexShrink: 0,
           }}>
