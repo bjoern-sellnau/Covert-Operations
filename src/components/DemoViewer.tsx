@@ -175,14 +175,15 @@ export function DemoViewer() {
     input.click()
   }
 
-  const btn = (label: string, onClick: () => void, active = false, col = '#00aaff') => (
+  const btn = (label: string, onClick: () => void, active = false, col = '#e05418') => (
     <button
       onClick={onClick}
       style={{
-        padding: '6px 12px', background: active ? `${col}22` : 'transparent',
-        border: `1px solid ${active ? col : '#1a2a3a'}`,
-        color: active ? col : '#445566',
-        fontSize: 9, letterSpacing: 2, cursor: 'pointer', fontFamily: 'inherit',
+        padding: '6px 12px', background: active ? `${col}18` : 'transparent',
+        border: `1px solid ${active ? col : 'rgba(138,154,98,0.2)'}`,
+        color: active ? col : 'rgba(138,154,98,0.5)',
+        fontSize: 9, letterSpacing: '0.2em', cursor: 'pointer',
+        fontFamily: "'Share Tech Mono', monospace", textTransform: 'uppercase',
         transition: 'all 0.12s',
       }}
     >
@@ -192,26 +193,33 @@ export function DemoViewer() {
 
   return (
     <div style={{
-      position: 'absolute', inset: 0, background: '#04060e',
-      fontFamily: "'Courier New', monospace", color: '#aabbcc',
+      position: 'absolute', inset: 0,
+      background: 'radial-gradient(ellipse at 50% 30%, rgba(30,36,20,0.95) 0%, rgba(8,9,6,1) 65%)',
+      fontFamily: "'Share Tech Mono', monospace", color: 'rgba(220,216,200,0.8)',
       display: 'flex', flexDirection: 'column',
     }}>
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent, rgba(224,84,24,0.8), transparent)', pointerEvents: 'none' }} />
+
       {/* Header */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: 16,
-        padding: '14px 20px', borderBottom: '1px solid #0e1825', flexShrink: 0,
+        padding: '14px 20px',
+        paddingTop: 'max(14px, calc(env(safe-area-inset-top, 0px) + 14px))',
+        borderBottom: '1px solid rgba(138,154,98,0.12)', flexShrink: 0,
       }}>
         <button
           onClick={() => setPhase(viewerReturnTo)}
           style={{
             padding: '6px 14px', background: 'transparent',
-            border: '1px solid #1a2a3a', color: '#445566',
-            fontSize: 10, letterSpacing: 2, cursor: 'pointer', fontFamily: 'inherit',
+            border: '1px solid rgba(138,154,98,0.2)', color: 'rgba(138,154,98,0.5)',
+            fontSize: 9, letterSpacing: '0.2em', cursor: 'pointer',
+            fontFamily: "'Share Tech Mono', monospace", textTransform: 'uppercase',
+            transition: 'all 0.12s',
           }}
         >
           {viewerReturnTo === 'editor' ? '← EDITOR' : '← ZURÜCK'}
         </button>
-        <div style={{ color: '#00aaff', fontSize: 18, fontWeight: 'bold', letterSpacing: 6, textShadow: '0 0 12px #00aaff66' }}>
+        <div style={{ fontFamily: "'Saira Condensed', sans-serif", fontWeight: 900, fontSize: 20, letterSpacing: '0.2em', color: '#e05418', textShadow: '0 0 12px rgba(224,84,24,0.4)' }}>
           DEMOS
         </div>
         <div style={{ flex: 1 }} />
@@ -223,11 +231,11 @@ export function DemoViewer() {
 
         {/* Demo list */}
         <div style={{
-          width: 280, flexShrink: 0, borderRight: '1px solid #0e1825',
+          width: 260, flexShrink: 0, borderRight: '1px solid rgba(138,154,98,0.1)',
           overflowY: 'auto', display: 'flex', flexDirection: 'column',
         }}>
           {demos.length === 0 && (
-            <div style={{ padding: '32px 20px', color: '#223344', fontSize: 11, textAlign: 'center', lineHeight: 2 }}>
+            <div style={{ padding: '32px 20px', color: 'rgba(106,112,72,0.35)', fontSize: 10, textAlign: 'center', lineHeight: 2, letterSpacing: '0.05em' }}>
               Noch keine Demos vorhanden.<br />
               Nimm eine Runde auf (● REC im HUD)<br />
               oder importiere eine .json Datei.
@@ -239,16 +247,16 @@ export function DemoViewer() {
               onClick={() => selectDemo(d)}
               style={{
                 padding: '12px 16px', cursor: 'pointer',
-                background: selected?.id === d.id ? '#00aaff11' : 'transparent',
-                borderBottom: '1px solid #0a1018',
-                borderLeft: `3px solid ${selected?.id === d.id ? '#00aaff' : 'transparent'}`,
+                background: selected?.id === d.id ? 'rgba(224,84,24,0.06)' : 'transparent',
+                borderBottom: '1px solid rgba(138,154,98,0.08)',
+                borderLeft: `2px solid ${selected?.id === d.id ? '#e05418' : 'transparent'}`,
                 transition: 'all 0.12s',
               }}
             >
-              <div style={{ color: selected?.id === d.id ? '#00aaff' : '#667788', fontSize: 11, marginBottom: 4 }}>
+              <div style={{ color: selected?.id === d.id ? '#e05418' : 'rgba(220,216,200,0.7)', fontSize: 11, marginBottom: 4, letterSpacing: '0.05em' }}>
                 {d.name}
               </div>
-              <div style={{ display: 'flex', gap: 12, color: '#334455', fontSize: 9, letterSpacing: 1 }}>
+              <div style={{ display: 'flex', gap: 12, color: 'rgba(106,112,72,0.45)', fontSize: 9, letterSpacing: '0.1em' }}>
                 <span>⏱ {fmtMs(d.duration)}</span>
                 <span>WAVE {d.wave}</span>
                 <span>{String(d.score).padStart(6, '0')}</span>
@@ -256,7 +264,7 @@ export function DemoViewer() {
               {selected?.id === d.id && (
                 <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
                   {btn('⬇ EXPORT', () => exportDemo(d))}
-                  {btn('✕ LÖSCHEN', () => { if (selected?.id === d.id) setSelected(null); deleteDemo(d.id) }, false, '#ff3322')}
+                  {btn('✕ LÖSCHEN', () => { if (selected?.id === d.id) setSelected(null); deleteDemo(d.id) }, false, '#ff5544')}
                 </div>
               )}
             </div>
@@ -264,9 +272,9 @@ export function DemoViewer() {
         </div>
 
         {/* Playback area */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 24 }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 24, paddingBottom: 'max(24px, calc(env(safe-area-inset-bottom, 0px) + 24px))' }}>
           {!selected ? (
-            <div style={{ color: '#223344', fontSize: 13, letterSpacing: 3 }}>
+            <div style={{ color: 'rgba(106,112,72,0.3)', fontSize: 11, letterSpacing: '0.3em' }}>
               ← DEMO AUSWÄHLEN
             </div>
           ) : (
@@ -276,11 +284,11 @@ export function DemoViewer() {
                 ref={canvasRef}
                 width={400}
                 height={400}
-                style={{ border: '1px solid #0e1825', borderRadius: 4 }}
+                style={{ border: '1px solid rgba(138,154,98,0.2)', borderRadius: 2, maxWidth: '100%' }}
               />
 
               {/* Timeline */}
-              <div style={{ width: 400 }}>
+              <div style={{ width: 'min(400px, 90vw)' }}>
                 <input
                   type="range"
                   min={0}
@@ -291,16 +299,16 @@ export function DemoViewer() {
                     cancelAnimationFrame(rafRef.current)
                     setElapsed(Number(e.target.value))
                   }}
-                  style={{ width: '100%', accentColor: '#00aaff' }}
+                  style={{ width: '100%', accentColor: '#e05418' }}
                 />
-                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#334455', fontSize: 9 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: 'rgba(106,112,72,0.45)', fontSize: 9, letterSpacing: '0.1em' }}>
                   <span>{fmtMs(elapsed)}</span>
                   <span>{fmtMs(selected.duration)}</span>
                 </div>
               </div>
 
               {/* Controls */}
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
                 {btn(playing ? '⏸ PAUSE' : '▶ PLAY', togglePlay, playing)}
                 {btn('⏮ RESET', () => { setPlaying(false); setElapsed(0) })}
                 <div style={{ display: 'flex', gap: 4, marginLeft: 8 }}>
@@ -309,7 +317,7 @@ export function DemoViewer() {
               </div>
 
               {/* Meta */}
-              <div style={{ color: '#334455', fontSize: 9, letterSpacing: 2, textAlign: 'center' }}>
+              <div style={{ color: 'rgba(106,112,72,0.4)', fontSize: 9, letterSpacing: '0.2em', textAlign: 'center' }}>
                 {selected.name} · {selected.frames.length} FRAMES · {fmtMs(selected.duration)}
               </div>
 
@@ -323,18 +331,19 @@ export function DemoViewer() {
                       key={mode}
                       onClick={() => setCutscene(mode, isSet ? null : selected.id)}
                       style={{
-                        background: isSet ? '#00aaff22' : 'transparent',
-                        border: `1px solid ${isSet ? '#00aaff' : '#1a2a3a'}`,
-                        color: isSet ? '#00aaff' : '#334455',
-                        fontSize: 9, letterSpacing: 2, padding: '5px 10px',
-                        cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.12s',
+                        background: isSet ? 'rgba(224,84,24,0.15)' : 'transparent',
+                        border: `1px solid ${isSet ? '#e05418' : 'rgba(138,154,98,0.2)'}`,
+                        color: isSet ? '#e05418' : 'rgba(138,154,98,0.45)',
+                        fontSize: 9, letterSpacing: '0.2em', padding: '5px 10px',
+                        cursor: 'pointer', fontFamily: "'Share Tech Mono', monospace",
+                        textTransform: 'uppercase', transition: 'all 0.12s',
                       }}
                     >
                       {isSet ? `✓ ${label}` : `+ ${label}`}
                     </button>
                   )
                 })}
-                <div style={{ color: '#223344', fontSize: 8, letterSpacing: 1, width: '100%', textAlign: 'center' }}>
+                <div style={{ color: 'rgba(106,112,72,0.3)', fontSize: 8, letterSpacing: '0.1em', width: '100%', textAlign: 'center' }}>
                   Als Cutscene für Mission setzen
                 </div>
               </div>

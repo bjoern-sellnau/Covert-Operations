@@ -237,7 +237,7 @@ function ModelViewer({ parts }: { parts: PartDef[] }) {
       camera={{ position: [0, 0.6, 2.8], fov: 38 }}
       style={{ width: 280, height: 280, borderRadius: 4 }}
     >
-      <color attach="background" args={['#060e1c']} />
+      <color attach="background" args={['#060804']} />
       <ambientLight intensity={5.0} />
       <directionalLight position={[3, 6, 3]} intensity={6.0} />
       <directionalLight position={[-3, 2, -2]} intensity={3.0} color="#88aaff" />
@@ -252,7 +252,7 @@ function ModelViewer({ parts }: { parts: PartDef[] }) {
 function StatBar({ label, value, max = 5, color }: { label: string; value: number; max?: number; color: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-      <div style={{ color: '#667788', fontSize: 10, letterSpacing: 2, width: 56, flexShrink: 0 }}>{label}</div>
+      <div style={{ color: 'rgba(106,112,72,0.6)', fontFamily: "'Share Tech Mono', monospace", fontSize: 10, letterSpacing: '0.1em', width: 56, flexShrink: 0 }}>{label}</div>
       <div style={{ display: 'flex', gap: 3 }}>
         {Array.from({ length: max }).map((_, i) => (
           <div key={i} style={{
@@ -268,7 +268,7 @@ function StatBar({ label, value, max = 5, color }: { label: string; value: numbe
 
 // ── Tab types ─────────────────────────────────────────────────────────────────
 
-type Tab = 'waffen' | 'pickups' | 'charaktere' | 'steuerung' | 'tipps' | 'editor'
+type Tab = 'waffen' | 'pickups' | 'charaktere' | 'steuerung' | 'tipps' | 'editor' | 'specials'
 
 // ── Weapon items ──────────────────────────────────────────────────────────────
 
@@ -278,21 +278,21 @@ function WeaponInfo({ id }: { id: WeaponId }) {
   const cfg = WEAPON_CONFIGS[id]
   return (
     <div>
-      <div style={{ color: '#00aaff', fontSize: 22, fontWeight: 'bold', letterSpacing: 3, marginBottom: 4 }}>
+      <div style={{ fontFamily: "'Saira Condensed', sans-serif", fontWeight: 900, color: '#e05418', fontSize: 22, letterSpacing: '0.12em', marginBottom: 4 }}>
         {cfg.name}
       </div>
-      <div style={{ color: '#445566', fontSize: 10, letterSpacing: 3, marginBottom: 14 }}>
+      <div style={{ fontFamily: "'Share Tech Mono', monospace", color: 'rgba(106,112,72,0.6)', fontSize: 9, letterSpacing: '0.2em', marginBottom: 14 }}>
         {cfg.shortName}{cfg.price > 0 ? ` · ${cfg.price} CR` : ' · KOSTENLOS'}
         {cfg.isMelee && ' · NAHKAMPF'}
         {cfg.isProjectile && ' · PROJEKTIL'}
         {cfg.isBanana && ' · ABPRALLER'}
       </div>
-      <div style={{ color: '#aabbcc', fontSize: 12, lineHeight: 1.7, marginBottom: 16, maxWidth: 340 }}>
+      <div style={{ fontFamily: "'DM Sans', sans-serif", color: 'rgba(200,196,176,0.65)', fontSize: 12, lineHeight: 1.7, marginBottom: 16, maxWidth: 340 }}>
         {cfg.description}
       </div>
       <StatBar label="SCHADEN" value={cfg.statDamage} color="#ff4444" />
       <StatBar label="RATE"    value={cfg.statRate}   color="#ffaa00" />
-      <StatBar label="REICHW"  value={cfg.statRange}  color="#00aaff" />
+      <StatBar label="REICHW"  value={cfg.statRange}  color="#44aaff" />
       <div style={{ marginTop: 14, display: 'flex', gap: 20, flexWrap: 'wrap' }}>
         {[
           cfg.baseDamage  && [`SCHADEN`, `${cfg.baseDamage}`],
@@ -303,8 +303,8 @@ function WeaponInfo({ id }: { id: WeaponId }) {
           cfg.projectileRadius && [`RADIUS`, `${cfg.projectileRadius}m`],
         ].filter((x): x is [string, string] => Boolean(x)).map(([k, v]) => (
           <div key={k} style={{ textAlign: 'center' }}>
-            <div style={{ color: '#445566', fontSize: 9, letterSpacing: 2 }}>{k}</div>
-            <div style={{ color: '#aaccee', fontSize: 14, fontWeight: 'bold' }}>{v}</div>
+            <div style={{ fontFamily: "'Share Tech Mono', monospace", color: 'rgba(106,112,72,0.5)', fontSize: 9, letterSpacing: '0.15em' }}>{k}</div>
+            <div style={{ color: 'rgba(220,216,200,0.85)', fontSize: 14, fontWeight: 'bold' }}>{v}</div>
           </div>
         ))}
       </div>
@@ -330,10 +330,10 @@ function PickupInfo({ id }: { id: PickupKind }) {
   const info = ALL_PICKUPS.find((p) => p.id === id)!
   return (
     <div>
-      <div style={{ color: info.color, fontSize: 22, fontWeight: 'bold', letterSpacing: 3, marginBottom: 4, textShadow: `0 0 14px ${info.color}88` }}>
+      <div style={{ fontFamily: "'Saira Condensed', sans-serif", fontWeight: 900, color: info.color, fontSize: 22, letterSpacing: '0.12em', marginBottom: 4, textShadow: `0 0 14px ${info.color}88` }}>
         {info.name}
       </div>
-      <div style={{ color: '#aabbcc', fontSize: 13, lineHeight: 1.7, marginTop: 16, maxWidth: 340 }}>
+      <div style={{ fontFamily: "'DM Sans', sans-serif", color: 'rgba(200,196,176,0.65)', fontSize: 13, lineHeight: 1.7, marginTop: 16, maxWidth: 340 }}>
         {info.desc}
       </div>
     </div>
@@ -356,8 +356,8 @@ function CharInfo({ id }: { id: CharId }) {
   if (id === 'player') {
     return (
       <div>
-        <div style={{ color: '#00ff88', fontSize: 22, fontWeight: 'bold', letterSpacing: 3, marginBottom: 4 }}>SPIELER</div>
-        <div style={{ color: '#aabbcc', fontSize: 12, lineHeight: 1.7, marginBottom: 16, maxWidth: 340 }}>
+        <div style={{ fontFamily: "'Saira Condensed', sans-serif", fontWeight: 900, color: '#00ff88', fontSize: 22, letterSpacing: '0.12em', marginBottom: 4 }}>SPIELER</div>
+        <div style={{ fontFamily: "'DM Sans', sans-serif", color: 'rgba(200,196,176,0.65)', fontSize: 12, lineHeight: 1.7, marginBottom: 16, maxWidth: 340 }}>
           Vollständig steuerbare Figur. 100 HP + Rüstungssystem. Nutze Bullet Time, Dive und Spin zur Überlebensstrategie.
         </div>
         <StatBar label="SPEED"   value={4} color="#00ff88" />
@@ -372,10 +372,10 @@ function CharInfo({ id }: { id: CharId }) {
   const dangerVal = Math.round(Math.min(cfg.damage / 12, 5))
   return (
     <div>
-      <div style={{ color: cfg.color, fontSize: 22, fontWeight: 'bold', letterSpacing: 3, marginBottom: 4, textShadow: `0 0 14px ${cfg.emissive}88` }}>
+      <div style={{ fontFamily: "'Saira Condensed', sans-serif", fontWeight: 900, color: cfg.color, fontSize: 22, letterSpacing: '0.12em', marginBottom: 4, textShadow: `0 0 14px ${cfg.emissive}88` }}>
         {id.toUpperCase()}
       </div>
-      <div style={{ color: '#445566', fontSize: 10, letterSpacing: 3, marginBottom: 14 }}>
+      <div style={{ fontFamily: "'Share Tech Mono', monospace", color: 'rgba(106,112,72,0.6)', fontSize: 9, letterSpacing: '0.2em', marginBottom: 14 }}>
         {cfg.scoreValue} PTS · {cfg.creditValue} CR · Ø {cfg.shootRange}m Reichweite
       </div>
       <StatBar label="SPEED"  value={speedVal}  color="#ffaa00" />
@@ -389,8 +389,8 @@ function CharInfo({ id }: { id: CharId }) {
           ['CR',      `${cfg.creditValue}`],
         ].map(([k, v]) => (
           <div key={k} style={{ textAlign: 'center' }}>
-            <div style={{ color: '#445566', fontSize: 9, letterSpacing: 2 }}>{k}</div>
-            <div style={{ color: '#aaccee', fontSize: 14, fontWeight: 'bold' }}>{v}</div>
+            <div style={{ fontFamily: "'Share Tech Mono', monospace", color: 'rgba(106,112,72,0.5)', fontSize: 9, letterSpacing: '0.15em' }}>{k}</div>
+            <div style={{ color: 'rgba(220,216,200,0.85)', fontSize: 14, fontWeight: 'bold' }}>{v}</div>
           </div>
         ))}
       </div>
@@ -419,20 +419,20 @@ const CONTROLS: Array<[string, string]> = [
 function ControlsTab() {
   return (
     <div style={{ padding: '28px 40px', maxWidth: 600 }}>
-      <div style={{ color: '#00aaff', fontSize: 20, fontWeight: 'bold', letterSpacing: 6, marginBottom: 24 }}>
+      <div style={{ fontFamily: "'Saira Condensed', sans-serif", fontWeight: 900, color: '#e05418', fontSize: 20, letterSpacing: '0.2em', marginBottom: 24 }}>
         STEUERUNG
       </div>
       {CONTROLS.map(([key, action]) => (
         <div key={key} style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 11 }}>
           <div style={{
-            background: '#0a1020', border: '1px solid #1a2a3a',
-            color: '#00ccff', fontSize: 11, letterSpacing: 2,
-            padding: '3px 10px', borderRadius: 3, minWidth: 130, flexShrink: 0,
-            fontWeight: 'bold', textAlign: 'center',
+            background: 'rgba(10,12,7,0.9)', border: '1px solid rgba(224,84,24,0.3)',
+            color: '#e05418', fontFamily: "'Share Tech Mono', monospace", fontSize: 10, letterSpacing: '0.1em',
+            padding: '3px 10px', borderRadius: 2, minWidth: 130, flexShrink: 0,
+            textAlign: 'center',
           }}>
             {key}
           </div>
-          <div style={{ color: '#8899aa', fontSize: 12, letterSpacing: 1 }}>{action}</div>
+          <div style={{ fontFamily: "'DM Sans', sans-serif", color: 'rgba(200,196,176,0.65)', fontSize: 12 }}>{action}</div>
         </div>
       ))}
     </div>
@@ -457,12 +457,12 @@ function TipsTab() {
     <div style={{ padding: '24px 32px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, maxWidth: 720 }}>
       {TIPS.map(({ title, body, color }) => (
         <div key={title} style={{
-          background: '#05050e', border: `1px solid ${color}44`,
-          borderRadius: 6, padding: '14px 16px',
+          background: 'rgba(10,12,7,0.85)', border: `1px solid ${color}44`,
+          borderRadius: 4, padding: '14px 16px',
           boxShadow: `0 0 12px ${color}18`,
         }}>
-          <div style={{ color, fontSize: 12, fontWeight: 'bold', letterSpacing: 2, marginBottom: 8 }}>{title}</div>
-          <div style={{ color: '#7799aa', fontSize: 11, lineHeight: 1.65 }}>{body}</div>
+          <div style={{ fontFamily: "'Share Tech Mono', monospace", color, fontSize: 11, letterSpacing: '0.1em', marginBottom: 8 }}>{title}</div>
+          <div style={{ fontFamily: "'DM Sans', sans-serif", color: 'rgba(200,196,176,0.55)', fontSize: 11, lineHeight: 1.65 }}>{body}</div>
         </div>
       ))}
     </div>
@@ -539,14 +539,120 @@ function EditorTab() {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
             {items.map(([name, desc]) => (
-              <div key={name} style={{ display: 'flex', gap: 12, background: '#05050e', border: `1px solid ${color}22`, borderRadius: 4, padding: '8px 12px' }}>
-                <div style={{ color, fontSize: 10, letterSpacing: 1, minWidth: 120, flexShrink: 0, fontWeight: 'bold' }}>{name}</div>
-                <div style={{ color: '#7799aa', fontSize: 10, lineHeight: 1.6 }}>{desc}</div>
+              <div key={name} style={{ display: 'flex', gap: 12, background: 'rgba(10,12,7,0.85)', border: `1px solid ${color}22`, borderRadius: 4, padding: '8px 12px' }}>
+                <div style={{ fontFamily: "'Share Tech Mono', monospace", color, fontSize: 9, letterSpacing: '0.1em', minWidth: 120, flexShrink: 0 }}>{name}</div>
+                <div style={{ fontFamily: "'DM Sans', sans-serif", color: 'rgba(200,196,176,0.5)', fontSize: 10, lineHeight: 1.6 }}>{desc}</div>
               </div>
             ))}
           </div>
         </div>
       ))}
+    </div>
+  )
+}
+
+// ── Specials tab ─────────────────────────────────────────────────────────────
+
+const SPECIALS_KEYFRAMES = `
+  @keyframes coSlowPulse { 0%,100%{opacity:0.5;transform:scale(1)} 50%{opacity:1;transform:scale(1.1)} }
+  @keyframes coRollRight { 0%{transform:translateX(-28px)rotate(0deg);opacity:0} 20%{opacity:1} 100%{transform:translateX(28px)rotate(720deg);opacity:0} }
+  @keyframes coExpandFade { 0%{transform:scale(0.2);opacity:1} 100%{transform:scale(2.4);opacity:0} }
+  @keyframes coRotateSpin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+  @keyframes coThrowArc { 0%{transform:translate(-24px,6px)rotate(-30deg);opacity:0} 15%{opacity:1} 60%{transform:translate(12px,-18px)rotate(20deg)} 100%{transform:translate(28px,6px)rotate(110deg);opacity:0} }
+  @keyframes coTargetSnap { 0%{opacity:0;transform:scale(2)} 25%{opacity:1;transform:scale(1)} 70%{opacity:1} 100%{opacity:0;transform:scale(0.7)} }
+`
+
+interface SpecialsCardProps { title: string; keys: string[]; desc: string; color: string; animation: React.ReactNode }
+function SpecialsCard({ title, keys, desc, color, animation }: SpecialsCardProps) {
+  return (
+    <div style={{ background: 'rgba(10,12,7,0.85)', border: `1px solid ${color}33`, borderRadius: 4, padding: '16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ fontFamily: "'Saira Condensed', sans-serif", fontWeight: 900, color, fontSize: 16, letterSpacing: '0.12em' }}>{title}</div>
+      <div style={{ display: 'flex', gap: 5 }}>
+        {keys.map((k) => (
+          <div key={k} style={{ background: `${color}18`, border: `1px solid ${color}55`, color, fontFamily: "'Share Tech Mono', monospace", fontSize: 9, letterSpacing: '0.1em', padding: '3px 8px', borderRadius: 2 }}>{k}</div>
+        ))}
+      </div>
+      <div style={{ height: 80, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+        {animation}
+      </div>
+      <div style={{ fontFamily: "'DM Sans', sans-serif", color: 'rgba(200,196,176,0.55)', fontSize: 11, lineHeight: 1.55 }}>{desc}</div>
+    </div>
+  )
+}
+
+function SpecialsTab() {
+  return (
+    <div style={{ padding: '20px 20px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12, overflowY: 'auto', paddingBottom: 'max(20px, calc(env(safe-area-inset-bottom, 0px) + 20px))' }}>
+      <style>{SPECIALS_KEYFRAMES}</style>
+
+      <SpecialsCard title="BULLET TIME" keys={['SHIFT']} color="#aa66ff"
+        desc="Verlangsamt die Zeit dramatisch. Verbraucht Fokus — spare ihn für kritische Momente."
+        animation={
+          <div style={{ position: 'relative', width: 80, height: 80 }}>
+            {[0,1,2].map((i) => (
+              <div key={i} style={{ position: 'absolute', inset: 0, margin: 'auto', width: 44 - i*8, height: 44 - i*8, borderRadius: '50%', border: `2px solid rgba(170,102,255,${0.9 - i*0.25})`, animation: `coSlowPulse ${1.4 + i*0.35}s ease-in-out ${i*0.2}s infinite` }} />
+            ))}
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#aa66ff', fontFamily: "'Share Tech Mono', monospace", fontSize: 11 }}>0.3×</div>
+          </div>
+        }
+      />
+
+      <SpecialsCard title="DIVE ROLL" keys={['SPACE']} color="#44aaff"
+        desc="Blitzschnelles Ausweichen in Bewegungsrichtung. Während des Rolls unverwundbar."
+        animation={
+          <div style={{ width: 80, height: 40, position: 'relative' }}>
+            <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#44aaff', boxShadow: '0 0 8px rgba(68,170,255,0.6)', position: 'absolute', top: 11, animation: 'coRollRight 1.3s ease-in-out infinite' }} />
+            <div style={{ position: 'absolute', inset: 0, borderBottom: '1px dashed rgba(68,170,255,0.25)' }} />
+          </div>
+        }
+      />
+
+      <SpecialsCard title="GUN KATA" keys={['G']} color="#e05418"
+        desc="Auto-Aim auf nahegelegene Feinde. Nur aktiv wenn Mutator eingeschaltet. Verbraucht Fokus."
+        animation={
+          <div style={{ position: 'relative', width: 80, height: 60 }}>
+            {[[-22,-12],[22,-12],[0,20]].map(([dx,dy], i) => (
+              <div key={i} style={{ position: 'absolute', left: '50%', top: '50%', transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))` }}>
+                <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#cc2222', boxShadow: '0 0 5px #ff0000', animation: `coTargetSnap 1.8s ease ${i*0.45}s infinite` }} />
+              </div>
+            ))}
+            <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', width: 13, height: 13, borderRadius: '50%', background: '#e05418', boxShadow: '0 0 10px rgba(224,84,24,0.8)' }} />
+          </div>
+        }
+      />
+
+      <SpecialsCard title="VERNICHTER" keys={['V']} color="#ff4400"
+        desc="Massive Flächenexplosion. Begrenzte Ladungen — im Shop unter Ausrüstung nachkaufen."
+        animation={
+          <div style={{ position: 'relative', width: 70, height: 70 }}>
+            {[0,1,2].map((i) => (
+              <div key={i} style={{ position: 'absolute', inset: 0, margin: 'auto', width: 20, height: 20, borderRadius: '50%', border: `2px solid rgba(255,${68+i*50},0,${1-i*0.25})`, animation: `coExpandFade 1.0s ease-out ${i*0.28}s infinite` }} />
+            ))}
+            <div style={{ position: 'absolute', inset: 0, margin: 'auto', width: 10, height: 10, borderRadius: '50%', background: '#ff4400', boxShadow: '0 0 14px #ff8800' }} />
+          </div>
+        }
+      />
+
+      <SpecialsCard title="GRANATE" keys={['Slot 7']} color="#ffcc00"
+        desc="Wirft eine Granate auf den Mauszeiger. Verweilt kurz dann explodiert sie — ideal für Gruppen."
+        animation={
+          <div style={{ position: 'relative', width: 80, height: 50 }}>
+            <div style={{ width: 13, height: 13, borderRadius: '50%', background: '#ffcc00', boxShadow: '0 0 8px #ffaa00', position: 'absolute', top: 18, animation: 'coThrowArc 1.6s ease-in-out infinite' }} />
+          </div>
+        }
+      />
+
+      <SpecialsCard title="SPIN ATTACK" keys={['Q', 'E']} color="#44ffcc"
+        desc="Bullet Ballet — Spin-Angriff der in alle Richtungen schießt. Nur mit Akimbo verfügbar."
+        animation={
+          <div style={{ position: 'relative', width: 60, height: 60, animation: 'coRotateSpin 1.1s linear infinite' }}>
+            {[0,45,90,135,180,225,270,315].map((deg) => (
+              <div key={deg} style={{ position: 'absolute', left: '50%', top: '50%', width: 5, height: 5, borderRadius: '50%', background: '#44ffcc', transform: `rotate(${deg}deg) translateY(-24px)`, transformOrigin: '0 0', opacity: 0.7 }} />
+            ))}
+            <div style={{ position: 'absolute', inset: 0, margin: 'auto', width: 10, height: 10, borderRadius: '50%', background: '#44ffcc', boxShadow: '0 0 8px #44ffcc' }} />
+          </div>
+        }
+      />
     </div>
   )
 }
@@ -560,15 +666,15 @@ function GridCard({ label, color, selected, onClick }: { label: string; color: s
       style={{
         flexShrink: 0,
         width: 80, padding: '8px 4px',
-        background: selected ? `${color}22` : '#05050e',
-        border: `1px solid ${selected ? color : '#1a1a2a'}`,
-        borderRadius: 4, cursor: 'pointer',
-        color: selected ? color : '#445566',
-        fontSize: 9, letterSpacing: 2,
-        fontFamily: "'Courier New', monospace",
+        background: selected ? `${color}18` : 'rgba(10,12,7,0.85)',
+        border: `1px solid ${selected ? color : 'rgba(138,154,98,0.15)'}`,
+        borderRadius: 2, cursor: 'pointer',
+        color: selected ? color : 'rgba(138,154,98,0.45)',
+        fontSize: 9, letterSpacing: '0.12em',
+        fontFamily: "'Share Tech Mono', monospace",
         textTransform: 'uppercase',
         transition: 'all 0.12s',
-        boxShadow: selected ? `0 0 10px ${color}44` : 'none',
+        boxShadow: selected ? `0 0 8px ${color}44` : 'none',
         textAlign: 'center',
         lineHeight: 1.3,
         wordBreak: 'break-all',
@@ -589,7 +695,7 @@ export function HelpScreen() {
   const [selectedPickup, setSelectedPickup] = useState<PickupKind>('ammo')
   const [selectedChar, setSelectedChar]   = useState<CharId>('player')
 
-  const showModel = tab !== 'steuerung' && tab !== 'tipps' && tab !== 'editor'
+  const showModel = tab !== 'steuerung' && tab !== 'tipps' && tab !== 'editor' && tab !== 'specials'
 
   const modelParts: PartDef[] = (() => {
     if (tab === 'waffen')     return WEAPON_PARTS[selectedWeapon]
@@ -603,6 +709,7 @@ export function HelpScreen() {
     { id: 'pickups',    label: 'PICKUPS'   },
     { id: 'charaktere', label: 'CHARAKTERE'},
     { id: 'steuerung',  label: 'STEUERUNG' },
+    { id: 'specials',   label: 'SPECIALS'  },
     { id: 'tipps',      label: 'TIPPS'     },
     { id: 'editor',     label: 'EDITOR'    },
   ]
@@ -610,54 +717,55 @@ export function HelpScreen() {
   return (
     <div style={{
       position: 'absolute', inset: 0,
-      background: 'radial-gradient(ellipse at 50% 20%, #0e1030 0%, #08081a 70%)',
-      fontFamily: "'Courier New', monospace",
+      background: 'radial-gradient(ellipse at 50% 30%, rgba(30,36,20,0.95) 0%, rgba(8,9,6,1) 65%)',
+      fontFamily: "'Share Tech Mono', monospace",
       userSelect: 'none',
       display: 'flex',
       flexDirection: 'column',
       overflow: 'hidden',
     }}>
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent, rgba(224,84,24,0.8), transparent)', pointerEvents: 'none' }} />
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div style={{
-        display: 'flex', alignItems: 'center', gap: 16,
-        padding: '12px 24px',
+        display: 'flex', alignItems: 'center', gap: 12,
+        padding: '12px 20px',
         paddingTop: 'max(12px, calc(env(safe-area-inset-top, 0px) + 12px))',
-        paddingLeft: 'max(24px, calc(env(safe-area-inset-left, 0px) + 24px))',
-        borderBottom: '1px solid #0d1520',
+        paddingLeft: 'max(20px, calc(env(safe-area-inset-left, 0px) + 20px))',
+        borderBottom: '1px solid rgba(138,154,98,0.12)',
         flexShrink: 0,
       }}>
         <button
           onClick={() => setPhase('title_screen')}
           style={{
-            background: 'transparent', border: '1px solid #1a2a3a', color: '#7799aa',
-            fontSize: 11, letterSpacing: 3, padding: '7px 14px', cursor: 'pointer',
-            fontFamily: 'inherit', textTransform: 'uppercase', transition: 'all 0.12s',
+            background: 'transparent', border: '1px solid rgba(138,154,98,0.2)', color: 'rgba(138,154,98,0.5)',
+            fontSize: 9, letterSpacing: '0.2em', padding: '6px 12px', cursor: 'pointer',
+            fontFamily: "'Share Tech Mono', monospace", textTransform: 'uppercase', transition: 'all 0.12s',
             flexShrink: 0,
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = '#aaccff'; e.currentTarget.style.borderColor = '#334455' }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = '#7799aa'; e.currentTarget.style.borderColor = '#1a2a3a' }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = '#e05418'; e.currentTarget.style.borderColor = 'rgba(224,84,24,0.5)' }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(138,154,98,0.5)'; e.currentTarget.style.borderColor = 'rgba(138,154,98,0.2)' }}
         >
           ← ZURÜCK
         </button>
 
-        <div style={{ color: '#00ccff', fontSize: 18, fontWeight: 'bold', letterSpacing: 8, textShadow: '0 0 14px #00aaff88', flex: 1, textAlign: 'center' }}>
+        <div style={{ fontFamily: "'Saira Condensed', sans-serif", fontWeight: 900, color: '#e05418', fontSize: 18, letterSpacing: '0.25em', textShadow: '0 0 14px rgba(224,84,24,0.4)' }}>
           HILFE
         </div>
 
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: 4, overflowX: 'auto', flexShrink: 1, WebkitOverflowScrolling: 'touch' as never }}>
+        <div style={{ display: 'flex', gap: 3, overflowX: 'auto', flexShrink: 1, WebkitOverflowScrolling: 'touch' as never, marginLeft: 8 }}>
           {TABS.map(({ id, label }) => (
             <button
               key={id}
               onClick={() => setTab(id)}
               style={{
-                background: tab === id ? '#00aaff22' : 'transparent',
-                border: `1px solid ${tab === id ? '#00aaff' : '#1a2a3a'}`,
-                color: tab === id ? '#00ccff' : '#445566',
-                fontSize: 10, letterSpacing: 2, padding: '6px 12px', cursor: 'pointer',
-                fontFamily: 'inherit', textTransform: 'uppercase', transition: 'all 0.12s',
-                boxShadow: tab === id ? '0 0 8px #00aaff44' : 'none',
+                background: tab === id ? 'rgba(224,84,24,0.12)' : 'transparent',
+                border: `1px solid ${tab === id ? 'rgba(224,84,24,0.7)' : 'rgba(138,154,98,0.2)'}`,
+                color: tab === id ? '#e05418' : 'rgba(138,154,98,0.5)',
+                fontSize: 9, letterSpacing: '0.2em', padding: '5px 10px', cursor: 'pointer',
+                fontFamily: "'Share Tech Mono', monospace", textTransform: 'uppercase', transition: 'all 0.12s',
+                boxShadow: tab === id ? '0 0 6px rgba(224,84,24,0.3)' : 'none',
                 borderRadius: 2,
               }}
             >
@@ -683,6 +791,11 @@ export function HelpScreen() {
           <EditorTab />
         </div>
       )}
+      {tab === 'specials' && (
+        <div style={{ flex: 1, overflowY: 'auto' }}>
+          <SpecialsTab />
+        </div>
+      )}
 
       {/* ── 3D tabs layout ─────────────────────────────────────────────── */}
       {showModel && (
@@ -695,16 +808,16 @@ export function HelpScreen() {
             <div style={{
               width: 300, flexShrink: 0,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: '#04040d',
-              borderRight: '1px solid #0d1520',
+              background: 'rgba(6,8,4,0.6)',
+              borderRight: '1px solid rgba(138,154,98,0.1)',
             }}>
               <div style={{
                 width: 280, height: 280,
-                border: '1px solid #0d1a28',
-                borderRadius: 6,
+                border: '1px solid rgba(138,154,98,0.15)',
+                borderRadius: 4,
                 overflow: 'hidden',
-                background: 'radial-gradient(ellipse at center, #0a1a2e 0%, #060c14 100%)',
-                boxShadow: '0 0 24px #00aaff18 inset',
+                background: 'radial-gradient(ellipse at center, rgba(20,26,14,0.9) 0%, rgba(6,8,4,1) 100%)',
+                boxShadow: '0 0 24px rgba(224,84,24,0.08) inset',
               }}>
                 <ModelViewer parts={modelParts} />
               </div>
@@ -720,10 +833,10 @@ export function HelpScreen() {
 
           {/* Bottom: item grid */}
           <div style={{
-            borderTop: '1px solid #0d1520',
+            borderTop: '1px solid rgba(138,154,98,0.1)',
             padding: '10px 16px',
             paddingBottom: 'max(12px, calc(env(safe-area-inset-bottom, 0px) + 12px))',
-            background: '#03030b',
+            background: 'rgba(6,8,4,0.9)',
             flexShrink: 0,
           }}>
             <div style={{
@@ -736,7 +849,7 @@ export function HelpScreen() {
                 <GridCard
                   key={id}
                   label={WEAPON_CONFIGS[id].shortName}
-                  color="#00aaff"
+                  color="#e05418"
                   selected={selectedWeapon === id}
                   onClick={() => setSelectedWeapon(id)}
                 />
