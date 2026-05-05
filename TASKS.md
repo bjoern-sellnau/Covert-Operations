@@ -41,7 +41,7 @@ Die aktuelle Reihenfolge ist falsch. Neue Reihenfolge:
 ## Neue Features
 
 - [x] Option in Mutatoren: Autoreload aktivierbar
-- [ ] Im Level-Editor kann man eingeben, in welchen Spielmodi eine Karte verfügbar ist (Standard: alle)
+- [x] Im Level-Editor kann man eingeben, in welchen Spielmodi eine Karte verfügbar ist (Standard: alle)
 
 ### Visuelle Effekte
 - [x] Flak trifft Gegner → Mini-Explosion + Sekundär-Splitter (4 Shrapnel-Bullets in zufällige Richtungen)

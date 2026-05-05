@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { useEditorStore, OBJECT_TYPE_CFGS, type ObjectType, type ViewMode, type ToolMode, type Level, type GravityMode } from './editorStore'
+import { useEditorStore, OBJECT_TYPE_CFGS, type ObjectType, type ViewMode, type ToolMode, type Level, type GravityMode, type GameType } from './editorStore'
 import { useGameStore } from '../store/gameStore'
 import { useDemoStore } from '../store/demoStore'
 import { ScriptPanel } from './ScriptPanel'
@@ -211,7 +211,7 @@ export function EditorHUD() {
     currentLevelId, getCurrentLevel,
     setViewMode, setToolMode, setPlaceType,
     createLevel, importLevel, setActivePlayLevel,
-    setGravity, toggleFogOfWar, setArenaHalf,
+    setGravity, toggleFogOfWar, setArenaHalf, setGameModes,
   } = useEditorStore()
 
   const setPhase = useGameStore((s) => s.setPhase)
@@ -466,6 +466,35 @@ export function EditorHUD() {
                   />
                   <div style={{ display: 'flex', justifyContent: 'space-between', color: C.textDim, fontSize: 8, marginTop: 2 }}>
                     <span>36×36</span><span>120×120</span>
+                  </div>
+
+                  {/* Game mode filter */}
+                  <div style={{ color: C.textDim, fontSize: 9, marginTop: 12, marginBottom: 4 }}>Verfügbar in Spielmodi</div>
+                  <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', marginBottom: 4 }}>
+                    {([
+                      ['waves',          'Waves'],
+                      ['roundtime',      'Rundenzeit'],
+                      ['instakill',      'Instakill'],
+                      ['instakill_wave', 'IK Welle'],
+                      ['hardline_solo',  'Hardline S'],
+                      ['hardline',       'Hardline'],
+                      ['deathmatch',     'Deathmatch'],
+                    ] as [GameType, string][]).map(([mode, label]) => {
+                      const modes = getCurrentLevel()?.gameModes ?? []
+                      const active = modes.includes(mode)
+                      return (
+                        <button key={mode} style={{ ...btn(active), fontSize: 8, padding: '3px 5px' }}
+                          onClick={() => {
+                            const next = active ? modes.filter(m => m !== mode) : [...modes, mode]
+                            setGameModes(next)
+                          }}>
+                          {label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <div style={{ color: C.textDim, fontSize: 8, letterSpacing: 1 }}>
+                    {(getCurrentLevel()?.gameModes?.length ?? 0) === 0 ? 'Alle Modi (Standard)' : 'Nur markierte Modi'}
                   </div>
                 </div>
               )}

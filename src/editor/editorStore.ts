@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { ScriptEntity, ScriptEntityType } from './scriptTypes'
+import type { GameType } from '../store/mutatorsStore'
 import { defaultEntity } from './scriptTypes'
 
 export type ObjectType = 'wall' | 'pillar' | 'cover' | 'crate' | 'spawn'
@@ -28,7 +29,10 @@ export interface Level {
   fogOfWar: boolean
   gravity: GravityMode
   arenaHalf: number   // half-width of the square arena (default 18, range 18–60)
+  gameModes: GameType[] // empty = available in all modes
 }
+
+export { type GameType }
 
 export interface ObjectTypeCfg {
   label: string
@@ -90,6 +94,7 @@ interface EditorStore {
   toggleFogOfWar: () => void
   setGravity: (g: GravityMode) => void
   setArenaHalf: (half: number) => void
+  setGameModes: (modes: GameType[]) => void
 
   setViewMode: (m: ViewMode) => void
   setToolMode: (m: ToolMode) => void
@@ -112,7 +117,7 @@ export const useEditorStore = create<EditorStore>()(
 
       createLevel: (name = 'Neues Level') => {
         const id = newLid()
-        set((s) => ({ levels: [...s.levels, { id, name, objects: [], scriptEntities: [], fogOfWar: false, gravity: 'normal', arenaHalf: 18 }], currentLevelId: id }))
+        set((s) => ({ levels: [...s.levels, { id, name, objects: [], scriptEntities: [], fogOfWar: false, gravity: 'normal', arenaHalf: 18, gameModes: [] }], currentLevelId: id }))
         return id
       },
 
@@ -126,6 +131,7 @@ export const useEditorStore = create<EditorStore>()(
           fogOfWar: level.fogOfWar ?? false,
           gravity: level.gravity ?? 'normal',
           arenaHalf: level.arenaHalf ?? 18,
+          gameModes: level.gameModes ?? [],
         }
         set((s) => ({ levels: [...s.levels, imported], currentLevelId: id }))
       },
@@ -245,6 +251,13 @@ export const useEditorStore = create<EditorStore>()(
         set((s) => ({
           levels: s.levels.map((l) =>
             l.id === s.currentLevelId ? { ...l, arenaHalf: Math.round(arenaHalf) } : l,
+          ),
+        })),
+
+      setGameModes: (gameModes) =>
+        set((s) => ({
+          levels: s.levels.map((l) =>
+            l.id === s.currentLevelId ? { ...l, gameModes } : l,
           ),
         })),
 
