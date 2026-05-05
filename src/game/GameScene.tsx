@@ -70,7 +70,7 @@ const MAX_GRENADES = 6
 const HARDLINE_WEAPONS: WeaponId[] = [
   'knife', 'pistol', 'smg', 'uzi', 'shotgun', 'rifle', 'mp5', 'm16', 'blaster', 'flak', 'plasma', 'bazooka', 'bfg',
 ]
-const BOT_GAME_TYPES = new Set(['instakill', 'deathmatch', 'hardline_solo', 'hardline'])
+const BOT_GAME_TYPES = new Set(['instakill', 'deathmatch', 'hardline_solo', 'hardline', 'arena'])
 
 const RANGE_TARGET_X = [-10, -5, 0, 5, 10]
 
@@ -439,7 +439,9 @@ export function GameScene() {
       for (let i = 0; i < mutators.botCount; i++) ids.push(_spawnBotEnemy(botTypes, diffMult, isInstakill, arenaHalfRef.current))
       setEnemyIds(ids)
       const modeMsg = (mutators.gameType === 'hardline_solo' || mutators.gameType === 'hardline')
-        ? 'HARDLINE — MESSER' : 'DEATHMATCH'
+        ? 'HARDLINE — MESSER'
+        : mutators.gameType === 'arena' ? 'ARENA MODE'
+        : 'DEATHMATCH'
       setWaveMessage(modeMsg)
       setTimeout(() => setWaveMessage(''), 2500)
       if (mutators.gameType === 'hardline_solo' || mutators.gameType === 'hardline') {

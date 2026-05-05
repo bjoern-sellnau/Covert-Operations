@@ -100,10 +100,10 @@ Die aktuelle Reihenfolge ist falsch. Neue Reihenfolge:
 - [ ] Unter "Munition": für alle Waffen Munition kaufen
 
 ### Game-Modi
-- [ ] **Arena-Modus**:
-  - [ ] Kein Shop
-  - [ ] Keine droppenden Waffenkisten (per Mutator änderbar)
-  - [ ] Klassisches Unreal-Tournament-Gameplay — keine Waves
+- [x] **Arena-Modus**:
+  - [x] Kein Shop
+  - [x] Keine droppenden Waffenkisten (per Mutator änderbar)
+  - [x] Klassisches Unreal-Tournament-Gameplay — keine Waves
 
 ---
 

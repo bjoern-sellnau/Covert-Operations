@@ -9,7 +9,7 @@ import {
 } from '../game/types'
 import { entityStore } from '../game/entityStore'
 
-const BOT_GAME_TYPES = new Set(['instakill', 'deathmatch', 'hardline_solo', 'hardline', 'instakill_wave'])
+const BOT_GAME_TYPES = new Set(['instakill', 'deathmatch', 'hardline_solo', 'hardline', 'instakill_wave', 'arena'])
 
 type Category = 'waffen' | 'nahkampf' | 'ausruestung' | 'munition' | 'ladung'
 

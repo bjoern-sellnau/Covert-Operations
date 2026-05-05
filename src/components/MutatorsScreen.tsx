@@ -4,8 +4,9 @@ import type { PickupMode, EnemyDrop, BtChargeMode, CrateExtra } from '../store/m
 import type { EnemyType } from '../game/types'
 
 export function MutatorsScreen() {
-  const setPhase = useGameStore((s) => s.setPhase)
-  const gameMode = useGameStore((s) => s.gameMode)
+  const setPhase    = useGameStore((s) => s.setPhase)
+  const setSkipShop = useGameStore((s) => s.setSkipShop)
+  const gameMode    = useGameStore((s) => s.gameMode)
   const {
     gameType, roundTimeSec, weaponPickups, enemyDrops,
     suddenDeath, suddenDeathSec, lives, chaosMode,
@@ -28,6 +29,7 @@ export function MutatorsScreen() {
   } = useMutatorsStore()
 
   function startGame() {
+    if (gameType === 'arena') setSkipShop(true)
     setPhase(gameMode === 'skydive' ? 'skydive' : 'playing')
   }
 
@@ -133,6 +135,7 @@ export function MutatorsScreen() {
               ['hardline_solo', 'HARDLINE SOLO',   '#ffcc00'],
               ['hardline',      'HARDLINE',        '#ffaa00'],
               ['deathmatch',    'DEATHMATCH',      '#cc44ff'],
+              ['arena',         'ARENA',           '#00aacc'],
             ] as [string, string, string][]).map(([val, label, color]) => (
               <button key={val} style={tog(gameType === val, color)} onClick={() => setGameType(val as never)}>
                 {label}
@@ -159,6 +162,7 @@ export function MutatorsScreen() {
             {gameType === 'hardline_solo' && 'Starte mit Messer. Jeder Kill = nächste Waffe. Nur Spieler. Kein Shop.'}
             {gameType === 'hardline'      && 'Starte mit Messer. Jeder Kill = nächste Waffe. Spieler & Bots. Kein Shop.'}
             {gameType === 'deathmatch'    && 'Bots spawnen sofort nach. Unbegrenzt. Kein Shop.'}
+            {gameType === 'arena'         && 'Unreal-Tournament-Stil. Bots spawnen sofort. Kein Shop. Waffen-Pickups via Mutatoren konfigurierbar.'}
           </div>
         </div>
 

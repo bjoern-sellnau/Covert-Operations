@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { EnemyType } from '../game/types'
 
-export type GameType    = 'waves' | 'roundtime' | 'instakill' | 'instakill_wave' | 'hardline_solo' | 'hardline' | 'deathmatch'
+export type GameType    = 'waves' | 'roundtime' | 'instakill' | 'instakill_wave' | 'hardline_solo' | 'hardline' | 'deathmatch' | 'arena'
 export type PickupMode  = 'none' | 'ammo' | 'weapons' | 'both' | 'chaos'
 export type EnemyDrop   = 'credits' | 'ammo' | 'weapons' | 'health' | 'armor' | 'focus'
 export type BtChargeMode = 'time' | 'kills' | 'start' | 'crate' | 'enemy'
