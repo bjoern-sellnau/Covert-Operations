@@ -9,7 +9,7 @@
 - [x] Wenn man einen Game-Modus ohne Shop gewählt hat (z.B. Direkt spielen), kommt man nach Game Over nicht mehr raus
 - [x] Änderungen für Flak-Waffe sind wieder raus (Regression)
 - [x] Low-Graphics-Modus sieht wieder wie vorher aus (Regression)
-- [ ] Skalierung führt zu Problemen mit dem Level
+- [x] Skalierung führt zu Problemen mit dem Level
 - [ ] UI hat Probleme mit Fullscreen-Modus auf iPad
 - [ ] UI hat allgemeine Probleme auf iPad
 - [ ] Das Hilfe-Menü hat Probleme im Fullscreen
@@ -201,7 +201,7 @@ Build the title screen as `<TitleScreen />` composed of sub-components. Read the
 - [x] **Back-navigation skips intro** — module-level flag `introShown` ensures the boot sequence only plays on the very first load; returning from any sub-menu lands directly in the final state
 - [x] **`<SingleplayerMenu />`** — CO-Δ style, routes: Missionen → missions, Story (disabled), Optionen → options, ← zurück → title_screen
 - [x] **`<MultiplayerMenu />`** — CO-Δ style, routes: Offline → character_select, Gefecht → briefing (skipShop), Online → lobby, Optionen → options, ← zurück → title_screen
-- [ ] **Debug-Menü** — Show Bounding Boxes, Cleanup Settings, Reset, Zurück
+- [x] **Debug-Menü** — Show Bounding Boxes, Cleanup Settings, Reset, Zurück
 
 **Color tokens:** `--orange` `#e05418`, `--cream` `#e0dcc8`, `--olive` `#8a9a62`, `--terminal-green` `#8aaa30`, bg radial `rgba(30,36,20,0.95)→rgba(8,9,6,1)`
 

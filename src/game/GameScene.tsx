@@ -589,6 +589,8 @@ export function GameScene() {
     const bounceDamp  = grav === 'moon' ? 0.9 : 0.7
     const extraBounce = grav === 'moon' ? 2 : 0
     const bloodIntensity = useSettingsStore.getState().bloodIntensity
+    const charScalePhys  = useSettingsStore.getState().charScale
+    const scaledPR       = PLAYER_RADIUS * charScalePhys
     const netRole        = useNetStore.getState().role
     const mobileControls = useSettingsStore.getState().mobileControls
     const [diffHpMult, diffDmgMult, diffSpeedMult, diffPlayerHpMult] = DIFFICULTY_MULTS[useSettingsStore.getState().difficulty]
@@ -993,10 +995,10 @@ export function GameScene() {
     }
 
     const moveSpeed = es.maneuver === 'dive' ? DIVE_SPEED : PLAYER_SPEED
-    const bound     = arenaHalf - PLAYER_RADIUS - 0.5
+    const bound     = arenaHalf - scaledPR - 0.5
     let nx = Math.max(-bound, Math.min(bound, es.player.position.x + dx * moveSpeed * playerDt))
     let nz = Math.max(-bound, Math.min(bound, es.player.position.y + dz * moveSpeed * playerDt))
-    if (level) { const r = resolveCircleVsLevel(nx, nz, PLAYER_RADIUS, level); nx = r.x; nz = r.z }
+    if (level) { const r = resolveCircleVsLevel(nx, nz, scaledPR, level); nx = r.x; nz = r.z }
     es.player.position.x = nx
     es.player.position.y = nz
 
@@ -1124,9 +1126,9 @@ export function GameScene() {
         if (p2dx !== 0 || p2dz !== 0) {
           const plen = Math.sqrt(p2dx * p2dx + p2dz * p2dz)
           p2dx /= plen; p2dz /= plen
-          let p2x = Math.max(-arenaHalf + PLAYER_RADIUS + 0.5, Math.min(arenaHalf - PLAYER_RADIUS - 0.5, p2.position.x + p2dx * PLAYER_SPEED * playerDt))
-          let p2z = Math.max(-arenaHalf + PLAYER_RADIUS + 0.5, Math.min(arenaHalf - PLAYER_RADIUS - 0.5, p2.position.y + p2dz * PLAYER_SPEED * playerDt))
-          if (level) { const r = resolveCircleVsLevel(p2x, p2z, PLAYER_RADIUS, level); p2x = r.x; p2z = r.z }
+          let p2x = Math.max(-arenaHalf + scaledPR + 0.5, Math.min(arenaHalf - scaledPR - 0.5, p2.position.x + p2dx * PLAYER_SPEED * playerDt))
+          let p2z = Math.max(-arenaHalf + scaledPR + 0.5, Math.min(arenaHalf - scaledPR - 0.5, p2.position.y + p2dz * PLAYER_SPEED * playerDt))
+          if (level) { const r = resolveCircleVsLevel(p2x, p2z, scaledPR, level); p2x = r.x; p2z = r.z }
           p2.position.x = p2x
           p2.position.y = p2z
           // Face movement direction
@@ -2001,7 +2003,7 @@ export function GameScene() {
         _toPlayer.y = mz * cfg.speed * speedMult * diffSpeedMult * dt
         let ex = enemy.position.x + _toPlayer.x
         let ez = enemy.position.y + _toPlayer.y
-        if (level) { const r = resolveCircleVsLevel(ex, ez, cfg.size, level); ex = r.x; ez = r.z }
+        if (level) { const r = resolveCircleVsLevel(ex, ez, cfg.size * charScalePhys, level); ex = r.x; ez = r.z }
         enemy.position.x = ex
         enemy.position.y = ez
       }
@@ -2009,7 +2011,7 @@ export function GameScene() {
       for (const [bid, bullet] of es.bullets) {
         if (hitBullets.has(bid)) continue
         _diff.set(bullet.position.x - enemy.position.x, bullet.position.y - enemy.position.y)
-        if (_diff.length() < cfg.size + BULLET_RADIUS) {
+        if (_diff.length() < cfg.size * charScalePhys + BULLET_RADIUS) {
           enemy.health  -= bullet.damage
           enemy.hitTime  = now
           hitBullets.add(bid)
@@ -2086,7 +2088,7 @@ export function GameScene() {
       if (eb.lifetime <= 0 || Math.abs(eb.position.x) > arenaHalf + 2 || Math.abs(eb.position.y) > arenaHalf + 2) {
         ebToRemove.push(ebId); continue
       }
-      if (Math.hypot(es.player.position.x - eb.position.x, es.player.position.y - eb.position.y) < PLAYER_RADIUS + 0.1 && now > es.player.invincibleUntil) {
+      if (Math.hypot(es.player.position.x - eb.position.x, es.player.position.y - eb.position.y) < scaledPR + 0.1 && now > es.player.invincibleUntil) {
         if (!useMutatorsStore.getState().godMode && es.player.berserkerTimer <= 0) {
           const dmg = eb.damage
           if (es.player.armor > 0) {
@@ -2103,7 +2105,7 @@ export function GameScene() {
         ebToRemove.push(ebId); continue
       }
       if (es.player2Active && es.player2.health > 0 && now > es.player2.invincibleUntil) {
-        if (Math.hypot(es.player2.position.x - eb.position.x, es.player2.position.y - eb.position.y) < PLAYER_RADIUS + 0.1) {
+        if (Math.hypot(es.player2.position.x - eb.position.x, es.player2.position.y - eb.position.y) < scaledPR + 0.1) {
           es.player2.health = Math.max(0, es.player2.health - eb.damage)
           es.player2.invincibleUntil = now + INVINCIBLE_DURATION
           ebToRemove.push(ebId); continue

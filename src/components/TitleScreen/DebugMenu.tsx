@@ -10,7 +10,21 @@ export function DebugMenu() {
   const setShowBoundingBoxes = useSettingsStore((s) => s.setShowBoundingBoxes)
   const resetSettings     = useSettingsStore((s) => s.resetSettings)
   const [hovered, setHovered] = useState<string | null>(null)
-  const [resetDone, setResetDone] = useState(false)
+  const [resetDone, setResetDone]     = useState(false)
+  const [cleanupCount, setCleanupCount] = useState<number | null>(null)
+
+  function handleCleanup() {
+    playClick()
+    const current = new Set(['covert-ops-editor-v1', 'covert-ops-loadout-v2', 'covert-ops-settings-v2', 'covert-ops-mutators-v3'])
+    const stale: string[] = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i)
+      if (k && k.startsWith('covert-ops-') && !current.has(k)) stale.push(k)
+    }
+    stale.forEach(k => localStorage.removeItem(k))
+    setCleanupCount(stale.length)
+    setTimeout(() => setCleanupCount(null), 2000)
+  }
 
   function handleReset() {
     playClick()
@@ -26,6 +40,11 @@ export function DebugMenu() {
       sub: showBoundingBoxes ? 'EIN' : 'AUS',
       action: () => { playClick(); setShowBoundingBoxes(!showBoundingBoxes) },
       toggle: true, toggleOn: showBoundingBoxes,
+    },
+    {
+      label: 'Cleanup Settings',
+      sub: cleanupCount !== null ? `${cleanupCount} REMOVED` : 'STALE DATA',
+      action: handleCleanup,
     },
     {
       label: 'Settings zurücksetzen',
