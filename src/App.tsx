@@ -34,6 +34,7 @@ import { DebugMenu } from './components/TitleScreen/DebugMenu'
 import { TrackPlayer } from './components/TrackPlayer'
 import { GameModesScreen } from './components/GameModesScreen'
 import { MapSelectScreen } from './components/MapSelectScreen'
+import { RulesScreen } from './components/RulesScreen'
 
 export function App() {
   const phase          = useGameStore((s) => s.phase)
@@ -110,7 +111,7 @@ export function App() {
   // Split into two effects: menu-phase music (no musicTrack dep) and playing-phase music
   useEffect(() => {
     if (!musicEnabled) { stopMusic(); return }
-    if (phase === 'splash' || phase === 'title_screen' || phase === 'singleplayer_menu' || phase === 'multiplayer_menu' || phase === 'debug_menu' || phase === 'menu' || phase === 'character_select' || phase === 'game_modes' || phase === 'map_select' || phase === 'missions' || phase === 'briefing' || phase === 'mutators' || phase === 'options' || phase === 'track_player' || phase === 'lobby' || phase === 'shop') {
+    if (phase === 'splash' || phase === 'title_screen' || phase === 'singleplayer_menu' || phase === 'multiplayer_menu' || phase === 'debug_menu' || phase === 'menu' || phase === 'character_select' || phase === 'game_modes' || phase === 'rules' || phase === 'map_select' || phase === 'missions' || phase === 'briefing' || phase === 'mutators' || phase === 'options' || phase === 'track_player' || phase === 'lobby' || phase === 'shop') {
       startMenuMusic()
     } else if (phase === 'skydive') {
       startSkydiveMusic()
@@ -257,6 +258,7 @@ export function App() {
       {phase === 'menu'                        && <MainMenu />}
       {phase === 'character_select'            && <CharacterSelectScreen />}
       {phase === 'game_modes'                  && <GameModesScreen />}
+      {phase === 'rules'                       && <RulesScreen />}
       {phase === 'map_select'                  && <MapSelectScreen />}
       {phase === 'missions'                    && <MissionsMenu />}
       {phase === 'briefing'                    && <MissionBriefing />}

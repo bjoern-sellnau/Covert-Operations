@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useGameStore } from '../store/gameStore'
-import { useLoadoutStore } from '../game/loadoutStore'
+import { useLoadoutStore, ALWAYS_OWNED } from '../game/loadoutStore'
 import { useMutatorsStore } from '../store/mutatorsStore'
+import { useRulesStore } from '../store/rulesStore'
 import {
   WEAPON_CONFIGS, EQUIPMENT_CONFIGS, AMMO_CONFIGS, AKIMBO_PRICE, VERNICHTER_AMMO_PRICE, LASER_AMMO_PRICE, ION_AMMO_PRICE,
   WEAPON_SLOT_WEAPONS, WEAPON_TO_SLOT,
@@ -39,13 +40,17 @@ function StatBar({ value, max = 5, color }: { value: number; max?: number; color
 function WeaponCard({ id }: { id: WeaponId }) {
   const cfg = WEAPON_CONFIGS[id]
   const { ownedWeapons, selectedWeapon, credits, buyWeapon, selectWeapon, isAkimbo } = useLoadoutStore()
+  const maxWeapons = useRulesStore((s) => s.maxWeapons)
   const owned = ownedWeapons.includes(id)
   const selected = selectedWeapon === id
   const canAfford = credits >= cfg.price
   const akimboEligible = (id === 'pistol' || id === 'smg') && owned && !isAkimbo
   const canAffordAkimbo = credits >= AKIMBO_PRICE
+  const purchasedCount = ownedWeapons.filter((w) => !ALWAYS_OWNED.includes(w as typeof ALWAYS_OWNED[number])).length
+  const atWeaponLimit = !owned && maxWeapons < 99 && purchasedCount >= maxWeapons
 
   const handleClick = () => {
+    if (atWeaponLimit) return
     if (owned && !akimboEligible) selectWeapon(id)
     else buyWeapon(id)
   }
@@ -116,7 +121,12 @@ function WeaponCard({ id }: { id: WeaponId }) {
         {cfg.pellets > 1 && <span>PELLETS: {cfg.pellets}</span>}
       </div>
 
-      {!owned && !canAfford && (
+      {!owned && atWeaponLimit && (
+        <div style={{ color: '#446644', fontSize: 10, marginTop: 6, letterSpacing: 1 }}>
+          LIMIT ERREICHT ({maxWeapons} WAFFEN)
+        </div>
+      )}
+      {!owned && !atWeaponLimit && !canAfford && (
         <div style={{ color: '#442200', fontSize: 10, marginTop: 6, letterSpacing: 1 }}>
           NICHT GENUG CREDITS
         </div>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { useSettingsStore } from '../../store/settingsStore'
 import { useMutatorsStore } from '../../store/mutatorsStore'
+import { useRulesStore } from '../../store/rulesStore'
 import { Particles } from './Particles'
 import { playHover, playClick } from '../../game/uiSounds'
 
@@ -16,7 +17,7 @@ export function DebugMenu() {
 
   function handleCleanup() {
     playClick()
-    const current = new Set(['covert-ops-editor-v1', 'covert-ops-loadout-v2', 'covert-ops-settings-v2', 'covert-ops-mutators-v3'])
+    const current = new Set(['covert-ops-editor-v1', 'covert-ops-loadout-v2', 'covert-ops-settings-v2', 'covert-ops-mutators-v3', 'covert-ops-rules-v1'])
     const stale: string[] = []
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i)
@@ -31,6 +32,7 @@ export function DebugMenu() {
     playClick()
     resetSettings()
     useMutatorsStore.getState().resetMutators()
+    useRulesStore.getState().resetRules()
     useGameStore.getState().reset()
     setResetDone(true)
     setTimeout(() => setResetDone(false), 1500)

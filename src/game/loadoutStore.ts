@@ -8,7 +8,7 @@ import {
 } from './types'
 
 // Always-owned weapons (no purchase required)
-const ALWAYS_OWNED: WeaponId[] = ['pistol', 'grenade', 'vernichter', 'deathlas', 'ioncan']
+export const ALWAYS_OWNED: WeaponId[] = ['pistol', 'grenade', 'vernichter', 'deathlas', 'ioncan']
 
 interface LoadoutStore {
   credits: number
@@ -44,6 +44,7 @@ interface LoadoutStore {
   getMaxAmmo: () => number
   getMaxAmmoFor: (id: WeaponId) => number
   getDamageBonus: () => number
+  resetForGame: (startCredits: number) => void
 }
 
 export const useLoadoutStore = create<LoadoutStore>()(
@@ -262,6 +263,23 @@ export const useLoadoutStore = create<LoadoutStore>()(
       },
 
       getDamageBonus: () => AMMO_CONFIGS[get().selectedAmmo].damageBonus,
+
+      resetForGame: (startCredits) => set({
+        credits:        startCredits,
+        selectedWeapon: 'pistol',
+        ownedWeapons:   [...ALWAYS_OWNED],
+        ownedEquipment: [],
+        selectedAmmo:   'standard',
+        ownedAmmo:      ['standard'],
+        isAkimbo:       false,
+        vernichterStock: 1,
+        laserStock:     0,
+        ionStock:       0,
+        meleeStacks:    {},
+        weaponAmmoRefills: {},
+        activeSlot:     2,
+        slotIndices:    {},
+      }),
     }),
     { name: 'covert-ops-loadout-v2' },
   ),
