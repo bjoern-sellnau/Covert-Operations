@@ -91,8 +91,9 @@ const RANGE_CARDS: Card[] = [
 ]
 
 export function MissionBriefing() {
-  const setPhase    = useGameStore((s) => s.setPhase)
-  const gameMode    = useGameStore((s) => s.gameMode)
+  const setPhase      = useGameStore((s) => s.setPhase)
+  const gameMode      = useGameStore((s) => s.gameMode)
+  const offlinePath   = useGameStore((s) => s.offlinePath)
   const { skyFPV, setSkyFPV } = useSettingsStore()
   const [page, setPage] = useState(0)
 
@@ -104,9 +105,15 @@ export function MissionBriefing() {
   const isLast = page === cards.length - 1
 
   function launch() {
-    if (gameMode === 'skydive') setPhase('skydive')
-    else if (gameMode === 'shooting_range') setPhase('shop')
-    else setPhase('mutators')
+    if (offlinePath) {
+      setPhase('playing')
+    } else if (gameMode === 'skydive') {
+      setPhase('skydive')
+    } else if (gameMode === 'shooting_range') {
+      setPhase('shop')
+    } else {
+      setPhase('mutators')
+    }
   }
 
   const accentColor = gameMode === 'skydive' ? '#ff8800'
@@ -250,7 +257,7 @@ export function MissionBriefing() {
       </div>
 
       <button
-        onClick={() => setPhase('title_screen')}
+        onClick={() => setPhase(offlinePath ? 'map_select' : 'title_screen')}
         style={{
           background: 'transparent', border: 'none', color: 'rgba(138,154,98,0.4)',
           fontSize: 10, letterSpacing: 2, padding: '12px', cursor: 'pointer',
@@ -258,7 +265,7 @@ export function MissionBriefing() {
           paddingBottom: 'max(12px, calc(env(safe-area-inset-bottom, 0px) + 12px))',
         }}
       >
-        Abbrechen
+        {offlinePath ? '← Zurück' : 'Abbrechen'}
       </button>
     </div>
   )

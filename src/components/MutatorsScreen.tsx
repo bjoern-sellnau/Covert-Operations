@@ -4,9 +4,10 @@ import type { PickupMode, EnemyDrop, BtChargeMode, CrateExtra } from '../store/m
 import type { EnemyType } from '../game/types'
 
 export function MutatorsScreen() {
-  const setPhase    = useGameStore((s) => s.setPhase)
-  const setSkipShop = useGameStore((s) => s.setSkipShop)
-  const gameMode    = useGameStore((s) => s.gameMode)
+  const setPhase      = useGameStore((s) => s.setPhase)
+  const setSkipShop   = useGameStore((s) => s.setSkipShop)
+  const gameMode      = useGameStore((s) => s.gameMode)
+  const offlinePath   = useGameStore((s) => s.offlinePath)
   const {
     gameType, roundTimeSec, weaponPickups, enemyDrops,
     suddenDeath, suddenDeathSec, lives, chaosMode,
@@ -28,9 +29,17 @@ export function MutatorsScreen() {
     setAutoReload,
   } = useMutatorsStore()
 
+  const NO_SHOP_TYPES = ['instakill', 'instakill_wave', 'hardline_solo', 'hardline', 'deathmatch', 'arena']
+
   function startGame() {
-    setSkipShop(gameType === 'arena')
-    setPhase(gameMode === 'skydive' ? 'skydive' : 'playing')
+    if (offlinePath) {
+      const noShop = NO_SHOP_TYPES.includes(gameType)
+      setSkipShop(noShop)
+      setPhase(noShop ? 'map_select' : 'shop')
+    } else {
+      setSkipShop(gameType === 'arena')
+      setPhase(gameMode === 'skydive' ? 'skydive' : 'playing')
+    }
   }
 
   const card: React.CSSProperties = {
@@ -509,7 +518,7 @@ export function MutatorsScreen() {
         paddingBottom: 'max(16px, calc(env(safe-area-inset-bottom, 0px) + 16px))',
       }}>
         <button
-          onClick={() => setPhase('briefing')}
+          onClick={() => setPhase(offlinePath ? 'game_modes' : 'briefing')}
           style={{
             background: 'transparent', border: '1px solid #2a1215', color: '#445566',
             fontSize: 10, letterSpacing: 3, padding: '11px 18px', cursor: 'pointer',
@@ -524,7 +533,7 @@ export function MutatorsScreen() {
             fontFamily: 'inherit', textTransform: 'uppercase', fontWeight: 'bold',
             boxShadow: '0 0 22px #aa000055', transition: 'all 0.12s',
           }}
-        >⚡ EINSATZ STARTEN</button>
+        >{offlinePath ? '⚡ WEITER' : '⚡ EINSATZ STARTEN'}</button>
       </div>
       <div style={{ height: 24 }} />
     </div>

@@ -682,9 +682,10 @@ function IonCard() {
 
 export function Shop() {
   const [category, setCategory] = useState<Category>('waffen')
-  const setPhase    = useGameStore((s) => s.setPhase)
-  const gameMode    = useGameStore((s) => s.gameMode)
-  const skipShop    = useGameStore((s) => s.skipShop)
+  const setPhase      = useGameStore((s) => s.setPhase)
+  const gameMode      = useGameStore((s) => s.gameMode)
+  const skipShop      = useGameStore((s) => s.skipShop)
+  const offlinePath   = useGameStore((s) => s.offlinePath)
   const { credits } = useLoadoutStore()
   const gameType    = useMutatorsStore((s) => s.gameType)
   // Only block if the mode normally has no shop AND we weren't sent here
@@ -879,7 +880,7 @@ export function Shop() {
         gap: mob ? 8 : 16,
       }}>
         <button
-          onClick={() => setPhase('title_screen')}
+          onClick={() => setPhase(offlinePath ? 'mutators' : 'title_screen')}
           style={{
             background: 'transparent', border: '1px solid rgba(138,154,98,0.18)', color: 'rgba(138,154,98,0.4)',
             fontSize: mob ? 14 : 12, letterSpacing: 3, padding: mob ? '14px' : '10px 24px',
@@ -888,12 +889,13 @@ export function Shop() {
           onMouseEnter={(e) => { e.currentTarget.style.color = '#e0dcc8'; e.currentTarget.style.borderColor = 'rgba(138,154,98,0.7)' }}
           onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(138,154,98,0.4)'; e.currentTarget.style.borderColor = 'rgba(138,154,98,0.18)' }}
         >
-          Hauptmenü
+          {offlinePath ? '← Zurück' : 'Hauptmenü'}
         </button>
 
         <button
           onClick={() => {
-            if (gameMode === 'shooting_range') { setPhase('playing') }
+            if (offlinePath) { setPhase('map_select') }
+            else if (gameMode === 'shooting_range') { setPhase('playing') }
             else { setPhase('mutators') }
           }}
           style={{
@@ -913,7 +915,7 @@ export function Shop() {
             e.currentTarget.style.color = '#f07030'
           }}
         >
-          Mission Starten
+          {offlinePath ? 'Karte auswählen →' : 'Mission Starten'}
         </button>
       </div>
     </div>

@@ -28,13 +28,13 @@
 
 Die aktuelle Reihenfolge ist falsch. Neue Reihenfolge:
 
-1. **Player Character Auswahl** — Anzüge als 3D-Modelle anzeigen (nicht als Farbmuster)
-2. **Game-Modi Auswahl** — eigener Screen (wird ausgelagert)
-3. **Mutatoren** — hier platziert, damit man bei bestimmten Modi den Shop auslassen kann
-4. **Regeln** — Regeln wie viele Waffen man kaufen kann, Defaults, Import/Export
-5. **Shop** — optional je nach Modus
-6. **Map-Auswahl** — alle Karten aus dem Level-Editor basierend auf dem Game-Modus
-7. **Briefing**
+1. [x] **Player Character Auswahl** — Anzüge als 3D-Modelle anzeigen (nicht als Farbmuster)
+2. [x] **Game-Modi Auswahl** — eigener Screen `GameModesScreen` (ausgelagert)
+3. [x] **Mutatoren** — hier platziert, damit man bei bestimmten Modi den Shop auslassen kann
+4. [ ] **Regeln** — Regeln wie viele Waffen man kaufen kann, Defaults, Import/Export
+5. [x] **Shop** — optional je nach Modus (übersprungen bei KEIN-SHOP-Modi)
+6. [x] **Map-Auswahl** — alle Karten aus dem Level-Editor basierend auf dem Game-Modus (`MapSelectScreen`)
+7. [x] **Briefing**
 
 ---
 

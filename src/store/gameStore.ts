@@ -22,6 +22,7 @@ interface GameStore {
   isPlaytesting: boolean
   gameMode: 'arena' | 'skydive' | 'shooting_range'
   skipShop: boolean
+  offlinePath: boolean
   bigExplosion: boolean
   optionsReturnTo: GamePhase
   // Co-op Player 2
@@ -39,6 +40,7 @@ interface GameStore {
   setPhase: (phase: GamePhase) => void
   setGameMode: (m: 'arena' | 'skydive' | 'shooting_range') => void
   setSkipShop: (v: boolean) => void
+  setOfflinePath: (v: boolean) => void
   setOptionsReturnTo: (phase: GamePhase) => void
   setBigExplosion: (v: boolean) => void
   updateHUD: (health: number, score: number, wave: number, ammo: number, maxAmmo: number, credits: number, armor: number) => void
@@ -73,6 +75,7 @@ export const useGameStore = create<GameStore>((set) => ({
   isPlaytesting: false,
   gameMode: 'arena',
   skipShop: false,
+  offlinePath: false,
   bigExplosion: false,
   optionsReturnTo: 'title_screen' as GamePhase,
   p2Active: false,
@@ -95,13 +98,17 @@ export const useGameStore = create<GameStore>((set) => ({
         ammo: 48, maxAmmo: 48, creditsEarned: 0, armor: 0, cameraMode: 'topdown',
         p2Active: false, p2Health: 100, p2Ammo: 48, p2MaxAmmo: 48,
         roundTimer: 0, playerLives: 3, p2Lives: 3, inSuddenDeath: false, chaosActive: false,
+        offlinePath: false,
       })
+    } else if (phase === 'playing') {
+      set({ phase, offlinePath: false })
     } else {
       set({ phase })
     }
   },
   setGameMode:     (gameMode)   => set({ gameMode }),
   setSkipShop:         (skipShop)        => set({ skipShop }),
+  setOfflinePath:      (offlinePath)     => set({ offlinePath }),
   setOptionsReturnTo:  (optionsReturnTo) => set({ optionsReturnTo }),
   setBigExplosion: (bigExplosion) => set({ bigExplosion }),
   updateHUD: (health, score, wave, ammo, maxAmmo, creditsEarned, armor) =>
@@ -125,6 +132,7 @@ export const useGameStore = create<GameStore>((set) => ({
       ammo: 48, maxAmmo: 48, creditsEarned: 0, armor: 0, cameraMode: 'topdown',
       gameMode: 'arena',
       skipShop: false,
+      offlinePath: false,
       p2Active: false, p2Health: 100, p2Ammo: 48, p2MaxAmmo: 48,
       roundTimer: 0, playerLives: 3, p2Lives: 3, inSuddenDeath: false, chaosActive: false,
     }),

@@ -4,7 +4,8 @@ import { SKIN_CONFIGS, SKIN_ORDER } from '../game/skins'
 import type { SkinId } from '../game/skins'
 
 export function CharacterSelectScreen() {
-  const setPhase    = useGameStore((s) => s.setPhase)
+  const setPhase      = useGameStore((s) => s.setPhase)
+  const setOfflinePath = useGameStore((s) => s.setOfflinePath)
   const playerSkin  = useSettingsStore((s) => s.playerSkin)
   const setPlayerSkin = useSettingsStore((s) => s.setPlayerSkin)
 
@@ -130,7 +131,7 @@ export function CharacterSelectScreen() {
           onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(106,112,72,0.6)' }}
         >← ZURÜCK</button>
         <button
-          onClick={() => setPhase('shop')}
+          onClick={() => { setOfflinePath(true); setPhase('game_modes') }}
           style={{
             flex: 1, background: 'rgba(224,84,24,0.08)', border: '1px solid rgba(224,84,24,0.5)',
             color: '#e05418', fontSize: 11, letterSpacing: '0.3em', padding: '13px', cursor: 'pointer',
