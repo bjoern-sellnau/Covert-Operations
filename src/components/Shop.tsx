@@ -684,9 +684,12 @@ export function Shop() {
   const [category, setCategory] = useState<Category>('waffen')
   const setPhase    = useGameStore((s) => s.setPhase)
   const gameMode    = useGameStore((s) => s.gameMode)
+  const skipShop    = useGameStore((s) => s.skipShop)
   const { credits } = useLoadoutStore()
   const gameType    = useMutatorsStore((s) => s.gameType)
-  const isBlockedMode = BOT_GAME_TYPES.has(gameType)
+  // Only block if the mode normally has no shop AND we weren't sent here
+  // via the GameOver AUSRÜSTUNG button (skipShop=false means user has shop access)
+  const isBlockedMode = BOT_GAME_TYPES.has(gameType) && skipShop
 
   const mob = typeof window !== 'undefined' && window.innerWidth < 640
 

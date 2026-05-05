@@ -75,6 +75,7 @@ interface MutatorsState {
   setGunKataTargets:    (v: number) => void
   setGunKataSpeed:      (v: number) => void
   setAutoReload:        (v: boolean) => void
+  resetMutators:        () => void
 }
 
 export const useMutatorsStore = create<MutatorsState>()(
@@ -149,6 +150,16 @@ export const useMutatorsStore = create<MutatorsState>()(
       setGunKataTargets:    (gunKataTargets)    => set({ gunKataTargets }),
       setGunKataSpeed:      (gunKataSpeed)      => set({ gunKataSpeed }),
       setAutoReload:        (autoReload)        => set({ autoReload }),
+      resetMutators: () => set({
+        gameType: 'waves', roundTimeSec: 180, weaponPickups: 'none', enemyDrops: [],
+        suddenDeath: false, suddenDeathSec: 60, lives: 3, chaosMode: false,
+        bulletBounce: true, bulletBounceCount: 2, btChargeModes: ['time'], btDuration: 4,
+        btVisualEffect: true, godMode: false, crateExtras: [], quadDamageDuration: 90,
+        berserkerDuration: 60, botCount: 6, botEnemyTypes: ['basic', 'fast'],
+        killMultipliers: true, balletDuration: 1.4, balletBulletCount: 2, balletSpeed: 1.0,
+        gunKataEnabled: false, gunKataDuration: 1.5, gunKataTargets: 4, gunKataSpeed: 1.0,
+        autoReload: false,
+      }),
     }),
     { name: 'covert-ops-mutators-v3' }
   )

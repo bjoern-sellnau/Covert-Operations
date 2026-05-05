@@ -29,7 +29,7 @@ export function MutatorsScreen() {
   } = useMutatorsStore()
 
   function startGame() {
-    if (gameType === 'arena') setSkipShop(true)
+    setSkipShop(gameType === 'arena')
     setPhase(gameMode === 'skydive' ? 'skydive' : 'playing')
   }
 

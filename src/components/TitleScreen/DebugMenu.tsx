@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { useSettingsStore } from '../../store/settingsStore'
+import { useMutatorsStore } from '../../store/mutatorsStore'
 import { Particles } from './Particles'
 import { playHover, playClick } from '../../game/uiSounds'
 
@@ -29,6 +30,8 @@ export function DebugMenu() {
   function handleReset() {
     playClick()
     resetSettings()
+    useMutatorsStore.getState().resetMutators()
+    useGameStore.getState().reset()
     setResetDone(true)
     setTimeout(() => setResetDone(false), 1500)
   }
