@@ -4,6 +4,7 @@ import { useEditorStore } from '../editor/editorStore'
 import { useMutatorsStore } from '../store/mutatorsStore'
 import type { Level } from '../editor/editorStore'
 import { playClick, playHover } from '../game/uiSounds'
+import { BUILT_IN_MAPS } from '../game/builtInMaps'
 
 export function MapSelectScreen() {
   const setPhase      = useGameStore((s) => s.setPhase)
@@ -24,7 +25,10 @@ export function MapSelectScreen() {
     if (selectedId === null) {
       setActivePlayLevel(null)
     } else {
-      const lvl = available.find((l) => l.id === selectedId) ?? null
+      const lvl =
+        available.find((l) => l.id === selectedId) ??
+        BUILT_IN_MAPS.find((l) => l.id === selectedId) ??
+        null
       setActivePlayLevel(lvl)
     }
     setPhase('briefing')
@@ -127,6 +131,45 @@ export function MapSelectScreen() {
             }}>▶ AKTIV</div>
           )}
         </div>
+
+        {/* Built-in maps */}
+        {BUILT_IN_MAPS.map((lvl) => {
+          const active = selectedId === lvl.id
+          const isHov  = hovered === lvl.id
+          return (
+            <div
+              key={lvl.id}
+              onClick={() => selectCard(lvl.id)}
+              onMouseEnter={() => { setHovered(lvl.id); playHover() }}
+              onMouseLeave={() => setHovered(null)}
+              style={cardStyle(lvl.id, active, isHov)}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{
+                  fontFamily: "'Share Tech Mono', monospace",
+                  fontSize: 11, letterSpacing: '0.15em',
+                  color: active ? '#e05418' : isHov ? 'rgba(224,220,200,0.9)' : 'rgba(200,196,176,0.7)',
+                  transition: 'color 0.15s',
+                }}>{lvl.name.toUpperCase()}</div>
+                <div style={{
+                  fontSize: 7, letterSpacing: '0.2em', padding: '1px 5px',
+                  border: '1px solid rgba(224,84,24,0.4)', color: 'rgba(224,84,24,0.6)',
+                  fontFamily: "'Share Tech Mono', monospace",
+                }}>BUILT-IN</div>
+              </div>
+              <div style={{ fontSize: 10, color: 'rgba(138,154,98,0.45)', lineHeight: 1.4 }}>
+                {lvl.objects.length} Objekte · Arena {lvl.arenaHalf * 2}m
+              </div>
+              {active && (
+                <div style={{
+                  fontSize: 9, letterSpacing: '0.25em', color: '#e05418',
+                  fontFamily: "'Share Tech Mono', monospace",
+                  textShadow: '0 0 8px #e05418',
+                }}>▶ AKTIV</div>
+              )}
+            </div>
+          )
+        })}
 
         {/* User-created levels */}
         {available.map((lvl: Level) => {
