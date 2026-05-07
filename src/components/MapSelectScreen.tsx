@@ -9,6 +9,7 @@ import { BUILT_IN_MAPS } from '../game/builtInMaps'
 export function MapSelectScreen() {
   const setPhase      = useGameStore((s) => s.setPhase)
   const skipShop      = useGameStore((s) => s.skipShop)
+  const offlinePath   = useGameStore((s) => s.offlinePath)
   const gameType      = useMutatorsStore((s) => s.gameType)
   const levels        = useEditorStore((s) => s.levels)
   const setActivePlayLevel = useEditorStore((s) => s.setActivePlayLevel)
@@ -224,7 +225,7 @@ export function MapSelectScreen() {
         paddingBottom: 'max(16px, calc(env(safe-area-inset-bottom, 0px) + 16px))',
       }}>
         <button
-          onClick={() => { playClick(); setPhase(skipShop ? 'mutators' : 'shop') }}
+          onClick={() => { playClick(); setPhase(offlinePath ? 'mutators' : skipShop ? 'mutators' : 'shop') }}
           style={{
             background: 'transparent', border: 'none', cursor: 'pointer',
             fontFamily: "'Share Tech Mono', monospace", fontSize: 10, letterSpacing: '0.3em',

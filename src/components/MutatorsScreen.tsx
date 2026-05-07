@@ -33,9 +33,8 @@ export function MutatorsScreen() {
 
   function startGame() {
     if (offlinePath) {
-      const noShop = NO_SHOP_TYPES.includes(gameType)
-      setSkipShop(noShop)
-      setPhase(noShop ? 'map_select' : 'rules')
+      setSkipShop(NO_SHOP_TYPES.includes(gameType))
+      setPhase('map_select')
     } else {
       setSkipShop(gameType === 'arena')
       setPhase(gameMode === 'skydive' ? 'skydive' : 'playing')
