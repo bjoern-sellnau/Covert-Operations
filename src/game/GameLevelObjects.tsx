@@ -135,3 +135,40 @@ export function pointIntersectsLevel(
   }
   return false
 }
+
+/**
+ * Reflects a bullet velocity off the first level object it penetrates.
+ * Returns { vx, vz, nx, nz } with the reflected velocity (damped by 0.82),
+ * or null if no collision was found.
+ * Note: bz/vz here correspond to world-Z, which is bullet.position.y / bullet.velocity.y
+ * in the 2-D physics coordinate system used by GameScene.
+ */
+export function reflectBulletVsLevel(
+  bx: number, bz: number, br: number,
+  vx: number, vz: number,
+  level: Level,
+): { vx: number; vz: number; nx: number; nz: number } | null {
+  const DAMP = 0.82
+  for (const obj of level.objects) {
+    const cfg = OBJECT_TYPE_CFGS[obj.type]
+    if (cfg.isSpawn) continue
+    let res: { pen: boolean; nx: number; nz: number }
+    if (cfg.collisionRadius > 0) {
+      res = circleCircle(bx, bz, br, obj.x, obj.z, cfg.collisionRadius * Math.max(obj.sx, obj.sz))
+    } else {
+      res = circleAABB(bx, bz, br, obj.x, obj.z, obj.sx / 2, obj.sz / 2)
+    }
+    if (res.pen) {
+      const dot = vx * res.nx + vz * res.nz
+      return { vx: (vx - 2 * dot * res.nx) * DAMP, vz: (vz - 2 * dot * res.nz) * DAMP, nx: res.nx, nz: res.nz }
+    }
+  }
+  for (const door of getClosedDoorColliders()) {
+    const res = circleAABB(bx, bz, br, door.x, door.z, door.hw, door.hd)
+    if (res.pen) {
+      const dot = vx * res.nx + vz * res.nz
+      return { vx: (vx - 2 * dot * res.nx) * DAMP, vz: (vz - 2 * dot * res.nz) * DAMP, nx: res.nx, nz: res.nz }
+    }
+  }
+  return null
+}

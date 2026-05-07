@@ -23,7 +23,7 @@ import { useSettingsStore, BLOOD_COUNTS, EXPL_COUNTS, SPARK_COUNTS, DIFFICULTY_M
 import { hudData } from './hudData'
 import { useInput } from './useInput'
 import { spawnWave } from './spawnWave'
-import { GameLevelObjects, resolveCircleVsLevel, pointIntersectsLevel } from './GameLevelObjects'
+import { GameLevelObjects, resolveCircleVsLevel, pointIntersectsLevel, reflectBulletVsLevel } from './GameLevelObjects'
 import type { Level } from '../editor/editorStore'
 import {
   PLAYER_SPEED, PLAYER_RADIUS, BULLET_LIFETIME, BULLET_RADIUS,
@@ -1961,8 +1961,24 @@ export function GameScene() {
             if (bullet.isFlak) playFlakBounce(); else playRicochet()
           } else { remove = true }
         }
-        if (!remove && level && pointIntersectsLevel(bullet.position.x, bullet.position.y, BULLET_RADIUS, level)) {
-          remove = true
+        if (!remove && level) {
+          const refl = reflectBulletVsLevel(
+            bullet.position.x, bullet.position.y, BULLET_RADIUS,
+            bullet.velocity.x, bullet.velocity.y,
+            level,
+          )
+          if (refl) {
+            if (bullet.bounces < bullet.maxBounces) {
+              bullet.velocity.x = refl.vx
+              bullet.velocity.y = refl.vz
+              bullet.damage     = Math.max(1, Math.round(bullet.damage * 0.7))
+              bullet.bounces++
+              spawnParticles(bullet.position.x, bullet.position.y, 'spark', SPARK_COUNTS[bloodIntensity])
+              if (bullet.isFlak) playFlakBounce(); else playRicochet()
+            } else {
+              remove = true
+            }
+          }
         }
       }
       if (remove) bulletsToRemove.push(id)

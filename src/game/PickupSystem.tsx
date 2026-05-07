@@ -4,6 +4,8 @@ import * as THREE from 'three'
 import { entityStore, spawnParticles } from './entityStore'
 import type { PickupData, PickupKind, ChaosModifier } from './entityStore'
 import { useMutatorsStore } from '../store/mutatorsStore'
+import { usePickupProfileStore, weightedPick } from '../store/pickupProfileStore'
+import type { PickupWeights } from '../store/pickupProfileStore'
 import { useGameStore } from '../store/gameStore'
 import { useLoadoutStore } from './loadoutStore'
 import { WEAPON_CONFIGS, ARENA_HALF, EQUIPMENT_CONFIGS, FOCUS_MAX } from './types'
@@ -205,24 +207,53 @@ export function PickupSystem() {
 }
 
 // ── Internal helpers ──────────────────────────────────────────────────────────
+
+const ALL_KINDS: PickupKind[] = ['ammo','weapon','health','credits','bad_package','armor','focus','quad_damage','berserker']
+const CHAOS_KINDS: ChaosModifier[] = ['normal','explosive','jammed']
+
+function _kindFromWeights(w: PickupWeights, mode: string, extras: string[]): PickupKind {
+  if (mode === 'ammo')    return 'ammo'
+  if (mode === 'weapons') return 'weapon'
+
+  // Build eligible kinds and their weights
+  let kinds: PickupKind[]
+  let weights: number[]
+
+  if (mode === 'both') {
+    kinds   = ['ammo', 'weapon', ...extras as PickupKind[]]
+    weights = [w.ammo, w.weapon, ...extras.map(() => 10)]
+  } else if (mode === 'chaos') {
+    kinds   = ALL_KINDS
+    weights = [w.ammo, w.weapon, w.health, w.credits, w.bad_package, w.armor, w.focus, w.quad_damage, w.berserker]
+    // Inject extras at their weight
+    for (const e of extras as PickupKind[]) {
+      const idx = kinds.indexOf(e)
+      if (idx >= 0) weights[idx] += 10
+    }
+  } else {
+    // mode === 'none', extras only
+    if (extras.length === 0) return 'ammo'
+    kinds   = extras as PickupKind[]
+    weights = extras.map((e) => {
+      const map: Record<string, number> = {
+        health: w.health, armor: w.armor, focus: w.focus,
+        quad_damage: w.quad_damage, berserker: w.berserker,
+      }
+      return map[e] ?? 10
+    })
+  }
+
+  return kinds[weightedPick(weights)]
+}
+
 function _spawnRandom(mode: string, extras: string[]) {
   const slot = _freeSlot()
   if (slot < 0) return
-  const x   = (Math.random() - 0.5) * (ARENA_HALF * 2 - 5)
-  const z   = (Math.random() - 0.5) * (ARENA_HALF * 2 - 5)
-  const rng = Math.random()
+  const x = (Math.random() - 0.5) * (ARENA_HALF * 2 - 5)
+  const z = (Math.random() - 0.5) * (ARENA_HALF * 2 - 5)
+  const w = usePickupProfileStore.getState().getActiveWeights()
 
-  // 20% chance to spawn a crate extra if any are configured
-  let kind: PickupKind
-  if (extras.length > 0 && rng < 0.20) {
-    kind = extras[Math.floor(Math.random() * extras.length)] as PickupKind
-  } else if (mode === 'none') {
-    kind = extras.length > 0 ? extras[Math.floor(Math.random() * extras.length)] as PickupKind : 'ammo'
-  } else if (mode === 'ammo')    { kind = 'ammo' }
-  else if (mode === 'weapons')   { kind = 'weapon' }
-  else if (mode === 'chaos')     { kind = rng < 0.25 ? 'bad_package' : rng < 0.55 ? 'weapon' : 'ammo' }
-  else { kind = rng < 0.5 ? 'ammo' : 'weapon' }  // 'both'
-
+  const kind = _kindFromWeights(w, mode, extras)
   const weapons: WeaponId[] = ['pistol','smg','shotgun','rifle','uzi','mp5','m16']
   const extraAmounts: Partial<Record<PickupKind, number>> = { ammo: 20, health: 20, armor: 25, focus: 30 }
   _push(slot, {
@@ -242,11 +273,12 @@ function _spawnRandom(mode: string, extras: string[]) {
 function _spawnChaosCrate() {
   const slot = _freeSlot()
   if (slot < 0) return
-  const x          = (Math.random() - 0.5) * (ARENA_HALF * 2 - 5)
-  const z          = (Math.random() - 0.5) * (ARENA_HALF * 2 - 5)
-  const weaponId   = CHAOS_WEAPONS[Math.floor(Math.random() * CHAOS_WEAPONS.length)]
-  const rng        = Math.random()
-  const chaosModifier: ChaosModifier = rng < 0.4 ? 'normal' : rng < 0.7 ? 'jammed' : 'explosive'
+  const x        = (Math.random() - 0.5) * (ARENA_HALF * 2 - 5)
+  const z        = (Math.random() - 0.5) * (ARENA_HALF * 2 - 5)
+  const weaponId = CHAOS_WEAPONS[Math.floor(Math.random() * CHAOS_WEAPONS.length)]
+  const w        = usePickupProfileStore.getState().getActiveWeights()
+  const modIdx   = weightedPick([w.chaos_normal, w.chaos_explosive, w.chaos_jammed])
+  const chaosModifier: ChaosModifier = CHAOS_KINDS[modIdx]
   _push(slot, {
     id:            `chaos-${++entityStore.pickupIdCounter}`,
     x, z,
