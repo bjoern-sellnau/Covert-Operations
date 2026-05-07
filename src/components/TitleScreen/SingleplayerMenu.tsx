@@ -11,13 +11,15 @@ interface Item {
 }
 
 export function SingleplayerMenu() {
-  const setPhase = useGameStore((s) => s.setPhase)
+  const setPhase       = useGameStore((s) => s.setPhase)
+  const setOfflinePath = useGameStore((s) => s.setOfflinePath)
   const [hovered, setHovered] = useState<string | null>(null)
 
   const items: Item[] = [
-    { label: 'Story',     sub: 'BALD',      disabled: true },
-    { label: 'Missionen', sub: 'SOLO',      action: () => { playClick(); setPhase('missions') } },
-    { label: 'Optionen',  sub: 'SETTINGS',  action: () => { playClick(); useGameStore.getState().setOptionsReturnTo('singleplayer_menu'); setPhase('options') } },
+    { label: 'Story',       sub: 'BALD',      disabled: true },
+    { label: 'Missionen',   sub: 'SOLO',      action: () => { playClick(); setPhase('missions') } },
+    { label: 'Schnellspiel', sub: 'FREIES SPIEL', action: () => { playClick(); setOfflinePath(true); setPhase('game_modes') } },
+    { label: 'Optionen',    sub: 'SETTINGS',  action: () => { playClick(); useGameStore.getState().setOptionsReturnTo('singleplayer_menu'); setPhase('options') } },
   ]
 
   return (
@@ -130,6 +132,7 @@ export function SingleplayerMenu() {
             fontFamily: "'Share Tech Mono', monospace",
             fontSize: 10, letterSpacing: '0.3em', textTransform: 'uppercase',
             color: 'rgba(106,112,72,0.6)', transition: 'color 0.15s',
+            paddingBottom: 'max(12px, calc(env(safe-area-inset-bottom, 0px) + 12px))',
           }}
           onMouseEnter={(e) => { playHover(); (e.currentTarget as HTMLButtonElement).style.color = 'rgba(224,84,24,0.8)' }}
           onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(106,112,72,0.6)' }}
