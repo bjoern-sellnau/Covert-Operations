@@ -45,6 +45,7 @@ interface LoadoutStore {
   getMaxAmmoFor: (id: WeaponId) => number
   getDamageBonus: () => number
   resetForGame: (startCredits: number) => void
+  unlockWeapon: (id: WeaponId) => void
 }
 
 export const useLoadoutStore = create<LoadoutStore>()(
@@ -263,6 +264,10 @@ export const useLoadoutStore = create<LoadoutStore>()(
       },
 
       getDamageBonus: () => AMMO_CONFIGS[get().selectedAmmo].damageBonus,
+
+      unlockWeapon: (id) => set((s) => ({
+        ownedWeapons: s.ownedWeapons.includes(id) ? s.ownedWeapons : [...s.ownedWeapons, id],
+      })),
 
       resetForGame: (startCredits) => set({
         credits:        startCredits,

@@ -1,59 +1,117 @@
+import type { CSSProperties } from 'react'
 import { useGameStore } from '../store/gameStore'
+import { useLoadoutStore } from '../game/loadoutStore'
+import { getSkydiveResult } from '../skydive/skydiveResultStore'
+import { WEAPON_CONFIGS } from '../game/types'
 
 export function SkydiveWin() {
-  const setPhase    = useGameStore((s) => s.setPhase)
-  const setGameMode = useGameStore((s) => s.setGameMode)
+  const setPhase       = useGameStore((s) => s.setPhase)
+  const setGameMode    = useGameStore((s) => s.setGameMode)
+  const setOfflinePath = useGameStore((s) => s.setOfflinePath)
+  const unlockWeapon   = useLoadoutStore((s) => s.unlockWeapon)
+  const result         = getSkydiveResult()
 
-  const btn = (color: string): React.CSSProperties => ({
-    background: `${color}22`, border: `2px solid ${color}`, color,
-    fontSize: 14, letterSpacing: 4, padding: '14px 32px', cursor: 'pointer',
-    fontFamily: 'inherit', textTransform: 'uppercase', transition: 'all 0.15s',
-    boxShadow: `0 0 14px ${color}44`,
+  function playArena() {
+    result.weapons.forEach(w => unlockWeapon(w))
+    setGameMode('arena')
+    setOfflinePath(true)
+    setPhase('map_select')
+  }
+
+  const survived = result.survived
+
+  const btn = (color: string, outline = false): CSSProperties => ({
+    background:  outline ? 'transparent' : `${color}18`,
+    border:      `${outline ? 1 : 2}px solid ${color}`,
+    color, fontSize: 13, letterSpacing: 4, padding: '13px 28px',
+    cursor: 'pointer', fontFamily: 'inherit',
+    transition: 'all 0.15s',
   })
 
   return (
     <div style={{
-      position: 'absolute', top: 0, right: 0, bottom: 0, left: 0,
+      position: 'absolute', inset: 0,
+      background: 'radial-gradient(ellipse at 50% 30%, rgba(30,36,20,0.98) 0%, rgba(8,9,6,1) 65%)',
+      fontFamily: '"Share Tech Mono", "Courier New", monospace',
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      background: 'radial-gradient(ellipse at center, #001a0a 0%, #000805 70%)',
-      fontFamily: "'Courier New', monospace", userSelect: 'none',
+      userSelect: 'none', padding: '0 24px',
     }}>
-      <div style={{
-        color: '#00ff88', fontSize: 13, letterSpacing: 10,
-        textShadow: '0 0 12px #00cc44', marginBottom: 14,
-      }}>
-        MISSION ERFÜLLT
-      </div>
-      <div style={{
-        color: '#00ff44', fontSize: 68, fontWeight: 'bold', letterSpacing: 6,
-        textShadow: '0 0 30px #00ff44, 0 0 80px #007722', marginBottom: 10,
-      }}>
-        GELANDET
-      </div>
-      <div style={{
-        color: '#224422', fontSize: 12, letterSpacing: 4, marginBottom: 52,
-      }}>
-        AGENT ERFOLGREICH INFILTRIERT
+      <div style={{ color: '#3a4a2a', fontSize: 11, letterSpacing: 8, marginBottom: 10 }}>
+        SKYDIVE 2.0
       </div>
 
-      <div style={{ display: 'flex', gap: 16 }}>
+      <div style={{
+        color: survived ? '#e05418' : '#cc2200',
+        fontSize: 52, fontWeight: 700, letterSpacing: 4, marginBottom: 6,
+        textShadow: survived ? '0 0 28px #e0541855' : '0 0 28px #cc220055',
+      }}>
+        {survived ? 'GELANDET' : 'GEFALLEN'}
+      </div>
+
+      <div style={{ color: '#1e2c12', fontSize: 10, letterSpacing: 5, marginBottom: 40 }}>
+        {survived ? '— INFILTRATION ABGESCHLOSSEN —' : '— MISSION GESCHEITERT —'}
+      </div>
+
+      {/* Stats */}
+      <div style={{ width: '100%', maxWidth: 340, marginBottom: 28 }}>
+        {([
+          ['ABSCHÜSSE',    String(result.kills)],
+          ['GESUNDHEIT',   survived ? `${result.healthRemaining}%` : '—'],
+          ['SCHWIERIGKEIT', result.difficulty === 'hard' ? 'SCHWER' : 'LEICHT'],
+        ] as [string, string][]).map(([label, value]) => (
+          <div key={label} style={{ display: 'flex', justifyContent: 'space-between', gap: 40,
+            borderBottom: '1px solid #161e10', padding: '8px 0' }}>
+            <span style={{ color: '#3a4a2a', fontSize: 11, letterSpacing: 4 }}>{label}</span>
+            <span style={{ color: '#8a9a62', fontSize: 11, letterSpacing: 3 }}>{value}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Collected weapons */}
+      {result.weapons.length > 0 && (
+        <div style={{ marginBottom: 36, textAlign: 'center' }}>
+          <div style={{ color: '#3a4a2a', fontSize: 10, letterSpacing: 6, marginBottom: 14 }}>
+            AUSRÜSTUNG
+          </div>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
+            {result.weapons.map(w => (
+              <div key={w} style={{
+                padding: '8px 14px',
+                background: 'rgba(224,84,24,0.1)', border: '1px solid #e05418',
+                color: '#e05418', fontSize: 12, letterSpacing: 3,
+              }}>
+                {WEAPON_CONFIGS[w]?.shortName ?? w.toUpperCase()}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Buttons */}
+      <div style={{ display: 'flex', gap: 12 }}>
+        {survived && (
+          <button
+            style={btn('#e05418')}
+            onClick={playArena}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(224,84,24,0.3)'; e.currentTarget.style.color = '#fff' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(224,84,24,0.18)'; e.currentTarget.style.color = '#e05418' }}
+          >
+            Spielen
+          </button>
+        )}
         <button
-          style={btn('#00ff88')}
+          style={btn('#8a9a62')}
           onClick={() => { setGameMode('skydive'); setPhase('skydive') }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = '#00ff8844'; e.currentTarget.style.color = '#fff' }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = '#00ff8822'; e.currentTarget.style.color = '#00ff88' }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(138,154,98,0.2)' }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(138,154,98,0.08)' }}
         >
           Nochmal
         </button>
         <button
-          style={{
-            background: 'transparent', border: '1px solid #1a2a1a', color: '#2a3a2a',
-            fontSize: 14, letterSpacing: 4, padding: '14px 32px', cursor: 'pointer',
-            fontFamily: 'inherit', textTransform: 'uppercase', transition: 'all 0.15s',
-          }}
+          style={btn('#2a3a1a', true)}
           onClick={() => setPhase('title_screen')}
-          onMouseEnter={(e) => { e.currentTarget.style.color = '#557755'; e.currentTarget.style.borderColor = '#334433' }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = '#2a3a2a'; e.currentTarget.style.borderColor = '#1a2a1a' }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = '#4a5a32'; e.currentTarget.style.color = '#4a5a32' }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = '#2a3a1a'; e.currentTarget.style.color = '#2a3a1a' }}
         >
           Menü
         </button>
