@@ -13,7 +13,7 @@ export function MultiplayerMenu() {
   const setPhase             = useGameStore((s) => s.setPhase)
   const setGameMode          = useGameStore((s) => s.setGameMode)
   const setSkipShop          = useGameStore((s) => s.setSkipShop)
-  const setBriefingReturnTo  = useGameStore((s) => s.setBriefingReturnTo)
+  const setOfflinePath       = useGameStore((s) => s.setOfflinePath)
   const [hovered, setHovered] = useState<string | null>(null)
 
   const items: Item[] = [
@@ -24,8 +24,8 @@ export function MultiplayerMenu() {
     },
     {
       label: 'Gefecht',
-      sub: 'DIREKT SPIELEN',
-      action: () => { playClick(); setSkipShop(true); setGameMode('arena'); setBriefingReturnTo('multiplayer_menu'); setPhase('briefing') },
+      sub: 'KARTE & MODUS WÄHLEN',
+      action: () => { playClick(); setOfflinePath(true); setSkipShop(true); setGameMode('arena'); setPhase('map_select') },
     },
     {
       label: 'Online',
@@ -147,6 +147,7 @@ export function MultiplayerMenu() {
             fontFamily: "'Share Tech Mono', monospace",
             fontSize: 10, letterSpacing: '0.3em', textTransform: 'uppercase',
             color: 'rgba(106,112,72,0.6)', transition: 'color 0.15s',
+            paddingBottom: 'max(12px, calc(env(safe-area-inset-bottom, 0px) + 12px))',
           }}
           onMouseEnter={(e) => { playHover(); (e.currentTarget as HTMLButtonElement).style.color = 'rgba(224,84,24,0.8)' }}
           onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(106,112,72,0.6)' }}

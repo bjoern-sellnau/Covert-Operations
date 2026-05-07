@@ -109,6 +109,7 @@ export function MutatorsScreen() {
       display: 'flex', flexDirection: 'column', alignItems: 'center',
       background: 'radial-gradient(ellipse at 50% 20%, #1e0010 0%, #080810 55%, #050508 100%)',
       fontFamily: "'Courier New', monospace", userSelect: 'none', overflowY: 'auto',
+      paddingBottom: 'max(24px, calc(env(safe-area-inset-bottom, 0px) + 24px))',
     }}>
       {/* Header */}
       <div style={{ textAlign: 'center', padding: '28px 0 20px' }}>
@@ -514,7 +515,6 @@ export function MutatorsScreen() {
       <div style={{
         display: 'flex', gap: 10, width: 'min(96vw, 780px)',
         padding: '16px 0',
-        paddingBottom: 'max(16px, calc(env(safe-area-inset-bottom, 0px) + 16px))',
       }}>
         <button
           onClick={() => setPhase(offlinePath ? 'game_modes' : 'briefing')}
@@ -534,7 +534,6 @@ export function MutatorsScreen() {
           }}
         >{offlinePath ? '⚡ WEITER' : '⚡ EINSATZ STARTEN'}</button>
       </div>
-      <div style={{ height: 24 }} />
     </div>
   )
 }
