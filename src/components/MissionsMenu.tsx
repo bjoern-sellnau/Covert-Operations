@@ -1,17 +1,43 @@
+import type { CSSProperties } from 'react'
 import { useState } from 'react'
 import { useGameStore } from '../store/gameStore'
 import { useDemoStore } from '../store/demoStore'
 import type { CutsceneMode } from '../store/demoStore'
+import type { GamePhase } from '../game/types'
 import { Particles } from './TitleScreen/Particles'
 import { playHover, playClick } from '../game/uiSounds'
 
-interface Mission { mode: CutsceneMode; title: string; sub: string; desc: string }
+interface Mission {
+  mode?: CutsceneMode
+  directPhase?: GamePhase
+  title: string; sub: string; desc: string
+}
 
 const MISSIONS: Mission[] = [
-  { mode: 'skydive',        title: 'SKYDIVE INFILTRATION', sub: 'FALLSCHIRM · SPEZIALOP',
-    desc: 'Springe aus 8.000m. Deploye den Fallschirm rechtzeitig und lande präzise auf der Zielzone.' },
-  { mode: 'shooting_range', title: 'SCHIESSTAND',          sub: 'TRAINING · UNBEGRENZTE MUNITION',
-    desc: 'Teste deine Waffen im gesicherten Trainingsbereich. Keine LP-Strafe, unbegrenzte Munition.' },
+  {
+    mode: 'skydive',
+    title: 'SKYDIVE INFILTRATION',
+    sub:   'ABSPRUNG · SPEZIALOP 2.0',
+    desc:  'Stürze aus 3.000m. Weiche Feinden aus, sammel Waffen ein und deploye den Fallschirm rechtzeitig.',
+  },
+  {
+    directPhase: 'skydive_v1',
+    title: 'SKYDIVE — THE BEGINNING',
+    sub:   'KLASSISCH · V1 · ORIGINAL',
+    desc:  'Der erste Absprung. Top-Down-3D-Szene mit Hindernissen, Feinden und Fallschirm-Mechanik.',
+  },
+  {
+    directPhase: 'skydive_v3',
+    title: 'SKYDIVE — AFTERMATH',
+    sub:   'FIRST PERSON · V3 · ALPHA',
+    desc:  'Nach der Landung: Räum die Infiltrations-Zone. First-Person-Kampf mit deiner Skydive-Ausrüstung.',
+  },
+  {
+    mode: 'shooting_range',
+    title: 'SCHIESSTAND',
+    sub:   'TRAINING · UNBEGRENZTE MUNITION',
+    desc:  'Teste deine Waffen im gesicherten Trainingsbereich. Keine LP-Strafe, unbegrenzte Munition.',
+  },
 ]
 
 export function MissionsMenu() {
@@ -20,11 +46,17 @@ export function MissionsMenu() {
   const { cutsceneMap, demos } = useDemoStore()
   const [hovered, setHovered] = useState<string | null>(null)
 
-  function launch(mode: CutsceneMode) {
+  function launch(m: Mission) {
     playClick()
-    setGameMode(mode)
-    const csId = cutsceneMap[mode]
-    setPhase(csId && demos.some((d) => d.id === csId) ? 'cutscene' : 'briefing')
+    if (m.directPhase) {
+      setPhase(m.directPhase)
+      return
+    }
+    if (m.mode) {
+      setGameMode(m.mode)
+      const csId = cutsceneMap[m.mode]
+      setPhase(csId && demos.some((d) => d.id === csId) ? 'cutscene' : 'briefing')
+    }
   }
 
   return (
@@ -47,45 +79,55 @@ export function MissionsMenu() {
       <div style={{ ...stampStyle('left'), top: 36, fontSize: 7, letterSpacing: '0.2em', color: 'rgba(106,112,72,0.35)' }}>© 2026 Loona! Designs</div>
       <div style={stampStyle('right')}>TOP SECRET // CO-Δ-0.1.0-ALPHA</div>
 
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ marginBottom: 48, textAlign: 'center' }}>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflowY: 'auto' }}>
+        <div style={{ marginBottom: 36, textAlign: 'center' }}>
           <div style={{ fontFamily: "'Saira Condensed', sans-serif", fontWeight: 900, fontSize: 13, letterSpacing: '0.3em', color: '#e05418' }}>
             Δ COVERT OPERATIONS
           </div>
         </div>
 
-        <div style={{ fontFamily: "'Saira Condensed', sans-serif", fontWeight: 900, fontSize: 'clamp(36px, 6vw, 56px)', letterSpacing: '0.18em', color: 'rgba(224,220,200,0.9)', marginBottom: 4, textShadow: '0 0 40px rgba(224,84,24,0.15)' }}>
+        <div style={{ fontFamily: "'Saira Condensed', sans-serif", fontWeight: 900, fontSize: 'clamp(30px, 5.5vw, 52px)', letterSpacing: '0.18em', color: 'rgba(224,220,200,0.9)', marginBottom: 4, textShadow: '0 0 40px rgba(224,84,24,0.15)' }}>
           MISSIONEN
         </div>
-        <div style={{ width: 320, height: 1, background: 'rgba(224,84,24,0.5)', marginBottom: 40 }} />
+        <div style={{ width: 320, height: 1, background: 'rgba(224,84,24,0.5)', marginBottom: 32 }} />
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, width: 'min(92vw, 440px)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, width: 'min(92vw, 460px)' }}>
           {MISSIONS.map((m) => {
-            const isHov = hovered === m.mode
+            const key   = m.mode ?? m.directPhase ?? m.title
+            const isHov = hovered === key
+            const isV3  = m.directPhase === 'skydive_v3'
             return (
               <div
-                key={m.mode}
-                onMouseEnter={() => { setHovered(m.mode); playHover() }}
+                key={key}
+                onMouseEnter={() => { setHovered(key); playHover() }}
                 onMouseLeave={() => setHovered(null)}
-                onClick={() => launch(m.mode)}
+                onClick={() => launch(m)}
                 style={{
-                  padding: '16px 0', borderBottom: '1px solid rgba(138,154,98,0.1)',
+                  padding: '14px 0', borderBottom: '1px solid rgba(138,154,98,0.1)',
                   cursor: 'pointer', transition: 'all 0.15s', position: 'relative',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 6 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 4 }}>
                   <span style={{
-                    fontFamily: "'Saira Condensed', sans-serif", fontWeight: 900, fontSize: 11, color: '#e05418',
+                    fontFamily: "'Saira Condensed', sans-serif", fontWeight: 900, fontSize: 11,
+                    color: isV3 ? '#ffaa00' : '#e05418',
                     opacity: isHov ? 1 : 0, transform: isHov ? 'translateX(0)' : 'translateX(-6px)',
                     transition: 'opacity 0.15s, transform 0.15s', width: 12, display: 'inline-block', flexShrink: 0, marginTop: 2,
                   }}>Δ</span>
                   <div>
-                    <div style={{
-                      fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
-                      fontSize: 14, letterSpacing: isHov ? '0.22em' : '0.16em',
-                      textTransform: 'uppercase', color: isHov ? '#f4f0e4' : 'rgba(220,216,200,0.8)',
-                      transition: 'color 0.15s, letter-spacing 0.15s', marginBottom: 4,
-                    }}>{m.title}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+                      <div style={{
+                        fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
+                        fontSize: 13, letterSpacing: isHov ? '0.22em' : '0.16em',
+                        textTransform: 'uppercase', color: isHov ? '#f4f0e4' : 'rgba(220,216,200,0.8)',
+                        transition: 'color 0.15s, letter-spacing 0.15s',
+                      }}>{m.title}</div>
+                      {isV3 && (
+                        <div style={{ fontSize: 8, letterSpacing: 2, color: '#ffaa00', border: '1px solid #ffaa0066', padding: '1px 5px' }}>
+                          ALPHA
+                        </div>
+                      )}
+                    </div>
                     <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 8, letterSpacing: '0.25em', color: 'rgba(106,112,72,0.6)' }}>
                       {m.sub}
                     </div>
@@ -94,7 +136,7 @@ export function MissionsMenu() {
                 <div style={{ paddingLeft: 24, fontFamily: "'Share Tech Mono', monospace", fontSize: 9, letterSpacing: '0.12em', color: 'rgba(106,112,72,0.5)', lineHeight: 1.6 }}>
                   {m.desc}
                 </div>
-                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 1, background: isHov ? 'rgba(224,84,24,0.4)' : 'transparent', transition: 'background 0.15s' }} />
+                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 1, background: isHov ? `rgba(${isV3 ? '255,170,0' : '224,84,24'},0.4)` : 'transparent', transition: 'background 0.15s' }} />
               </div>
             )
           })}
@@ -102,7 +144,7 @@ export function MissionsMenu() {
 
         <button
           onClick={() => { playClick(); setPhase('singleplayer_menu') }}
-          style={{ marginTop: 48, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Share Tech Mono', monospace", fontSize: 10, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'rgba(106,112,72,0.6)', transition: 'color 0.15s' }}
+          style={{ marginTop: 40, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Share Tech Mono', monospace", fontSize: 10, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'rgba(106,112,72,0.6)', transition: 'color 0.15s' }}
           onMouseEnter={(e) => { playHover(); (e.currentTarget as HTMLButtonElement).style.color = 'rgba(224,84,24,0.8)' }}
           onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(106,112,72,0.6)' }}
         >← ZURÜCK</button>
@@ -111,7 +153,7 @@ export function MissionsMenu() {
   )
 }
 
-const stampStyle = (side: 'left' | 'right'): React.CSSProperties => ({
+const stampStyle = (side: 'left' | 'right'): CSSProperties => ({
   position: 'absolute', top: 22, [side]: 64,
   fontFamily: "'Share Tech Mono', monospace",
   fontSize: 8, letterSpacing: '0.3em', textTransform: 'uppercase',

@@ -14,6 +14,8 @@ import { GameOver } from './components/GameOver'
 import { Shop } from './components/Shop'
 import { Editor } from './editor/Editor'
 import { Skydive } from './skydive/Skydive'
+import { SkydiveV1 } from './skydive/SkydiveV1'
+import { SkydiveV3 } from './skydive/SkydiveV3'
 import { SkydiveWin } from './components/SkydiveWin'
 import { Lobby } from './components/Lobby'
 import { ChatOverlay } from './components/ChatOverlay'
@@ -113,7 +115,7 @@ export function App() {
     if (!musicEnabled) { stopMusic(); return }
     if (phase === 'splash' || phase === 'title_screen' || phase === 'singleplayer_menu' || phase === 'multiplayer_menu' || phase === 'debug_menu' || phase === 'menu' || phase === 'character_select' || phase === 'game_modes' || phase === 'rules' || phase === 'map_select' || phase === 'missions' || phase === 'briefing' || phase === 'mutators' || phase === 'options' || phase === 'track_player' || phase === 'lobby' || phase === 'shop') {
       startMenuMusic()
-    } else if (phase === 'skydive') {
+    } else if (phase === 'skydive' || phase === 'skydive_v1' || phase === 'skydive_v3') {
       startSkydiveMusic()
     } else if (phase !== 'playing') {
       stopMusic()
@@ -273,6 +275,8 @@ export function App() {
       {phase === 'gameover'                    && <GameOver />}
       {phase === 'skydive_win'                 && <SkydiveWin />}
       {phase === 'skydive'                     && <Skydive />}
+      {phase === 'skydive_v1'                  && <SkydiveV1 />}
+      {phase === 'skydive_v3'                  && <SkydiveV3 />}
       {phase === 'editor'                      && <Editor />}
 
       {/* Fullscreen toggle — always visible top-right */}
