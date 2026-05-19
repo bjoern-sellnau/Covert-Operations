@@ -904,7 +904,7 @@ export function Shop() {
 
         <button
           onClick={() => {
-            if (offlinePath) { setPhase('map_select') }
+            if (offlinePath) { setPhase('playing') }
             else if (gameMode === 'shooting_range') { setPhase('playing') }
             else { setPhase('mutators') }
           }}
@@ -925,7 +925,7 @@ export function Shop() {
             e.currentTarget.style.color = '#f07030'
           }}
         >
-          {offlinePath ? 'Karte auswählen →' : 'Mission Starten'}
+          {offlinePath ? 'Spielen →' : 'Mission Starten'}
         </button>
       </div>
     </div>

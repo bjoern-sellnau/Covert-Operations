@@ -867,9 +867,13 @@ export function GameScene() {
     if (ambientRef.current) {
       ambientRef.current.color.lerp(es.isBulletTime ? _btAmbientColor : _normalAmbientColor, 0.07)
       // Low quality uses higher ambient intensity to compensate for absent directional light
+      // FPS mode needs extra ambient since the directional light hits walls from above not forward
+      const isFPS = cameraModeRef.current === 'fps'
       const targetIntensity = isLowQuality
         ? (es.isBulletTime ? 1.4 : 1.6)
-        : (es.isBulletTime ? 0.7 : 0.25)
+        : isFPS
+          ? (es.isBulletTime ? 0.9 : 0.75)
+          : (es.isBulletTime ? 0.7 : 0.75)
       ambientRef.current.intensity = THREE.MathUtils.lerp(ambientRef.current.intensity, targetIntensity, 0.07)
     }
     if (dirLightRef.current) {

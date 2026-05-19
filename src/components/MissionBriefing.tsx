@@ -94,6 +94,7 @@ export function MissionBriefing() {
   const setPhase            = useGameStore((s) => s.setPhase)
   const gameMode            = useGameStore((s) => s.gameMode)
   const offlinePath         = useGameStore((s) => s.offlinePath)
+  const skipShop            = useGameStore((s) => s.skipShop)
   const briefingReturnTo    = useGameStore((s) => s.briefingReturnTo)
   const { skyFPV, setSkyFPV } = useSettingsStore()
   const [page, setPage] = useState(0)
@@ -106,7 +107,9 @@ export function MissionBriefing() {
   const isLast = page === cards.length - 1
 
   function launch() {
-    if (offlinePath) {
+    if (offlinePath && !skipShop) {
+      setPhase('shop')
+    } else if (offlinePath) {
       setPhase('playing')
     } else if (gameMode === 'skydive') {
       setPhase('skydive')
