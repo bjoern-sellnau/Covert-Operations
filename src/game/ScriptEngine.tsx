@@ -48,8 +48,7 @@ export const scriptRuntime = {
   initialized:      false,
 }
 
-export function resetScriptRuntime() {
-  scriptRuntime.doorRuntimes.clear()
+export function resetScriptRuntime() {  scriptRuntime.doorRuntimes.clear()
   scriptRuntime.elevatorRuntimes.clear()
   scriptRuntime.collectedKeys.clear()
   scriptRuntime.firedTriggers.clear()
@@ -60,6 +59,9 @@ export function resetScriptRuntime() {
   scriptRuntime.level = null
   scriptRuntime.initialized = false
 }
+
+/** Re-initialize script runtime from a level — used by GameScene after reset. */
+export function initScriptForLevel(level: Level) { initFromLevel(level) }
 
 function initFromLevel(level: Level) {
   resetScriptRuntime()

@@ -47,7 +47,7 @@ import { BulletMesh } from './BulletMesh'
 import { EnemyBulletMesh } from './EnemyBulletMesh'
 import { ParticleSystem } from './ParticleSystem'
 import { DemoRecorder } from './DemoRecorder'
-import { ScriptEngine, resetScriptRuntime, tryInteractDoor, getDoorHint } from './ScriptEngine'
+import { ScriptEngine, resetScriptRuntime, initScriptForLevel, tryInteractDoor, getDoorHint } from './ScriptEngine'
 import { FogOfWar } from './FogOfWar'
 
 const _groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
@@ -389,6 +389,11 @@ export function GameScene() {
     const playerHpMult = DIFFICULTY_MULTS[useSettingsStore.getState().difficulty][3]
     entityStore.player.health = Math.round(100 * playerHpMult)
     resetScriptRuntime()
+    // Re-initialize door/trigger state immediately — ScriptEngine's useEffect runs
+    // after this one (child effects before parent), so its initFromLevel call was
+    // already wiped by the resetScriptRuntime() above. Do it here explicitly.
+    const lvl = useEditorStore.getState().activePlayLevel
+    if (lvl) initScriptForLevel(lvl)
     useGameStore.getState().reset()
 
     const loadout  = useLoadoutStore.getState()
@@ -2515,11 +2520,55 @@ export function GameScene() {
         />
       )}
 
-      <ambientLight ref={ambientRef} intensity={isLowQuality ? 1.6 : 0.25} color="#4488ff" />
-      {!isLowQuality && <directionalLight ref={dirLightRef} position={[5, 15, 5]} intensity={1.2} color="#ffffff" castShadow />}
-      {graphicsQuality === 'high' && <pointLight position={[0, 8, 0]} intensity={0.6} color="#2244aa" distance={40} />}
+      <ambientLight ref={ambientRef} intensity={isLowQuality ? 1.8 : 0.75} color="#c8d8ff" />
+      {!isLowQuality && <directionalLight ref={dirLightRef} position={[5, 15, 5]} intensity={1.4} color="#ffffff" castShadow />}
+      {!isLowQuality && <directionalLight position={[-8, 10, -6]} intensity={0.5} color="#ffe8d0" />}
+      {graphicsQuality === 'high' && <pointLight position={[0, 8, 0]} intensity={0.8} color="#2244aa" distance={50} />}
+      <CeilingLamps arenaHalf={arenaHalfRef.current} quality={graphicsQuality} />
       <EnemyProjector />
       <DemoRecorder />
+    </>
+  )
+}
+
+// ── Ceiling lamps ─────────────────────────────────────────────────────────────
+function CeilingLamps({ arenaHalf, quality }: { arenaHalf: number; quality: string }) {
+  const r = Math.max(6, arenaHalf * 0.5)
+  const positions: [number, number][] = [
+    [ r,  r], [-r,  r], [ r, -r], [-r, -r],
+    [ 0,  0],
+    [ r,  0], [-r,  0], [ 0,  r], [ 0, -r],
+  ]
+  const isLow = quality === 'low'
+  return (
+    <>
+      {positions.map(([x, z], i) => (
+        <group key={i} position={[x, 4.2, z]}>
+          {/* Fixture box */}
+          <mesh>
+            <boxGeometry args={[0.18, 0.12, 0.18]} />
+            <meshStandardMaterial color="#222" metalness={0.8} roughness={0.3} />
+          </mesh>
+          {/* Glowing bulb */}
+          <mesh position={[0, -0.12, 0]}>
+            <sphereGeometry args={[0.09, 8, 8]} />
+            <meshStandardMaterial
+              color="#ffe8b0" emissive="#ffcc66" emissiveIntensity={3}
+              roughness={0.2} metalness={0}
+            />
+          </mesh>
+          {/* Point light — skip every other lamp on medium, skip all on low */}
+          {!isLow && (i % (quality === 'high' ? 1 : 2) === 0) && (
+            <pointLight
+              position={[0, -0.2, 0]}
+              color="#ffe4a0"
+              intensity={quality === 'high' ? 4 : 3}
+              distance={arenaHalf * 1.4}
+              decay={2}
+            />
+          )}
+        </group>
+      ))}
     </>
   )
 }
