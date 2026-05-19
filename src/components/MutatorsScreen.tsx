@@ -18,6 +18,7 @@ export function MutatorsScreen() {
     balletDuration, balletBulletCount, balletSpeed,
     gunKataEnabled, gunKataDuration, gunKataTargets, gunKataSpeed,
     autoReload,
+    fogOfWarEnabled, fogOfWarRadius,
     setGameType, setRoundTimeSec, setWeaponPickups, toggleEnemyDrop,
     setSuddenDeath, setSuddenDeathSec, setLives, setChaosMode,
     setBulletBounce, setBulletBounceCount,
@@ -26,7 +27,7 @@ export function MutatorsScreen() {
     setBotCount, toggleBotEnemyType, setKillMultipliers,
     setBalletDuration, setBalletBulletCount, setBalletSpeed,
     setGunKataEnabled, setGunKataDuration, setGunKataTargets, setGunKataSpeed,
-    setAutoReload,
+    setAutoReload, setFogOfWarEnabled, setFogOfWarRadius,
   } = useMutatorsStore()
 
   const NO_SHOP_TYPES = ['instakill', 'instakill_wave', 'hardline_solo', 'hardline', 'deathmatch', 'arena']
@@ -326,6 +327,27 @@ export function MutatorsScreen() {
             sub="Waffe lädt automatisch nach wenn Magazin leer ist"
             onClick={() => setAutoReload(!autoReload)}
           />
+        </div>
+
+        {/* Fog of War */}
+        <div style={card}>
+          <div style={secLabel}>Nebel des Krieges</div>
+          <Toggle
+            on={fogOfWarEnabled} color="#6644aa"
+            label="NEBEL DES KRIEGES"
+            sub="Spieler sieht nur einen begrenzten Bereich um sich herum"
+            onClick={() => setFogOfWarEnabled(!fogOfWarEnabled)}
+          />
+          {fogOfWarEnabled && (
+            <div style={{ marginTop: 10 }}>
+              <div style={{ fontSize: 9, letterSpacing: 2, color: '#555', marginBottom: 6 }}>SICHTRADIUS</div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                {([5, 8, 12, 16] as const).map((r) => (
+                  <button key={r} style={tog(fogOfWarRadius === r, '#cc88ff')} onClick={() => setFogOfWarRadius(r)}>{r}m</button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Kill Multipliers */}

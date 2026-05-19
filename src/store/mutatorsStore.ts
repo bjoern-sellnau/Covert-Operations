@@ -46,6 +46,9 @@ interface MutatorsState {
   gunKataSpeed:      number   // bullet speed multiplier (default 1.0)
   // Auto-reload
   autoReload:        boolean
+  // Fog of war
+  fogOfWarEnabled:   boolean
+  fogOfWarRadius:    number   // world units
 
   setGameType:          (v: GameType) => void
   setRoundTimeSec:      (v: number) => void
@@ -75,6 +78,8 @@ interface MutatorsState {
   setGunKataTargets:    (v: number) => void
   setGunKataSpeed:      (v: number) => void
   setAutoReload:        (v: boolean) => void
+  setFogOfWarEnabled:   (v: boolean) => void
+  setFogOfWarRadius:    (v: number) => void
   resetMutators:        () => void
 }
 
@@ -109,6 +114,8 @@ export const useMutatorsStore = create<MutatorsState>()(
       gunKataTargets:    4,
       gunKataSpeed:      1.0,
       autoReload:        false,
+      fogOfWarEnabled:   false,
+      fogOfWarRadius:    8,
 
       setGameType:          (gameType)       => set({ gameType }),
       setRoundTimeSec:      (roundTimeSec)   => set({ roundTimeSec }),
@@ -150,6 +157,8 @@ export const useMutatorsStore = create<MutatorsState>()(
       setGunKataTargets:    (gunKataTargets)    => set({ gunKataTargets }),
       setGunKataSpeed:      (gunKataSpeed)      => set({ gunKataSpeed }),
       setAutoReload:        (autoReload)        => set({ autoReload }),
+      setFogOfWarEnabled:   (fogOfWarEnabled)   => set({ fogOfWarEnabled }),
+      setFogOfWarRadius:    (fogOfWarRadius)    => set({ fogOfWarRadius }),
       resetMutators: () => set({
         gameType: 'waves', roundTimeSec: 180, weaponPickups: 'none', enemyDrops: [],
         suddenDeath: false, suddenDeathSec: 60, lives: 3, chaosMode: false,
@@ -158,7 +167,7 @@ export const useMutatorsStore = create<MutatorsState>()(
         berserkerDuration: 60, botCount: 6, botEnemyTypes: ['basic', 'fast'],
         killMultipliers: true, balletDuration: 1.4, balletBulletCount: 2, balletSpeed: 1.0,
         gunKataEnabled: false, gunKataDuration: 1.5, gunKataTargets: 4, gunKataSpeed: 1.0,
-        autoReload: false,
+        autoReload: false, fogOfWarEnabled: false, fogOfWarRadius: 8,
       }),
     }),
     { name: 'covert-ops-mutators-v3' }

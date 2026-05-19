@@ -172,3 +172,16 @@ export function reflectBulletVsLevel(
   }
   return null
 }
+
+/** Returns true if a straight path between two world points is unobstructed by walls/objects. */
+export function hasLineOfSight(x1: number, z1: number, x2: number, z2: number, level: Level): boolean {
+  const dx = x2 - x1, dz = z2 - z1
+  const len = Math.sqrt(dx * dx + dz * dz)
+  if (len < 0.001) return true
+  const steps = Math.max(2, Math.ceil(len / 0.4))
+  const sx = dx / steps, sz = dz / steps
+  for (let i = 1; i < steps; i++) {
+    if (pointIntersectsLevel(x1 + sx * i, z1 + sz * i, 0.12, level)) return false
+  }
+  return true
+}

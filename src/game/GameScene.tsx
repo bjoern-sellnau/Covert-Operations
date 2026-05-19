@@ -23,7 +23,7 @@ import { useSettingsStore, BLOOD_COUNTS, EXPL_COUNTS, SPARK_COUNTS, DIFFICULTY_M
 import { hudData } from './hudData'
 import { useInput } from './useInput'
 import { spawnWave } from './spawnWave'
-import { GameLevelObjects, resolveCircleVsLevel, pointIntersectsLevel, reflectBulletVsLevel } from './GameLevelObjects'
+import { GameLevelObjects, resolveCircleVsLevel, pointIntersectsLevel, reflectBulletVsLevel, hasLineOfSight } from './GameLevelObjects'
 import type { Level } from '../editor/editorStore'
 import {
   PLAYER_SPEED, PLAYER_RADIUS, BULLET_LIFETIME, BULLET_RADIUS,
@@ -316,7 +316,9 @@ export function GameScene() {
   const gameModeLive    = useGameStore((s) => s.gameMode)
   const enemyIds        = useGameStore((s) => s.enemyIds)
   const bulletIds       = useGameStore((s) => s.bulletIds)
-  const activePlayLevel = useEditorStore((s) => s.activePlayLevel)
+  const activePlayLevel  = useEditorStore((s) => s.activePlayLevel)
+  const fogOfWarEnabled  = useMutatorsStore((s) => s.fogOfWarEnabled)
+  const fogOfWarRadius   = useMutatorsStore((s) => s.fogOfWarRadius)
   const charScale        = useSettingsStore((s) => s.charScale)
   const graphicsQuality  = useSettingsStore((s) => s.graphicsQuality)
   const isLowQuality     = graphicsQuality === 'low'
@@ -2100,9 +2102,10 @@ export function GameScene() {
         }
       }
 
-      // Enemy shoots at target player
+      // Enemy shoots at target player (only when line-of-sight is clear)
       enemy.shootCooldown -= rawDt
-      if (enemy.shootCooldown <= 0 && dist >= cfg.size + 0.3 && dist < cfg.shootRange) {
+      if (enemy.shootCooldown <= 0 && dist >= cfg.size + 0.3 && dist < cfg.shootRange &&
+          (!level || hasLineOfSight(enemy.position.x, enemy.position.y, targetX, targetY, level))) {
         enemy.shootCooldown = 1 / cfg.shootRate
         const ebId = `eb-${++es.enemyBulletIdCounter}`
         es.enemyBullets.set(ebId, {
@@ -2133,6 +2136,10 @@ export function GameScene() {
       eb.position.y += eb.velocity.y * rawDt
       eb.lifetime -= rawDt
       if (eb.lifetime <= 0 || Math.abs(eb.position.x) > arenaHalf + 2 || Math.abs(eb.position.y) > arenaHalf + 2) {
+        ebToRemove.push(ebId); continue
+      }
+      // Enemy bullets stop at walls (no bounce)
+      if (level && reflectBulletVsLevel(eb.position.x, eb.position.y, 0.12, eb.velocity.x, eb.velocity.y, level)) {
         ebToRemove.push(ebId); continue
       }
       if (Math.hypot(es.player.position.x - eb.position.x, es.player.position.y - eb.position.y) < scaledPR + 0.1 && now > es.player.invincibleUntil) {
@@ -2501,7 +2508,12 @@ export function GameScene() {
 
       {/* Script system */}
       {activePlayLevel && <ScriptEngine level={activePlayLevel} />}
-      {activePlayLevel?.fogOfWar && <FogOfWar arenaHalf={activePlayLevel.arenaHalf ?? ARENA_HALF} />}
+      {(activePlayLevel?.fogOfWar || fogOfWarEnabled) && (
+        <FogOfWar
+          arenaHalf={activePlayLevel?.arenaHalf ?? ARENA_HALF}
+          revealRadius={fogOfWarRadius}
+        />
+      )}
 
       <ambientLight ref={ambientRef} intensity={isLowQuality ? 1.6 : 0.25} color="#4488ff" />
       {!isLowQuality && <directionalLight ref={dirLightRef} position={[5, 15, 5]} intensity={1.2} color="#ffffff" castShadow />}

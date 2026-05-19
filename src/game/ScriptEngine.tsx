@@ -89,7 +89,7 @@ function initFromLevel(level: Level) {
   scriptRuntime.initialized = true
 }
 
-const DOOR_INTERACT_DIST = 1.8
+const DOOR_INTERACT_DIST = 2.5
 
 /** Try to open/close the nearest door within reach. Returns false if locked. */
 export function tryInteractDoor(px: number, pz: number): boolean {
@@ -124,7 +124,14 @@ export function getClosedDoorColliders(): Array<{ x: number; z: number; hw: numb
   const result: Array<{ x: number; z: number; hw: number; hd: number; angle: number }> = []
   for (const dr of scriptRuntime.doorRuntimes.values()) {
     if (dr.animT < 0.5) {
-      result.push({ x: dr.entity.x, z: dr.entity.z, hw: dr.entity.w / 2, hd: 0.15, angle: dr.entity.angle })
+      // For doors rotated ~90° (running along Z), swap hw/hd so the AABB is correct
+      const isVertical = Math.abs(Math.sin(dr.entity.angle)) > 0.7
+      result.push({
+        x: dr.entity.x, z: dr.entity.z,
+        hw: isVertical ? 0.15 : dr.entity.w / 2,
+        hd: isVertical ? dr.entity.w / 2 : 0.15,
+        angle: dr.entity.angle,
+      })
     }
   }
   return result
