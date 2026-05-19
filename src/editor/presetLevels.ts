@@ -1,4 +1,5 @@
 import type { Level, LevelObject, GravityMode } from './editorStore'
+import type { ScriptEntity } from './scriptTypes'
 
 let _seq = 9000000
 const id = () => `preset-${_seq++}`
@@ -195,10 +196,103 @@ function schmiede(): Level {
   return make('Schmiede', objs)
 }
 
+// ── Aktion Schloss ────────────────────────────────────────────────────────────
+// Three-zone bunker connected by doors. Vault in north requires a key found
+// in the middle room. All doors open/close with E.
+//
+// Layout (top = north = z-negative):
+//
+//   z=-16  ┌─────[TRESOR gesperrt]─────┐
+//          │  Vault: crates + objective  │
+//   z=-12  └──────TRESOR-WAND──────────┘
+//          │   Nordraum (Schlüssel!)     │
+//   z=-4   └─────[Innentor]─────────────┘
+//          │   Mittelzone (cover, crates)│
+//   z=4    └──────[Haupttor]────────────┘
+//          │   Eingang (spawn)           │
+//   z=14   │            S               │
+//
+function aktion_schloss(): Level {
+  const objs: LevelObject[]       = []
+  const script: ScriptEntity[]    = []
+  const VAULT_KEY                 = 'vault-key'
+
+  // ── Script entities ──────────────────────────────────────────────────────
+  // Haupttor (z=4, door gap x=-3…+3)
+  script.push({ id: 'd-main',  type: 'door', x:  0, z:  4, angle: 0, w: 6, label: 'Haupttor',  keyId: '',         startOpen: false })
+  // Innentor (z=-4, offset right: gap x=2…+8)
+  script.push({ id: 'd-inner', type: 'door', x:  5, z: -4, angle: 0, w: 6, label: 'Innentor',  keyId: '',         startOpen: false })
+  // Tresortür (z=-12, locked)
+  script.push({ id: 'd-vault', type: 'door', x:  0, z:-12, angle: 0, w: 6, label: 'TRESOR',    keyId: VAULT_KEY,  startOpen: false })
+  // Key inside north room
+  script.push({ id: 'k-vault', type: 'key',  x: 10, z: -8, keyId: VAULT_KEY, color: '#ff3300', label: 'Tresor-Schlüssel' })
+
+  // ── Horizontal walls ─────────────────────────────────────────────────────
+  // Haupttor-Wand (z=4): door gap x=-3…+3 → walls cover x=-17…-3 and x=3…17
+  objs.push(wall(-10, 4,  14, 0.5, 0, 'concrete'))
+  objs.push(wall( 10, 4,  14, 0.5, 0, 'concrete'))
+
+  // Innentor-Wand (z=-4): door gap x=2…+8 → walls cover x=-17…+2 and x=8…+17
+  objs.push(wall( -7.5, -4, 15, 0.5, 0, 'concrete_worn'))
+  objs.push(wall( 12.5, -4,  9, 0.5, 0, 'concrete_worn'))
+
+  // Tresorwand (z=-12): door gap x=-3…+3
+  objs.push(wall(-10, -12, 14, 0.5, 0, 'stone_dark'))
+  objs.push(wall( 10, -12, 14, 0.5, 0, 'stone_dark'))
+
+  // ── Side walls narrowing the middle zone ─────────────────────────────────
+  // Left bunker alcove: x=-14, z=-4 to -12 (between inner and vault wall)
+  objs.push(wall(-14,  -8, 0.5, 8, 0, 'concrete_worn'))
+  // Right bunker alcove: x=14, z=-4 to -12
+  objs.push(wall( 14,  -8, 0.5, 8, 0, 'concrete_worn'))
+
+  // ── Cover — Eingang (south room) ─────────────────────────────────────────
+  objs.push(cover(-8, 10, 3, 1.2))
+  objs.push(cover( 8, 10, 3, 1.2))
+  objs.push(crate(-3,  8))
+  objs.push(crate( 3,  8))
+
+  // ── Cover — Mittelzone ────────────────────────────────────────────────────
+  objs.push(cover(-8,  0,  1, 4))       // left pillar-cover
+  objs.push(cover( 0,  0,  3, 1))       // center cover
+  objs.push(crate(-5, -2))
+  objs.push(crate( 8, -1))
+  objs.push(pillar(-12, 0, 0.9))
+  objs.push(pillar( 12, 0, 0.9))
+
+  // ── Cover — Nordraum ─────────────────────────────────────────────────────
+  objs.push(cover(-10, -8, 3, 1))
+  objs.push(cover(  4, -7, 4, 1))
+  objs.push(crate( -5, -9))
+  objs.push(pillar( 12, -8, 0.8))       // near key pickup
+
+  // ── Vault interior ────────────────────────────────────────────────────────
+  objs.push(crate(-6, -15))
+  objs.push(crate( 6, -15))
+  objs.push(pillar(0, -15, 1.4))        // central "objective" column
+
+  // ── Spawns ────────────────────────────────────────────────────────────────
+  objs.push(spawn( 0, 14))
+  objs.push(spawn(-6, 12))
+  objs.push(spawn( 6, 12))
+
+  return {
+    id: `preset-lvl-${_seq++}`,
+    name: 'Aktion Schloss',
+    objects: objs,
+    scriptEntities: script,
+    fogOfWar: false,
+    gravity: 'normal',
+    arenaHalf: 18,
+    gameModes: [],
+  }
+}
+
 export const PRESET_LEVELS: Level[] = [
   schiessstand(),
   fabrik(),
   mondstation(),
   raumstation(),
   schmiede(),
+  aktion_schloss(),
 ]

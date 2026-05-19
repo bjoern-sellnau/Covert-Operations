@@ -1,4 +1,5 @@
 import type { Level, LevelObject } from '../editor/editorStore'
+import type { ScriptEntity } from '../editor/scriptTypes'
 
 let _seq = 9000000
 const id = () => `blt-${_seq++}`
@@ -159,4 +160,60 @@ export const ATOMIC_TEST_GROUND: Level = {
   gameModes: [],
 }
 
-export const BUILT_IN_MAPS: Level[] = [COLOSSEUM, WAREHOUSE, ATOMIC_TEST_GROUND]
+// ── AKTION SCHLOSS ────────────────────────────────────────────────────────────
+// Three-zone bunker. Open two doors to reach the north room, find the red key,
+// then unlock the vault. All doors open/close with E.
+//
+//   z=-16  ┌─── TRESOR (gesperrt, roter Schlüssel) ───┐
+//   z=-12  ├─────────── Tresortür ────────────────────┤
+//          │   Nordraum (roter Schlüssel liegt hier)  │
+//   z= -4  ├─────────── Innentor ────────────────────┤
+//          │   Mittelzone (cover, crates)             │
+//   z=  4  ├─────────── Haupttor ────────────────────┤
+//          │   Eingang (Spawns)                       │
+//   z= 14  │                 S                        │
+//
+const _SCHLOSS_KEY = 'schloss-vault-key'
+
+const SCHLOSS_SCRIPT: ScriptEntity[] = [
+  { id: 'schloss-d-main',  type: 'door', x:  0, z:  4, angle: 0, w: 6, label: 'Haupttor',           keyId: '',           startOpen: false },
+  { id: 'schloss-d-inner', type: 'door', x:  5, z: -4, angle: 0, w: 6, label: 'Innentor',           keyId: '',           startOpen: false },
+  { id: 'schloss-d-vault', type: 'door', x:  0, z:-12, angle: 0, w: 6, label: 'TRESOR',             keyId: _SCHLOSS_KEY, startOpen: false },
+  { id: 'schloss-key',     type: 'key',  x: 10, z: -8, keyId: _SCHLOSS_KEY, color: '#ff3300', label: 'Tresor-Schlüssel' },
+]
+
+export const AKTION_SCHLOSS: Level = {
+  id: 'builtin-aktion-schloss',
+  name: 'Aktion Schloss',
+  objects: [
+    // ── Gate wall (z=4) — door gap x=-3…+3
+    wall(-10,   4, 14, 0.5, 0), wall( 10,  4, 14, 0.5, 0),
+    // ── Inner wall (z=-4) — door gap x=2…+8
+    wall( -7.5, -4, 15, 0.5, 0), wall(12.5, -4,  9, 0.5, 0),
+    // ── Vault wall (z=-12) — door gap x=-3…+3
+    wall(-10,  -12, 14, 0.5, 0), wall( 10, -12, 14, 0.5, 0),
+    // ── Alcove side walls (middle zone narrowing)
+    wall(-14,   -8, 0.5, 8, 0), wall( 14,  -8, 0.5, 8, 0),
+    // ── Cover — Eingang
+    cover(-8, 10, 3, 1.2), cover(8, 10, 3, 1.2),
+    crate(-3, 8), crate(3, 8),
+    // ── Cover — Mittelzone
+    cover(-8,  0, 1, 4), cover(0, 0, 3, 1),
+    crate(-5, -2), crate(8, -1),
+    pillar(-12, 0, 0.9), pillar(12, 0, 0.9),
+    // ── Cover — Nordraum
+    cover(-10, -8, 3, 1), cover(4, -7, 4, 1),
+    crate(-5, -9), pillar(12, -8, 0.8),
+    // ── Vault interior
+    crate(-6, -15), crate(6, -15), pillar(0, -15, 1.4),
+    // ── Spawns
+    spawn(0, 14), spawn(-6, 12), spawn(6, 12),
+  ],
+  scriptEntities: SCHLOSS_SCRIPT,
+  fogOfWar: false,
+  gravity: 'normal',
+  arenaHalf: 18,
+  gameModes: [],
+}
+
+export const BUILT_IN_MAPS: Level[] = [COLOSSEUM, WAREHOUSE, ATOMIC_TEST_GROUND, AKTION_SCHLOSS]
