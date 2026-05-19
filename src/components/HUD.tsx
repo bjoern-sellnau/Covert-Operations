@@ -173,6 +173,7 @@ export function HUD() {
   const score         = useGameStore((s) => s.score)
   const wave          = useGameStore((s) => s.wave)
   const waveMessage   = useGameStore((s) => s.waveMessage)
+  const doorHint      = useGameStore((s) => s.doorHint)
   const focus         = useGameStore((s) => s.focus)
   const isBulletTime  = useGameStore((s) => s.isBulletTime)
   const ammo          = useGameStore((s) => s.ammo)
@@ -478,6 +479,20 @@ export function HUD() {
           </div>
         </div>
       </div>
+
+      {doorHint && (
+        <div style={{
+          position: 'absolute', bottom: 80, left: '50%', transform: 'translateX(-50%)',
+          color: doorHint.startsWith('[') ? '#ff4422' : '#ffcc44',
+          fontSize: 13, letterSpacing: '0.25em', textTransform: 'uppercase',
+          fontFamily: "'Share Tech Mono', monospace",
+          background: 'rgba(0,0,0,0.55)', padding: '5px 14px',
+          border: `1px solid ${doorHint.startsWith('[') ? 'rgba(255,60,20,0.4)' : 'rgba(255,200,60,0.3)'}`,
+          pointerEvents: 'none',
+        }}>
+          {doorHint}
+        </div>
+      )}
 
       {waveMessage && (
         <div style={{

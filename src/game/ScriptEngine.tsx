@@ -89,6 +89,36 @@ function initFromLevel(level: Level) {
   scriptRuntime.initialized = true
 }
 
+const DOOR_INTERACT_DIST = 1.8
+
+/** Try to open/close the nearest door within reach. Returns false if locked. */
+export function tryInteractDoor(px: number, pz: number): boolean {
+  for (const dr of scriptRuntime.doorRuntimes.values()) {
+    const dx = px - dr.entity.x
+    const dz = pz - dr.entity.z
+    if (Math.sqrt(dx * dx + dz * dz) < DOOR_INTERACT_DIST) {
+      if (dr.entity.keyId && !scriptRuntime.collectedKeys.has(dr.entity.keyId)) return false
+      dr.isOpen = !dr.isOpen
+      return true
+    }
+  }
+  return false
+}
+
+/** Returns a UI hint string if the player is near an interactable door. */
+export function getDoorHint(px: number, pz: number): string {
+  for (const dr of scriptRuntime.doorRuntimes.values()) {
+    const dx = px - dr.entity.x
+    const dz = pz - dr.entity.z
+    if (Math.sqrt(dx * dx + dz * dz) < DOOR_INTERACT_DIST) {
+      if (dr.entity.keyId && !scriptRuntime.collectedKeys.has(dr.entity.keyId))
+        return `[GESPERRT] ${dr.entity.label}`
+      return dr.isOpen ? `E · ${dr.entity.label} schließen` : `E · ${dr.entity.label} öffnen`
+    }
+  }
+  return ''
+}
+
 /** Returns the current world-space half-extents for a closed door (for collision). */
 export function getClosedDoorColliders(): Array<{ x: number; z: number; hw: number; hd: number; angle: number }> {
   const result: Array<{ x: number; z: number; hw: number; hd: number; angle: number }> = []
@@ -214,6 +244,9 @@ export function ScriptEngine({ level }: { level: Level }) {
         if (Math.abs(dr.animT - target) < 0.001) dr.animT = target
       }
     }
+
+    // ── Door proximity hint ────────────────────────────────────────────────
+    useGameStore.getState().setDoorHint(getDoorHint(px, pz))
 
     // ── Check trigger zones ────────────────────────────────────────────────
     for (const entity of lvl.scriptEntities) {

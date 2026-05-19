@@ -47,7 +47,7 @@ import { BulletMesh } from './BulletMesh'
 import { EnemyBulletMesh } from './EnemyBulletMesh'
 import { ParticleSystem } from './ParticleSystem'
 import { DemoRecorder } from './DemoRecorder'
-import { ScriptEngine, resetScriptRuntime } from './ScriptEngine'
+import { ScriptEngine, resetScriptRuntime, tryInteractDoor, getDoorHint } from './ScriptEngine'
 import { FogOfWar } from './FogOfWar'
 
 const _groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
@@ -920,6 +920,18 @@ export function GameScene() {
       es.maneuverDz    = ddz / dlen
       es.maneuver      = 'dive'
       es.maneuverTimer = DIVE_DURATION
+    }
+
+    // ── Door interaction (E key) ───────────────────────────────────────────────
+    if (eJust) {
+      const opened = tryInteractDoor(es.player.position.x, es.player.position.y)
+      if (!opened) {
+        const gs = useGameStore.getState()
+        if (getDoorHint(es.player.position.x, es.player.position.y).startsWith('[')) {
+          gs.setWaveMessage('Gesperrt — Schlüssel benötigt!')
+          setTimeout(() => gs.setWaveMessage(''), 1800)
+        }
+      }
     }
 
     // ── Trigger: Ballett-Spin (Q/E, only when akimbo) ─────────────────────────

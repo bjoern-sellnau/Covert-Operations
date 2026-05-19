@@ -12,6 +12,7 @@ interface GameStore {
   bulletIds: string[]
   enemyBulletIds: string[]
   waveMessage: string
+  doorHint: string
   focus: number
   isBulletTime: boolean
   ammo: number
@@ -52,6 +53,7 @@ interface GameStore {
   setBulletIds: (ids: string[]) => void
   setEnemyBulletIds: (ids: string[]) => void
   setWaveMessage: (msg: string) => void
+  setDoorHint: (hint: string) => void
   setCameraMode: (v: CameraMode) => void
   setPlaytesting: (v: boolean) => void
   updateMutatorHUD: (roundTimer: number, playerLives: number, p2Lives: number, inSuddenDeath: boolean, chaosActive: boolean) => void
@@ -67,6 +69,7 @@ export const useGameStore = create<GameStore>((set) => ({
   bulletIds: [],
   enemyBulletIds: [],
   waveMessage: '',
+  doorHint: '',
   focus: 100,
   isBulletTime: false,
   ammo: 48,
@@ -96,7 +99,7 @@ export const useGameStore = create<GameStore>((set) => ({
       set({
         phase,
         health: 100, score: 0, wave: 1,
-        enemyIds: [], bulletIds: [], enemyBulletIds: [], waveMessage: '',
+        enemyIds: [], bulletIds: [], enemyBulletIds: [], waveMessage: '', doorHint: '',
         focus: 100, isBulletTime: false,
         ammo: 48, maxAmmo: 48, creditsEarned: 0, armor: 0, cameraMode: 'topdown',
         p2Active: false, p2Health: 100, p2Ammo: 48, p2MaxAmmo: 48,
@@ -124,6 +127,7 @@ export const useGameStore = create<GameStore>((set) => ({
   setBulletIds:      (ids) => set({ bulletIds: ids }),
   setEnemyBulletIds: (ids) => set({ enemyBulletIds: ids }),
   setWaveMessage: (msg) => set({ waveMessage: msg }),
+  setDoorHint: (hint) => set({ doorHint: hint }),
   setCameraMode:  (cameraMode) => set({ cameraMode }),
   setPlaytesting: (isPlaytesting) => set({ isPlaytesting }),
   updateMutatorHUD: (roundTimer, playerLives, p2Lives, inSuddenDeath, chaosActive) =>
@@ -131,7 +135,7 @@ export const useGameStore = create<GameStore>((set) => ({
   reset: () =>
     set({
       health: 100, score: 0, wave: 1,
-      enemyIds: [], bulletIds: [], enemyBulletIds: [], waveMessage: '',
+      enemyIds: [], bulletIds: [], enemyBulletIds: [], waveMessage: '', doorHint: '',
       focus: 100, isBulletTime: false,
       ammo: 48, maxAmmo: 48, creditsEarned: 0, armor: 0, cameraMode: 'topdown',
       gameMode: 'arena',
