@@ -39,6 +39,10 @@ interface GameStore {
   inSuddenDeath: boolean
   chaosActive:  boolean
 
+  // Pause
+  paused: boolean
+  setPaused: (v: boolean) => void
+
   setPhase: (phase: GamePhase) => void
   setGameMode: (m: 'arena' | 'skydive' | 'shooting_range') => void
   setSkipShop: (v: boolean) => void
@@ -93,7 +97,9 @@ export const useGameStore = create<GameStore>((set) => ({
   p2Lives:       3,
   inSuddenDeath: false,
   chaosActive:   false,
+  paused: false,
 
+  setPaused: (paused) => set({ paused }),
   setPhase: (phase) => {
     if (phase === 'menu' || phase === 'title_screen') {
       set({
@@ -104,10 +110,10 @@ export const useGameStore = create<GameStore>((set) => ({
         ammo: 48, maxAmmo: 48, creditsEarned: 0, armor: 0, cameraMode: 'topdown',
         p2Active: false, p2Health: 100, p2Ammo: 48, p2MaxAmmo: 48,
         roundTimer: 0, playerLives: 3, p2Lives: 3, inSuddenDeath: false, chaosActive: false,
-        offlinePath: false,
+        offlinePath: false, paused: false,
       })
     } else if (phase === 'playing') {
-      set({ phase, offlinePath: false })
+      set({ phase, offlinePath: false, paused: false })
     } else {
       set({ phase })
     }

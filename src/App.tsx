@@ -9,6 +9,7 @@ import { startMenuMusic, startGameMusic, startGameMusic2, startGameMusic3, start
 import { useCustomTracksStore } from './store/customTracksStore'
 import { Game } from './game/Game'
 import { HUD } from './components/HUD'
+import { PauseMenu } from './components/PauseMenu'
 import { MainMenu } from './components/MainMenu'
 import { GameOver } from './components/GameOver'
 import { Shop } from './components/Shop'
@@ -40,6 +41,7 @@ import { RulesScreen } from './components/RulesScreen'
 
 export function App() {
   const phase          = useGameStore((s) => s.phase)
+  const paused         = useGameStore((s) => s.paused)
   const isBulletTime   = useGameStore((s) => s.isBulletTime)
   const cameraMode     = useGameStore((s) => s.cameraMode)
   const bigExplosion   = useGameStore((s) => s.bigExplosion)
@@ -255,6 +257,7 @@ export function App() {
       {phase === 'multiplayer_menu'           && <MultiplayerMenu />}
       {phase === 'debug_menu'                 && <DebugMenu />}
       {phase === 'playing'                    && <HUD />}
+      {phase === 'playing' && paused          && <PauseMenu />}
       {phase === 'playing' && mobileControls  && <MobileControls />}
       {phase === 'playing' && isNetGame        && <ChatOverlay />}
       {phase === 'menu'                        && <MainMenu />}

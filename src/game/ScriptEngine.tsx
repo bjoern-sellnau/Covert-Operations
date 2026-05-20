@@ -125,7 +125,7 @@ export function getDoorHint(px: number, pz: number): string {
 export function getClosedDoorColliders(): Array<{ x: number; z: number; hw: number; hd: number; angle: number }> {
   const result: Array<{ x: number; z: number; hw: number; hd: number; angle: number }> = []
   for (const dr of scriptRuntime.doorRuntimes.values()) {
-    if (dr.animT < 0.5) {
+    if (dr.animT < 0.9) {
       // For doors rotated ~90° (running along Z), swap hw/hd so the AABB is correct
       const isVertical = Math.abs(Math.sin(dr.entity.angle)) > 0.7
       result.push({

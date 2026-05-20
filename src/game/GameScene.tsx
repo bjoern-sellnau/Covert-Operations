@@ -489,6 +489,24 @@ export function GameScene() {
     camera.lookAt(0, 0, -1)
   }, [camera])
 
+  // ── Pause on Escape ───────────────────────────────────────────────────────
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.code === 'Escape' && phaseRef.current === 'playing') {
+        const gs = useGameStore.getState()
+        const nextPaused = !gs.paused
+        gs.setPaused(nextPaused)
+        if (nextPaused && cameraModeRef.current === 'fps') {
+          document.exitPointerLock()
+        } else if (!nextPaused && cameraModeRef.current === 'fps') {
+          gl.domElement.requestPointerLock()
+        }
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [gl.domElement])
+
   // ── Camera mode cycle (F key: topdown → iso → fps) ───────────────────────
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -602,6 +620,7 @@ export function GameScene() {
   // ── Main game loop ────────────────────────────────────────────────────────
   useFrame((state, delta) => {
     if (phaseRef.current !== 'playing') return
+    if (useGameStore.getState().paused) return
 
     const rawDt  = Math.min(delta, 0.05)
     const es     = entityStore
