@@ -19,6 +19,7 @@ export function MutatorsScreen() {
     gunKataEnabled, gunKataDuration, gunKataTargets, gunKataSpeed,
     autoReload,
     fogOfWarEnabled, fogOfWarRadius,
+    largeBullets,
     setGameType, setRoundTimeSec, setWeaponPickups, toggleEnemyDrop,
     setSuddenDeath, setSuddenDeathSec, setLives, setChaosMode,
     setBulletBounce, setBulletBounceCount,
@@ -27,7 +28,7 @@ export function MutatorsScreen() {
     setBotCount, toggleBotEnemyType, setKillMultipliers,
     setBalletDuration, setBalletBulletCount, setBalletSpeed,
     setGunKataEnabled, setGunKataDuration, setGunKataTargets, setGunKataSpeed,
-    setAutoReload, setFogOfWarEnabled, setFogOfWarRadius,
+    setAutoReload, setFogOfWarEnabled, setFogOfWarRadius, setLargeBullets,
   } = useMutatorsStore()
 
   const NO_SHOP_TYPES = ['instakill', 'instakill_wave', 'hardline_solo', 'hardline', 'deathmatch', 'arena']
@@ -326,6 +327,12 @@ export function MutatorsScreen() {
             label="AUTO-RELOAD"
             sub="Waffe lädt automatisch nach wenn Magazin leer ist"
             onClick={() => setAutoReload(!autoReload)}
+          />
+          <Toggle
+            on={largeBullets} color="#44aaff"
+            label="GROSSE PROJEKTILE (FPS)"
+            sub="Im FPS-Modus werden Projektile in Originalgröße dargestellt"
+            onClick={() => setLargeBullets(!largeBullets)}
           />
         </div>
 

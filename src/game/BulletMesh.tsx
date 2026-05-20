@@ -2,6 +2,8 @@ import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { entityStore } from './entityStore'
+import { useGameStore } from '../store/gameStore'
+import { useMutatorsStore } from '../store/mutatorsStore'
 
 interface Props {
   id: string
@@ -41,6 +43,10 @@ export function BulletMesh({ id }: Props) {
     if (!bullet || !meshRef.current) return
 
     meshRef.current.position.set(bullet.position.x, 0.25, bullet.position.y)
+
+    const isFPS = useGameStore.getState().cameraMode === 'fps'
+    const largeBullets = useMutatorsStore.getState().largeBullets
+    meshRef.current.scale.setScalar(isFPS && !largeBullets ? 0.33 : 1.0)
 
     if (bullet.isEnergy) {
       meshRef.current.material = _bulletMatEnergy

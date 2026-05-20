@@ -249,7 +249,7 @@ export function ScriptEngine({ level }: { level: Level }) {
     for (const dr of scriptRuntime.doorRuntimes.values()) {
       const target = dr.isOpen ? 1 : 0
       if (Math.abs(dr.animT - target) > 0.001) {
-        dr.animT += (target - dr.animT) * Math.min(1, delta * 4)
+        dr.animT += (target - dr.animT) * Math.min(1, delta * 7)
         if (Math.abs(dr.animT - target) < 0.001) dr.animT = target
       }
     }

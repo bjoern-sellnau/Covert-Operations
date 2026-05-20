@@ -49,6 +49,8 @@ interface MutatorsState {
   // Fog of war
   fogOfWarEnabled:   boolean
   fogOfWarRadius:    number   // world units
+  // FPS visual tweaks
+  largeBullets:      boolean  // keep old (large) bullet size in FPS mode
 
   setGameType:          (v: GameType) => void
   setRoundTimeSec:      (v: number) => void
@@ -80,6 +82,7 @@ interface MutatorsState {
   setAutoReload:        (v: boolean) => void
   setFogOfWarEnabled:   (v: boolean) => void
   setFogOfWarRadius:    (v: number) => void
+  setLargeBullets:      (v: boolean) => void
   resetMutators:        () => void
 }
 
@@ -116,6 +119,7 @@ export const useMutatorsStore = create<MutatorsState>()(
       autoReload:        false,
       fogOfWarEnabled:   false,
       fogOfWarRadius:    8,
+      largeBullets:      false,
 
       setGameType:          (gameType)       => set({ gameType }),
       setRoundTimeSec:      (roundTimeSec)   => set({ roundTimeSec }),
@@ -159,6 +163,7 @@ export const useMutatorsStore = create<MutatorsState>()(
       setAutoReload:        (autoReload)        => set({ autoReload }),
       setFogOfWarEnabled:   (fogOfWarEnabled)   => set({ fogOfWarEnabled }),
       setFogOfWarRadius:    (fogOfWarRadius)    => set({ fogOfWarRadius }),
+      setLargeBullets:      (largeBullets)      => set({ largeBullets }),
       resetMutators: () => set({
         gameType: 'waves', roundTimeSec: 180, weaponPickups: 'none', enemyDrops: [],
         suddenDeath: false, suddenDeathSec: 60, lives: 3, chaosMode: false,
@@ -167,7 +172,7 @@ export const useMutatorsStore = create<MutatorsState>()(
         berserkerDuration: 60, botCount: 6, botEnemyTypes: ['basic', 'fast'],
         killMultipliers: true, balletDuration: 1.4, balletBulletCount: 2, balletSpeed: 1.0,
         gunKataEnabled: false, gunKataDuration: 1.5, gunKataTargets: 4, gunKataSpeed: 1.0,
-        autoReload: false, fogOfWarEnabled: false, fogOfWarRadius: 8,
+        autoReload: false, fogOfWarEnabled: false, fogOfWarRadius: 8, largeBullets: false,
       }),
     }),
     { name: 'covert-ops-mutators-v3' }

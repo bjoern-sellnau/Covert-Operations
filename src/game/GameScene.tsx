@@ -867,12 +867,12 @@ export function GameScene() {
     if (ambientRef.current) {
       ambientRef.current.color.lerp(es.isBulletTime ? _btAmbientColor : _normalAmbientColor, 0.07)
       // Low quality uses higher ambient intensity to compensate for absent directional light
-      // FPS mode needs extra ambient since the directional light hits walls from above not forward
+      // FPS mode needs much more ambient — directional light hits horizontal surfaces only
       const isFPS = cameraModeRef.current === 'fps'
       const targetIntensity = isLowQuality
         ? (es.isBulletTime ? 1.4 : 1.6)
         : isFPS
-          ? (es.isBulletTime ? 0.9 : 0.75)
+          ? (es.isBulletTime ? 1.2 : 1.5)
           : (es.isBulletTime ? 0.7 : 0.75)
       ambientRef.current.intensity = THREE.MathUtils.lerp(ambientRef.current.intensity, targetIntensity, 0.07)
     }
@@ -934,11 +934,14 @@ export function GameScene() {
     }
 
     // ── Door interaction (E key) ───────────────────────────────────────────────
+    let eConsumed = false
     if (eJust) {
-      const opened = tryInteractDoor(es.player.position.x, es.player.position.y)
-      if (!opened) {
-        const gs = useGameStore.getState()
-        if (getDoorHint(es.player.position.x, es.player.position.y).startsWith('[')) {
+      const doorHint = getDoorHint(es.player.position.x, es.player.position.y)
+      if (doorHint !== '') {
+        eConsumed = true
+        const opened = tryInteractDoor(es.player.position.x, es.player.position.y)
+        if (!opened && doorHint.startsWith('[')) {
+          const gs = useGameStore.getState()
           gs.setWaveMessage('Gesperrt — Schlüssel benötigt!')
           setTimeout(() => gs.setWaveMessage(''), 1800)
         }
@@ -949,7 +952,7 @@ export function GameScene() {
     const balletDuration    = mutators.balletDuration
     const balletBulletCount = mutators.balletBulletCount
     const balletSpeedMult   = mutators.balletSpeed
-    if ((qJust || eJust) && es.maneuver === 'none' && es.spinCooldown <= 0 && es.isAkimbo) {
+    if ((qJust || (eJust && !eConsumed)) && es.maneuver === 'none' && es.spinCooldown <= 0 && es.isAkimbo) {
       es.spinDir       = qJust ? -1 : 1
       es.maneuver      = 'spin'
       es.maneuverTimer = balletDuration
