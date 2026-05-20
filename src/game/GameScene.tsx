@@ -1474,16 +1474,14 @@ export function GameScene() {
           })
           es.ammo = Math.max(0, es.ammo - 1)
         } else if (weaponCfg.isProjectile) {
-          // Plasma / Bazooka: single slow projectile — don't overwrite an in-flight one
-          if (es.weaponProjectile === null) {
-            es.weaponProjectile = {
-              x:  es.player.position.x + _toMouse.x * (PLAYER_RADIUS + 0.4),
-              z:  es.player.position.y + _toMouse.y * (PLAYER_RADIUS + 0.4),
-              vx: _toMouse.x * (weaponCfg.projectileSpeed ?? 8),
-              vz: _toMouse.y * (weaponCfg.projectileSpeed ?? 8),
-            }
-            es.ammo = Math.max(0, es.ammo - 1)
+          // Fire projectile; replace any in-flight one so cooldown-gated shots always respond
+          es.weaponProjectile = {
+            x:  es.player.position.x + _toMouse.x * (PLAYER_RADIUS + 0.4),
+            z:  es.player.position.y + _toMouse.y * (PLAYER_RADIUS + 0.4),
+            vx: _toMouse.x * (weaponCfg.projectileSpeed ?? 8),
+            vz: _toMouse.y * (weaponCfg.projectileSpeed ?? 8),
           }
+          es.ammo = Math.max(0, es.ammo - 1)
         } else if (weaponCfg.isBanana) {
           // Banana grenade
           const ang = baseAngle + (Math.random() - 0.5) * 2 * weaponCfg.spread
