@@ -46,7 +46,7 @@ export function BulletMesh({ id }: Props) {
 
     const isFPS = useGameStore.getState().cameraMode === 'fps'
     const largeBullets = useMutatorsStore.getState().largeBullets
-    meshRef.current.scale.setScalar(isFPS && !largeBullets ? 0.33 : 1.0)
+    meshRef.current.scale.setScalar(isFPS && !largeBullets ? 0.18 : 1.0)
 
     if (bullet.isEnergy) {
       meshRef.current.material = _bulletMatEnergy

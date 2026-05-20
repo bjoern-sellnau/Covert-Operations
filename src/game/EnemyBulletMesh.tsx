@@ -2,6 +2,8 @@ import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { entityStore } from './entityStore'
+import { useGameStore } from '../store/gameStore'
+import { useMutatorsStore } from '../store/mutatorsStore'
 
 interface Props {
   id: string
@@ -23,6 +25,9 @@ export function EnemyBulletMesh({ id }: Props) {
     const b = entityStore.enemyBullets.get(id)
     if (!b || !meshRef.current) return
     meshRef.current.position.set(b.position.x, 0.25, b.position.y)
+    const isFPS = useGameStore.getState().cameraMode === 'fps'
+    const largeBullets = useMutatorsStore.getState().largeBullets
+    meshRef.current.scale.setScalar(isFPS && !largeBullets ? 0.2 : 1.0)
     if (lightRef.current) {
       lightRef.current.position.set(b.position.x, 0.5, b.position.y)
     }

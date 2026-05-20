@@ -872,9 +872,9 @@ export function GameScene() {
       const targetIntensity = isLowQuality
         ? (es.isBulletTime ? 1.4 : 1.6)
         : isFPS
-          ? (es.isBulletTime ? 1.2 : 1.5)
+          ? (es.isBulletTime ? 1.5 : 2.5)
           : (es.isBulletTime ? 0.7 : 0.75)
-      ambientRef.current.intensity = THREE.MathUtils.lerp(ambientRef.current.intensity, targetIntensity, 0.07)
+      ambientRef.current.intensity = THREE.MathUtils.lerp(ambientRef.current.intensity, targetIntensity, isFPS ? 0.15 : 0.07)
     }
     if (dirLightRef.current) {
       dirLightRef.current.color.lerp(es.isBulletTime ? _btDirColor : _normalDirColor, 0.07)

@@ -5,7 +5,7 @@ import { entityStore, spawnParticles } from './entityStore'
 import { useGameStore } from '../store/gameStore'
 import { useEditorStore } from '../editor/editorStore'
 import type { Level } from '../editor/editorStore'
-import type { ScriptAction, DoorEntity, EmitterEntity, PortalEntity, ElevatorEntity } from '../editor/scriptTypes'
+import type { ScriptAction, DoorEntity, KeyEntity, EmitterEntity, PortalEntity, ElevatorEntity } from '../editor/scriptTypes'
 import { ENEMY_CONFIGS } from './types'
 import { useSettingsStore, DIFFICULTY_MULTS } from '../store/settingsStore'
 
@@ -278,13 +278,14 @@ export function ScriptEngine({ level }: { level: Level }) {
     // ── Key pickups ────────────────────────────────────────────────────────
     for (const entity of lvl.scriptEntities) {
       if (entity.type !== 'key') continue
-      if (scriptRuntime.collectedKeys.has(entity.id)) continue
+      const ke = entity as KeyEntity
+      if (scriptRuntime.collectedKeys.has(ke.keyId)) continue
 
-      const dx = px - entity.x
-      const dz = pz - entity.z
+      const dx = px - ke.x
+      const dz = pz - ke.z
       if (Math.sqrt(dx * dx + dz * dz) < 1.2) {
-        scriptRuntime.collectedKeys.add(entity.id)
-        setWaveMessage(`${entity.label} aufgenommen!`)
+        scriptRuntime.collectedKeys.add(ke.keyId)
+        setWaveMessage(`${ke.label} aufgenommen!`)
         setTimeout(() => setWaveMessage(''), 2000)
       }
     }
@@ -445,9 +446,9 @@ export function ScriptEngine({ level }: { level: Level }) {
 
       {/* Key collectibles */}
       {level.scriptEntities.filter((e) => e.type === 'key').map((entity) => {
-        if (scriptRuntime.collectedKeys.has(entity.id)) return null
-        const key = entity
-        const color = 'color' in key ? (key as { color: string }).color : '#ffcc00'
+        const ke = entity as KeyEntity
+        if (scriptRuntime.collectedKeys.has(ke.keyId)) return null
+        const color = ke.color ?? '#ffcc00'
         return (
           <mesh key={entity.id} position={[entity.x, 0.6, entity.z]}>
             <boxGeometry args={[0.3, 0.15, 0.5]} />
