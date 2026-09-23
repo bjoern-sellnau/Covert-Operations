@@ -53,6 +53,7 @@ export function OptionsScreen() {
           customTrackId, setCustomTrackId,
           difficulty, setDifficulty,
           graphicsQuality, setGraphicsQuality,
+          dynamicResolution, setDynamicResolution,
           charScale, setCharScale,
           showFPSWeapon, setShowFPSWeapon,
           showEnemyMarkers, setShowEnemyMarkers,
@@ -325,6 +326,18 @@ export function OptionsScreen() {
           </div>
           <div style={{ color: 'rgba(138,154,98,0.55)', fontSize: 9, letterSpacing: 1 }}>
             Niedrig: nur globales Licht, keine Schatten, keine Reflexionen · Hoch: volle Beleuchtung + Schatten
+          </div>
+        </div>
+
+        {/* ── Dynamic resolution ── */}
+        <div style={section}>
+          <div style={labelStyle}>Dynamische Auflösung</div>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button style={tog(dynamicResolution, '#e05418')} onClick={() => setDynamicResolution(true)}>Ein</button>
+            <button style={tog(!dynamicResolution, 'rgba(138,154,98,0.55)')} onClick={() => setDynamicResolution(false)}>Aus</button>
+          </div>
+          <div style={{ color: 'rgba(138,154,98,0.55)', fontSize: 9, letterSpacing: 1 }}>
+            Senkt die Renderauflösung automatisch bei niedriger Bildrate und hebt sie wieder an, sobald genug Leistung frei ist
           </div>
         </div>
 
