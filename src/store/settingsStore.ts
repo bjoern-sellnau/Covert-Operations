@@ -36,6 +36,7 @@ interface SettingsStore {
   cameraFollow: boolean
   difficulty: Difficulty
   graphicsQuality: GraphicsQuality
+  dynamicResolution: boolean // scale render resolution with measured FPS
   charScale: number          // 0.5 – 2.0, player and enemy visual scale
   showFPSWeapon: boolean     // show weapon arm in FPS mode
   showEnemyMarkers: boolean  // show off-screen enemy direction arrows
@@ -53,6 +54,7 @@ interface SettingsStore {
   setCameraFollow: (v: boolean) => void
   setDifficulty: (v: Difficulty) => void
   setGraphicsQuality: (v: GraphicsQuality) => void
+  setDynamicResolution: (v: boolean) => void
   setCharScale: (v: number) => void
   setShowFPSWeapon: (v: boolean) => void
   setShowEnemyMarkers: (v: boolean) => void
@@ -72,6 +74,7 @@ export const useSettingsStore = create<SettingsStore>()(
       cameraFollow:    false,
       difficulty:      'normal',
       graphicsQuality: 'medium',
+      dynamicResolution: true,
       charScale:           1.0,
       showFPSWeapon:       true,
       showEnemyMarkers:    true,
@@ -88,6 +91,7 @@ export const useSettingsStore = create<SettingsStore>()(
       setCameraFollow:    (cameraFollow)    => set({ cameraFollow }),
       setDifficulty:      (difficulty)      => set({ difficulty }),
       setGraphicsQuality: (graphicsQuality) => set({ graphicsQuality }),
+      setDynamicResolution: (dynamicResolution) => set({ dynamicResolution }),
       setCharScale:       (charScale)       => set({ charScale: Math.round(charScale * 10) / 10 }),
       showBoundingBoxes:       false,
       setShowFPSWeapon:        (showFPSWeapon)        => set({ showFPSWeapon }),
@@ -96,7 +100,7 @@ export const useSettingsStore = create<SettingsStore>()(
       setShowBoundingBoxes:    (showBoundingBoxes)    => set({ showBoundingBoxes }),
       resetSettings: () => set({
         bloodIntensity: 2, mobileControls: false, musicEnabled: true, skyFPV: false,
-        musicTrack: 'auto', cameraFollow: false, difficulty: 'normal', graphicsQuality: 'medium',
+        musicTrack: 'auto', cameraFollow: false, difficulty: 'normal', graphicsQuality: 'medium', dynamicResolution: true,
         charScale: 1.0, showFPSWeapon: true, showEnemyMarkers: true, showMinimap: false,
         showBoundingBoxes: false, playerSkin: 'palantir' as SkinId, customTrackId: '',
       }),
